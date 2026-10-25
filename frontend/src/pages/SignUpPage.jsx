@@ -95,12 +95,11 @@ export function SignUpPage() {
           {/* Header */}
           <div className="flex flex-col items-center text-center mb-6">
             <div className="inline-flex items-center gap-2.5 mb-2">
-              <span className="text-2xl font-bold text-primary tracking-tight">ConnectX</span>
-              <TricolourBadge />
+              <img src="/sampark-logo.png" alt="Sampark" className="h-10 w-auto object-contain" />
             </div>
             <h1 className="text-xl font-bold text-on-surface tracking-tight">Create your account</h1>
             <p className="text-xs text-on-surface-variant mt-1">
-              Join ConnectX and start a conversation.
+              Join Sampark and start a conversation.
             </p>
           </div>
 

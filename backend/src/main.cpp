@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[]) {
     std::cout << "========================================" << std::endl;
-    std::cout << "   ConnectX Backend Server (Phase 1)    " << std::endl;
+    std::cout << "   Sampark Backend Server              " << std::endl;
     std::cout << "========================================" << std::endl;
 
     std::string host = "0.0.0.0";
@@ -31,8 +31,9 @@ int main(int argc, char* argv[]) {
     if (argc > 2) port = std::atoi(argv[2]);
     if (argc > 3) dbPath = argv[3];
 
-    // If default path was used without explicit override, check if database exists in backend/ subfolder
-    if (argc <= 3 && !std::getenv("DATABASE_PATH")) {
+    // If the database path is connectx.db and it doesn't exist in the current working directory,
+    // automatically check if it exists in the backend/ subfolder (e.g. running from project root)
+    if (!std::getenv("DATABASE_PATH") && dbPath == "connectx.db") {
         if (!std::filesystem::exists("connectx.db") && std::filesystem::exists("backend/connectx.db")) {
             dbPath = "backend/connectx.db";
         }

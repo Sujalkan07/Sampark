@@ -12,11 +12,11 @@ export function Navbar() {
       <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-white font-bold text-sm tracking-tight shadow-xs">
-            C
-          </div>
-          <span className="font-bold text-lg text-primary tracking-tight">ConnectX</span>
-          <TricolourBadge />
+          <img
+            src="/sampark-logo.png"
+            alt="Sampark"
+            className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+          />
         </Link>
 
         {/* Public Nav items */}

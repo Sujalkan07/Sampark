@@ -115,7 +115,7 @@ export function LandingPage() {
                   <div className="h-4 w-px bg-border-hairline ml-1"></div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant font-mono">
-                      ConnectX Desktop
+                      Sampark Desktop
                     </span>
                     <span className="w-1.5 h-1.5 rounded-full bg-india-green"></span>
                   </div>
@@ -279,12 +279,11 @@ export function LandingPage() {
       <footer className="w-full py-6 border-t border-border-hairline bg-surface-container-low text-xs text-on-surface-variant">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-primary">ConnectX</span>
-            <TricolourBadge size="sm" />
+            <img src="/sampark-logo.png" alt="Sampark" className="h-6 w-auto object-contain" />
             <span className="text-outline">·</span>
             <span>Minimalist network chat</span>
           </div>
-          <div>© 2026 ConnectX Platform. All rights reserved.</div>
+          <div>© 2026 Sampark Platform. All rights reserved.</div>
         </div>
       </footer>
     </div>

@@ -5,9 +5,13 @@ LDFLAGS = -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
 SRCS = src/Database.cpp \
        src/UserRepository.cpp \
        src/SessionRepository.cpp \
+       src/ConversationRepository.cpp \
+       src/MessageRepository.cpp \
        src/Validator.cpp \
        src/AuthService.cpp \
        src/AuthController.cpp \
+       src/MessagingService.cpp \
+       src/MessagingController.cpp \
        src/HealthController.cpp \
        src/Server.cpp
 

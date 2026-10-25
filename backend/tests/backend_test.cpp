@@ -1,7 +1,10 @@
 #include "Database.hpp"
 #include "UserRepository.hpp"
 #include "SessionRepository.hpp"
+#include "ConversationRepository.hpp"
+#include "MessageRepository.hpp"
 #include "AuthService.hpp"
+#include "MessagingService.hpp"
 #include "Validator.hpp"
 #include <iostream>
 #include <cassert>
@@ -11,7 +14,7 @@
 namespace fs = std::filesystem;
 
 void runTests() {
-    std::cout << ">>> STARTING CONNECTX PHASE 1 BACKEND TEST SUITE <<<" << std::endl;
+    std::cout << ">>> STARTING SAMPARK BACKEND TEST SUITE <<<" << std::endl;
     const std::string testDbPath = "test_connectx.db";
 
     // Clean up any existing test DB file
@@ -215,6 +218,183 @@ void runTests() {
         assert(reAuth.user.has_value());
         assert(reAuth.user->username == "aarav_sharma");
         std::cout << "[PASS] Test 20: Database persistence survives application restart" << std::endl;
+
+        // PHASE 2 MESSAGING TESTS
+        auto convRepo = std::make_shared<connectx::SqliteConversationRepository>(db);
+        auto msgRepo = std::make_shared<connectx::SqliteMessageRepository>(db);
+        auto messagingService = std::make_shared<connectx::MessagingService>(convRepo, msgRepo, userRepo, sessionRepo);
+
+        std::string aaravToken = reAuth.session->token;
+        int64_t aaravId = reAuth.user->id;
+
+        // Login Priya
+        auto priyaAuth = authService->login("priya_patel", "PriyaSecurePass2026!");
+        assert(priyaAuth.success);
+        std::string priyaToken = priyaAuth.session->token;
+        int64_t priyaId = priyaAuth.user->id;
+
+        // Register Third User: Rohan Kapoor (ID 3) for isolation testing
+        auto rohanReg = authService->registerUser("rohan_k", "rohan@iitb.ac.in", "Rohan Kapoor", "RohanPass789!");
+        assert(rohanReg.success);
+        std::string rohanToken = rohanReg.session->token;
+
+        // Test 21: Direct conversation creation between Aarav and Priya
+        auto createConv = messagingService->createOrGetConversation(aaravToken, priyaId);
+        assert(createConv.success);
+        assert(createConv.conversation.has_value());
+        int64_t convId = createConv.conversation->id;
+        assert(convId > 0);
+        assert(createConv.conversation->otherParticipant.has_value());
+        assert(createConv.conversation->otherParticipant->username == "priya_patel");
+        std::cout << "[PASS] Test 21: Direct conversation created between Aarav and Priya (ID: " << convId << ")" << std::endl;
+
+        // Test 22: Uniqueness and idempotency: Priya requesting conversation with Aarav resolves to same ID
+        auto priyaGetConv = messagingService->createOrGetConversation(priyaToken, aaravId);
+        assert(priyaGetConv.success);
+        assert(priyaGetConv.conversation.has_value());
+        assert(priyaGetConv.conversation->id == convId);
+        assert(priyaGetConv.conversation->otherParticipant->username == "aarav_sharma");
+        std::cout << "[PASS] Test 22: Bi-directional pair normalization resolves to exact same conversation ID" << std::endl;
+        assert(priyaGetConv.conversation->id == convId);
+        assert(priyaGetConv.conversation->otherParticipant->username == "aarav_sharma");
+        std::cout << "[PASS] Test 22: Bi-directional pair normalization resolves to exact same conversation ID" << std::endl;
+
+        // Test 23: Self-conversation rejection
+        auto selfConv = messagingService->createOrGetConversation(aaravToken, aaravId);
+        assert(!selfConv.success);
+        assert(selfConv.statusCode == 400);
+        std::cout << "[PASS] Test 23: Self-conversation rejected with HTTP 400" << std::endl;
+
+        // Test 24: Unauthenticated conversation access rejected
+        auto unauthConv = messagingService->createOrGetConversation("invalid_token_xyz", priyaId);
+        assert(!unauthConv.success);
+        assert(unauthConv.statusCode == 401);
+        std::cout << "[PASS] Test 24: Unauthenticated conversation access rejected with HTTP 401" << std::endl;
+
+        // Test 25: Non-existent user conversation rejected
+        auto noUserConv = messagingService->createOrGetConversation(aaravToken, 99999);
+        assert(!noUserConv.success);
+        assert(noUserConv.statusCode == 404);
+        std::cout << "[PASS] Test 25: Non-existent user conversation creation rejected with HTTP 404" << std::endl;
+
+        // Test 26: Sending message persists to SQLite with server timestamp and sender
+        auto sendMsg1 = messagingService->sendMessage(aaravToken, convId, "Hello Priya, how are you?");
+        assert(sendMsg1.success);
+        assert(sendMsg1.chatMessage.has_value());
+        assert(sendMsg1.chatMessage->senderId == aaravId);
+        assert(sendMsg1.chatMessage->body == "Hello Priya, how are you?");
+        assert(!sendMsg1.chatMessage->createdAt.empty());
+        int64_t msg1Id = sendMsg1.chatMessage->id;
+        std::cout << "[PASS] Test 26: Message successfully sent and persisted in SQLite (ID: " << msg1Id << ")" << std::endl;
+
+        // Test 27: Message history retrieval in chronological order
+        auto sendMsg2 = messagingService->sendMessage(priyaToken, convId, "Hi Aarav! I am doing great, working on ConnectX.");
+        assert(sendMsg2.success);
+        int64_t msg2Id = sendMsg2.chatMessage->id;
+
+        auto historyResult = messagingService->getMessages(aaravToken, convId, 50, 0, 0);
+        assert(historyResult.success);
+        assert(historyResult.messages.size() == 2);
+        assert(historyResult.messages[0].id == msg1Id);
+        assert(historyResult.messages[1].id == msg2Id);
+        assert(historyResult.messages[0].body == "Hello Priya, how are you?");
+        assert(historyResult.messages[1].body == "Hi Aarav! I am doing great, working on ConnectX.");
+        std::cout << "[PASS] Test 27: Message history retrieved in stable chronological order" << std::endl;
+
+        // Test 28: Empty or whitespace-only messages rejected
+        auto emptySend = messagingService->sendMessage(aaravToken, convId, "   \n\t  ");
+        assert(!emptySend.success);
+        assert(emptySend.statusCode == 400);
+        std::cout << "[PASS] Test 28: Empty and whitespace-only message rejected with HTTP 400" << std::endl;
+
+        // Test 29: Message length validation (>4000 characters rejected)
+        std::string hugeMessage(4001, 'A');
+        auto hugeSend = messagingService->sendMessage(aaravToken, convId, hugeMessage);
+        assert(!hugeSend.success);
+        assert(hugeSend.statusCode == 400);
+        std::cout << "[PASS] Test 29: Message exceeding 4000 chars rejected with HTTP 400" << std::endl;
+
+        // Test 30: Participant isolation: Rohan (third user) cannot view messages or send to Aarav-Priya conversation
+        auto rohanView = messagingService->getMessages(rohanToken, convId, 50, 0, 0);
+        assert(!rohanView.success);
+        assert(rohanView.statusCode == 403);
+
+        auto rohanSend = messagingService->sendMessage(rohanToken, convId, "I am sneaking into your chat!");
+        assert(!rohanSend.success);
+        assert(rohanSend.statusCode == 403);
+        std::cout << "[PASS] Test 30: Multi-user privacy enforced: third party denied access (HTTP 403)" << std::endl;
+
+        // Test 31: Unread message count and mark as read
+        // Priya sent msg2 to Aarav. Aarav has 1 unread message from Priya in convId.
+        int unreadBefore = msgRepo->getUnreadCount(convId, aaravId);
+        assert(unreadBefore == 1);
+
+        auto markReadResult = messagingService->markAsRead(aaravToken, convId);
+        assert(markReadResult.success);
+
+        int unreadAfter = msgRepo->getUnreadCount(convId, aaravId);
+        assert(unreadAfter == 0);
+        std::cout << "[PASS] Test 31: Unread count calculated correctly and updated upon mark-as-read" << std::endl;
+
+        // Test 32: Incremental polling cursor (afterId)
+        auto sendMsg3 = messagingService->sendMessage(priyaToken, convId, "Did you see my latest commit?");
+        assert(sendMsg3.success);
+        int64_t msg3Id = sendMsg3.chatMessage->id;
+
+        // Polling from after msg2Id should return ONLY msg3
+        auto pollResult = messagingService->getMessages(aaravToken, convId, 50, 0, msg2Id);
+        assert(pollResult.success);
+        assert(pollResult.messages.size() == 1);
+        assert(pollResult.messages[0].id == msg3Id);
+        assert(pollResult.messages[0].body == "Did you see my latest commit?");
+        std::cout << "[PASS] Test 32: Incremental polling cursor (afterId) returns only new message delta" << std::endl;
+
+        // Test 33: Pagination cursor (beforeId)
+        auto beforeResult = messagingService->getMessages(aaravToken, convId, 1, msg3Id, 0);
+        assert(beforeResult.success);
+        assert(beforeResult.messages.size() == 1);
+        assert(beforeResult.messages[0].id == msg2Id);
+        std::cout << "[PASS] Test 33: Pagination cursor (beforeId) retrieves earlier messages correctly" << std::endl;
+
+        // Test 34: Conversation list returns other participant and last message preview
+        auto listResult = messagingService->listConversations(aaravToken);
+        assert(listResult.success);
+        assert(!listResult.conversations.empty());
+        auto& firstConv = listResult.conversations[0];
+        assert(firstConv.id == convId);
+        assert(firstConv.otherParticipant.has_value());
+        assert(firstConv.otherParticipant->username == "priya_patel");
+        assert(firstConv.lastMessage.has_value());
+        assert(firstConv.lastMessage->body == "Did you see my latest commit?");
+        std::cout << "[PASS] Test 34: Conversation list contains other participant details and last message preview" << std::endl;
+    } // DB is closed here
+
+    // Test 35: Messages and conversations survive full database restart
+    {
+        connectx::Database db(testDbPath);
+        auto userRepo = std::make_shared<connectx::SqliteUserRepository>(db);
+        auto sessionRepo = std::make_shared<connectx::SqliteSessionRepository>(db);
+        auto convRepo = std::make_shared<connectx::SqliteConversationRepository>(db);
+        auto msgRepo = std::make_shared<connectx::SqliteMessageRepository>(db);
+        auto messagingService = std::make_shared<connectx::MessagingService>(convRepo, msgRepo, userRepo, sessionRepo);
+
+        // Fetch Aarav and Priya
+        auto aaravUser = userRepo->findByUsername("aarav_sharma");
+        auto priyaUser = userRepo->findByUsername("priya_patel");
+        assert(aaravUser.has_value());
+        assert(priyaUser.has_value());
+
+        // Verify conversation persists
+        auto conv = convRepo->findByParticipants(aaravUser->id, priyaUser->id);
+        assert(conv.has_value());
+
+        // Verify messages persist
+        auto msgs = msgRepo->getMessages(conv->id, 50, 0, 0);
+        assert(msgs.size() == 3);
+        assert(msgs[0].body == "Hello Priya, how are you?");
+        assert(msgs[1].body == "Hi Aarav! I am doing great, working on ConnectX.");
+        assert(msgs[2].body == "Did you see my latest commit?");
+        std::cout << "[PASS] Test 35: Full conversation and message history persists across database restarts" << std::endl;
     }
 
     // Clean up test DB
@@ -223,7 +403,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 20 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 35 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

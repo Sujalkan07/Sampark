@@ -82,10 +82,36 @@ bool Database::initSchema() {
             expires_at TEXT NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS conversations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_low_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            user_high_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            CONSTRAINT chk_diff_users CHECK (user_low_id < user_high_id),
+            CONSTRAINT uq_participants UNIQUE (user_low_id, user_high_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+            sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            body TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            read_at TEXT DEFAULT NULL
+        );
+
         CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
         CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
         CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_conv_user_low ON conversations(user_low_id);
+        CREATE INDEX IF NOT EXISTS idx_conv_user_high ON conversations(user_high_id);
+        CREATE INDEX IF NOT EXISTS idx_conv_updated_at ON conversations(updated_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_msg_conv_id ON messages(conversation_id);
+        CREATE INDEX IF NOT EXISTS idx_msg_conv_created ON messages(conversation_id, id ASC);
+        CREATE INDEX IF NOT EXISTS idx_msg_sender ON messages(sender_id);
+        CREATE INDEX IF NOT EXISTS idx_msg_unread ON messages(conversation_id, sender_id, read_at);
     )";
 
     return execute(schemaSql);

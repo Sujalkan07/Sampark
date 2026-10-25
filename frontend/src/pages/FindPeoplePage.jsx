@@ -15,6 +15,7 @@ export function FindPeoplePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [connectingUserId, setConnectingUserId] = useState(null);
 
   const fetchUsers = useCallback(async (query = '') => {
     try {
@@ -45,10 +46,22 @@ export function FindPeoplePage() {
     };
   }, [searchQuery, fetchUsers]);
 
-  const handleMessageClick = (targetUser) => {
-    setNotice(
-      `Direct messaging with @${targetUser.username} will be available in the upcoming Phase 2 release. Your connection has been noted!`
-    );
+  const handleMessageClick = async (targetUser) => {
+    if (connectingUserId) return;
+    try {
+      setConnectingUserId(targetUser.id);
+      setError(null);
+      const res = await api.createOrGetConversation(targetUser.id);
+      if (res && res.conversation && res.conversation.id) {
+        navigate(`/conversation/${res.conversation.id}`);
+      } else {
+        throw new Error('Failed to open conversation. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Unable to open conversation with this member.');
+    } finally {
+      setConnectingUserId(null);
+    }
   };
 
   return (
@@ -59,7 +72,12 @@ export function FindPeoplePage() {
         {/* Top Header */}
         <header className="h-14 bg-surface-container-lowest border-b border-border-hairline z-40 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-base text-primary tracking-tight">ConnectX</span>
+            <img
+              src="/sampark-logo.png"
+              alt="Sampark"
+              className="h-7 w-auto object-contain cursor-pointer"
+              onClick={() => navigate('/dashboard')}
+            />
             <span className="text-outline/50">•</span>
             <span className="text-sm font-medium text-on-surface-variant">Find People</span>
           </div>
@@ -83,7 +101,7 @@ export function FindPeoplePage() {
             </div>
             <h1 className="text-2xl font-bold text-primary tracking-tight">Find People</h1>
             <p className="text-sm text-on-surface-variant mt-1">
-              Discover and connect with registered members on the ConnectX network.
+              Discover and connect with registered members on the Sampark network.
             </p>
           </div>
 
@@ -261,7 +279,7 @@ export function FindPeoplePage() {
                       No other registered members yet
                     </h3>
                     <p className="text-xs text-on-surface-variant max-w-md leading-relaxed">
-                      As soon as other members register on ConnectX, they will automatically appear here.
+                      As soon as other members register on Sampark, they will automatically appear here.
                     </p>
                   </>
                 )}
@@ -316,11 +334,21 @@ export function FindPeoplePage() {
                       <div className="shrink-0 ml-4">
                         <button
                           type="button"
+                          disabled={connectingUserId === peer.id}
                           onClick={() => handleMessageClick(peer)}
-                          className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                          className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover active:scale-95 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          <span className="material-symbols-outlined text-[16px]">chat</span>
-                          <span>Message</span>
+                          {connectingUserId === peer.id ? (
+                            <>
+                              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                              <span>Connecting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-symbols-outlined text-[16px]">chat</span>
+                              <span>Message</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>

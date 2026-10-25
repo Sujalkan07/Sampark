@@ -33,7 +33,14 @@ async function request(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const errorMessage = data?.error || data?.message || `Request failed with status ${response.status}`;
+      let errorMessage = data?.error || data?.message;
+      if (!errorMessage) {
+        if (response.status === 500 || response.status === 502 || response.status === 503 || response.status === 504) {
+          errorMessage = 'Sampark backend server is unreachable. Please ensure the C++ backend server is running on port 8080.';
+        } else {
+          errorMessage = `Request failed with status ${response.status}`;
+        }
+      }
       throw new ApiError(errorMessage, response.status, data);
     }
 
@@ -44,7 +51,7 @@ async function request(endpoint, options = {}) {
     }
     // Network / server connection failure
     throw new ApiError(
-      'Unable to connect to the ConnectX server. Please check your network connection or try again.',
+      'Unable to connect to the Sampark server. Please check your network connection or try again.',
       0,
       { originalError: error.message }
     );
@@ -90,6 +97,53 @@ export const api = {
     const endpoint = queryString ? `/api/users?${queryString}` : '/api/users';
     return request(endpoint, {
       method: 'GET',
+    });
+  },
+
+  // Phase 2 Messaging APIs
+  async createOrGetConversation(participantId) {
+    return request('/api/conversations', {
+      method: 'POST',
+      body: JSON.stringify({ participantId }),
+    });
+  },
+
+  async getConversations() {
+    return request('/api/conversations', {
+      method: 'GET',
+    });
+  },
+
+  async getConversation(conversationId) {
+    return request(`/api/conversations/${conversationId}`, {
+      method: 'GET',
+    });
+  },
+
+  async getMessages(conversationId, { limit = 50, before = 0, after = 0 } = {}) {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (before) params.append('before', before.toString());
+    if (after) params.append('after', after.toString());
+    const queryString = params.toString();
+    const endpoint = queryString
+      ? `/api/conversations/${conversationId}/messages?${queryString}`
+      : `/api/conversations/${conversationId}/messages`;
+    return request(endpoint, {
+      method: 'GET',
+    });
+  },
+
+  async sendMessage(conversationId, body) {
+    return request(`/api/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+    });
+  },
+
+  async markConversationAsRead(conversationId) {
+    return request(`/api/conversations/${conversationId}/read`, {
+      method: 'POST',
     });
   },
 };

@@ -58,6 +58,14 @@ export function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/conversation/:conversationId"
+            element={
+              <ProtectedRoute>
+                <ConversationPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

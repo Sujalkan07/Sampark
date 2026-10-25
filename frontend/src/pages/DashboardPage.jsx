@@ -1,16 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { api } from '../api/client';
 import { Sidebar } from '../components/Sidebar';
 import { TricolourBadge } from '../components/TricolourBadge';
+import { AlertBanner } from '../components/AlertBanner';
 
 export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [showNotice, setShowNotice] = useState(false);
+
+  const pollIntervalRef = useRef(null);
+
+  const fetchConversations = async (isInitial = false) => {
+    try {
+      if (isInitial) setLoading(true);
+      const data = await api.getConversations();
+      setConversations(data?.conversations || []);
+      setError(null);
+    } catch (err) {
+      if (isInitial) {
+        setError(err.message || 'Failed to load conversations.');
+      }
+    } finally {
+      if (isInitial) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversations(true);
+
+    // Poll for new incoming conversations or activity updates every 4 seconds
+    pollIntervalRef.current = setInterval(() => {
+      fetchConversations(false);
+    }, 4000);
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Format preview timestamp
+  const formatPreviewTime = (isoString) => {
+    if (!isoString) return '';
+    try {
+      const d = new Date(isoString);
+      const today = new Date();
+      if (d.toDateString() === today.toDateString()) {
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  };
+
+  // Filter conversations
+  const filteredConversations = useMemo(() => {
+    return conversations.filter((c) => {
+      const other = c.participant;
+      const name = other?.fullName?.toLowerCase() || '';
+      const handle = other?.username?.toLowerCase() || '';
+      const q = searchQuery.toLowerCase().trim();
+
+      const matchesSearch = !q || name.includes(q) || handle.includes(q);
+      if (!matchesSearch) return false;
+
+      if (activeTab === 'unread') {
+        return c.unreadCount > 0;
+      }
+      return true;
+    });
+  }, [conversations, searchQuery, activeTab]);
+
+  const totalUnread = useMemo(() => {
+    return conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+  }, [conversations]);
 
   return (
     <div className="min-h-screen bg-surface flex text-on-surface">
@@ -22,7 +95,12 @@ export function DashboardPage() {
         {/* Top Header Bar */}
         <header className="h-14 bg-surface-container-lowest border-b border-border-hairline z-40 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
-            <span className="font-bold text-base text-primary tracking-tight">ConnectX</span>
+            <img
+              src="/sampark-logo.png"
+              alt="Sampark"
+              className="h-7 w-auto object-contain cursor-pointer"
+              onClick={() => navigate('/dashboard')}
+            />
             <span className="text-outline/50">•</span>
             <span className="text-sm font-medium text-on-surface-variant">Messages</span>
           </div>
@@ -49,12 +127,12 @@ export function DashboardPage() {
                 <div className="flex items-center gap-2.5">
                   <h1 className="text-lg font-bold text-primary tracking-tight">Messages</h1>
                   <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-xs font-semibold">
-                    0
+                    {conversations.length}
                   </span>
                 </div>
 
                 <button
-                  onClick={() => setShowNotice(true)}
+                  onClick={() => navigate('/find-people')}
                   className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all active:scale-95 group shadow-xs cursor-pointer"
                   title="Start new conversation"
                   type="button"
@@ -102,6 +180,11 @@ export function DashboardPage() {
                   }`}
                 >
                   <span>Unread</span>
+                  {totalUnread > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-saffron text-[10px] text-white font-bold">
+                      {totalUnread}
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -117,24 +200,123 @@ export function DashboardPage() {
               </div>
             </div>
 
-            {/* Conversation Empty State List */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-3">
-                <span className="material-symbols-outlined text-[24px]">chat_bubble_outline</span>
+            {/* Error Banner */}
+            {error && (
+              <div className="p-3">
+                <AlertBanner type="error" message={error} onClose={() => setError(null)} />
               </div>
-              <h2 className="text-sm font-semibold text-primary mb-1">No conversations yet</h2>
-              <p className="text-xs text-on-surface-variant max-w-[240px] leading-relaxed mb-4">
-                Start by finding someone to connect with. New chats will appear here.
-              </p>
-              <button
-                onClick={() => navigate('/find-people')}
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container text-primary hover:bg-surface-container-high transition-colors border border-border-hairline"
-              >
-                Find People
-              </button>
-            </div>
+            )}
 
-            {/* Directory Card */}
+            {/* Loading Skeletons */}
+            {loading && (
+              <div className="p-3 space-y-2">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="p-3 rounded-xl bg-surface-container-low animate-pulse flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-surface-container-high shrink-0"></div>
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-3.5 w-24 bg-surface-container-high rounded"></div>
+                      <div className="h-3 w-36 bg-surface-container rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Conversation Empty State List */}
+            {!loading && filteredConversations.length === 0 && (
+              <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-3">
+                  <span className="material-symbols-outlined text-[24px]">chat_bubble_outline</span>
+                </div>
+                <h2 className="text-sm font-semibold text-primary mb-1">
+                  {searchQuery ? 'No matching conversations' : 'No conversations yet'}
+                </h2>
+                <p className="text-xs text-on-surface-variant max-w-[240px] leading-relaxed mb-4">
+                  {searchQuery
+                    ? 'Try searching for another member name or handle.'
+                    : 'Start by finding someone to connect with. New chats will appear here.'}
+                </p>
+                <button
+                  onClick={() => navigate('/find-people')}
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container text-primary hover:bg-surface-container-high transition-colors border border-border-hairline cursor-pointer"
+                >
+                  Find People
+                </button>
+              </div>
+            )}
+
+            {/* Populated Conversation List */}
+            {!loading && filteredConversations.length > 0 && (
+              <div className="flex-1 overflow-y-auto divide-y divide-border-hairline/60">
+                {filteredConversations.map((conv) => {
+                  const peer = conv.participant;
+                  const initials = (peer?.fullName || peer?.username || 'U')
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
+
+                  const lastMsg = conv.lastMessage;
+                  const snippet = lastMsg?.body || 'No messages yet';
+                  const timestamp = formatPreviewTime(lastMsg?.createdAt || conv.updatedAt);
+                  const hasUnread = conv.unreadCount > 0;
+
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => navigate(`/conversation/${conv.id}`)}
+                      className={`p-3.5 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group ${
+                        hasUnread ? 'bg-surface-container-low/60' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="relative shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                            {initials}
+                          </div>
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-india-green rounded-full ring-2 ring-surface-container-lowest"></span>
+                        </div>
+
+                        <div className="min-w-0 flex-1 pr-2">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span
+                              className={`text-xs font-semibold truncate ${
+                                hasUnread ? 'text-primary font-bold' : 'text-on-surface'
+                              }`}
+                            >
+                              {peer?.fullName || `@${peer?.username}`}
+                            </span>
+                            <span className="text-[10px] text-outline font-mono shrink-0 ml-1">
+                              {timestamp}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <p
+                              className={`text-xs truncate ${
+                                hasUnread
+                                  ? 'text-primary font-semibold'
+                                  : 'text-on-surface-variant'
+                              }`}
+                            >
+                              {snippet}
+                            </p>
+                            {hasUnread && (
+                              <span className="px-1.5 py-0.2 rounded-full bg-saffron text-white text-[10px] font-bold shrink-0 ml-1">
+                                {conv.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Directory Link Card */}
             <div className="p-3 m-3 bg-surface-container-low border border-border-hairline rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-xs">
@@ -147,7 +329,7 @@ export function DashboardPage() {
               </div>
               <button
                 onClick={() => navigate('/find-people')}
-                className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors"
+                className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors cursor-pointer"
                 title="Open Directory"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
@@ -175,19 +357,8 @@ export function DashboardPage() {
               </div>
             </header>
 
-            {/* Notice Modal/Alert if triggered */}
-            {showNotice && (
-              <div className="w-full max-w-md my-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center justify-between z-20">
-                <span>Direct messaging will be available in the upcoming release. You can search member profiles in Find People.</span>
-                <button onClick={() => setShowNotice(false)} className="text-blue-700 hover:text-blue-900 font-bold ml-2">
-                  ×
-                </button>
-              </div>
-            )}
-
             {/* Centered Minimal Hero Panel */}
             <div className="w-full max-w-lg px-6 flex flex-col items-center text-center my-auto z-10">
-              {/* Geometric Icon Emblem */}
               <div className="relative mb-6 flex items-center justify-center">
                 <div className="w-16 h-16 p-3.5 rounded-2xl bg-surface-container-lowest border border-border-hairline shadow-sm flex items-center justify-center relative">
                   <svg className="w-10 h-10" fill="none" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
@@ -204,17 +375,14 @@ export function DashboardPage() {
                 </div>
               </div>
 
-              {/* Heading */}
               <h2 className="text-2xl font-bold text-primary tracking-tight mb-2">
                 Your conversations start here.
               </h2>
 
-              {/* Explanatory Subtext */}
               <p className="text-sm text-on-surface-variant max-w-sm mb-6 leading-relaxed">
-                Choose someone from your chats or find a person on the ConnectX network to send your first message.
+                Choose someone from your chats or find a person on the Sampark network to send your first message.
               </p>
 
-              {/* Action Cluster */}
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                 <button
                   type="button"
@@ -226,20 +394,10 @@ export function DashboardPage() {
                   </span>
                   <span>Find People</span>
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowNotice(true)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-surface-container-lowest hover:bg-surface-container text-on-surface border border-border-hairline font-semibold text-sm shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-outline">dialpad</span>
-                  <span>New Direct Message</span>
-                </button>
               </div>
 
-              {/* Keyboard Assist */}
               <div className="mt-8 flex items-center gap-2 text-outline text-xs">
-                <span>Welcome to ConnectX,</span>
+                <span>Welcome to Sampark,</span>
                 <span className="font-semibold text-primary">{user?.fullName || user?.username}</span>
               </div>
             </div>
@@ -248,7 +406,7 @@ export function DashboardPage() {
             <footer className="w-full flex items-center justify-center z-10">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-border-hairline text-xs font-medium text-on-surface-variant">
                 <span className="w-2 h-2 rounded-full bg-india-green"></span>
-                <span>Connected to ConnectX Server • Active</span>
+                <span>Connected to Sampark Server • Active</span>
               </div>
             </footer>
           </section>

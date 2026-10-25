@@ -54,18 +54,11 @@ export function LoginPage() {
             {/* Top Brand Emblem */}
             <div className="flex items-center justify-between pb-6 border-b border-border-hairline mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center shadow-xs">
-                  <span className="text-white font-bold text-base tracking-tight">C</span>
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-lg text-primary tracking-tight">ConnectX</span>
-                    <TricolourBadge size="sm" />
-                  </div>
-                  <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-                    Secure Access
-                  </span>
-                </div>
+                <img
+                  src="/sampark-logo.png"
+                  alt="Sampark"
+                  className="h-9 w-auto object-contain"
+                />
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low border border-border-hairline text-xs font-mono text-on-surface-variant">

@@ -59,4 +59,62 @@ struct AuthResult {
     std::optional<Session> session;
 };
 
+struct Message {
+    int64_t id = 0;
+    int64_t conversationId = 0;
+    int64_t senderId = 0;
+    std::string body;
+    std::string createdAt;
+    std::optional<std::string> readAt;
+
+    json toJson() const {
+        json j = {
+            {"id", id},
+            {"conversationId", conversationId},
+            {"senderId", senderId},
+            {"body", body},
+            {"createdAt", createdAt}
+        };
+        if (readAt.has_value()) {
+            j["readAt"] = *readAt;
+        } else {
+            j["readAt"] = nullptr;
+        }
+        return j;
+    }
+};
+
+struct Conversation {
+    int64_t id = 0;
+    int64_t userLowId = 0;
+    int64_t userHighId = 0;
+    std::string createdAt;
+    std::string updatedAt;
+
+    // Associated context for current user view
+    std::optional<User> otherParticipant;
+    std::optional<Message> lastMessage;
+    int unreadCount = 0;
+
+    json toJson() const {
+        json j = {
+            {"id", id},
+            {"userLowId", userLowId},
+            {"userHighId", userHighId},
+            {"createdAt", createdAt},
+            {"updatedAt", updatedAt},
+            {"unreadCount", unreadCount}
+        };
+        if (otherParticipant.has_value()) {
+            j["participant"] = otherParticipant->toPublicJson();
+        }
+        if (lastMessage.has_value()) {
+            j["lastMessage"] = lastMessage->toJson();
+        } else {
+            j["lastMessage"] = nullptr;
+        }
+        return j;
+    }
+};
+
 } // namespace connectx
