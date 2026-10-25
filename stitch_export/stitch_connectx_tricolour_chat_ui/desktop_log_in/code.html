@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-background": "#1a1c1b",
+          "background": "#f9f9f6",
+          "surface-container": "#eeeeeb",
+          "on-secondary-container": "#fffbff",
+          "surface-container-high": "#e8e8e5",
+          "on-tertiary-fixed": "#311300",
+          "secondary": "#2d4fcf",
+          "surface-tint": "#575d78",
+          "surface-bright": "#f9f9f6",
+          "on-primary": "#ffffff",
+          "primary-fixed": "#dce1ff",
+          "inverse-on-surface": "#f1f1ee",
+          "on-tertiary": "#ffffff",
+          "secondary-container": "#4b69ea",
+          "surface-dim": "#dadad7",
+          "surface-container-lowest": "#ffffff",
+          "error": "#ba1a1a",
+          "secondary-fixed": "#dde1ff",
+          "on-error-container": "#93000a",
+          "on-secondary": "#ffffff",
+          "primary": "#000000",
+          "tertiary": "#000000",
+          "on-primary-fixed": "#141a32",
+          "on-error": "#ffffff",
+          "on-surface-variant": "#46464d",
+          "primary-fixed-dim": "#bfc5e4",
+          "inverse-primary": "#bfc5e4",
+          "outline": "#76767e",
+          "surface-variant": "#e2e3e0",
+          "secondary-fixed-dim": "#b8c3ff",
+          "on-primary-container": "#7c839f",
+          "outline-variant": "#c6c6ce",
+          "on-secondary-fixed": "#001355",
+          "primary-container": "#141a32",
+          "on-primary-fixed-variant": "#3f465f",
+          "on-tertiary-container": "#ce6700",
+          "tertiary-fixed-dim": "#ffb786",
+          "surface": "#f9f9f6",
+          "surface-container-highest": "#e2e3e0",
+          "surface-container-low": "#f4f4f1",
+          "on-surface": "#1a1c1b",
+          "on-tertiary-fixed-variant": "#723600",
+          "tertiary-container": "#311300",
+          "inverse-surface": "#2f312f",
+          "error-container": "#ffdad6",
+          "on-secondary-fixed-variant": "#0736ba",
+          "tertiary-fixed": "#ffdcc6"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-md": "0.75rem",
+          "space-lg": "1.25rem",
+          "space-sm": "0.5rem",
+          "margin": "1.5rem",
+          "gutter-mobile": "0.75rem",
+          "margin-mobile": "1rem",
+          "space-xl": "2rem",
+          "gutter": "1rem",
+          "space-xs": "0.25rem"
+        },
+        "fontFamily": {
+          "code-sm": ["JetBrains Mono"],
+          "display-lg": ["Inter"],
+          "headline-lg": ["Inter"],
+          "display-lg-mobile": ["Inter"],
+          "label-md": ["Inter"],
+          "body-md": ["Inter"],
+          "body-lg": ["Inter"],
+          "headline-md": ["Inter"],
+          "body-sm": ["Inter"],
+          "label-sm": ["Inter"],
+          "headline-sm": ["Inter"],
+          "headline-lg-mobile": ["Inter"]
+        },
+        "fontSize": {
+          "code-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+          "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+          "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+          "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+          "body-md": ["13px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "body-lg": ["15px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+          "headline-md": ["18px", {"lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+          "body-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+          "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "headline-lg-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600"}]
+        }
+      }
+    }
+  }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><span class="font-headline-md text-headline-md text-primary tracking-tight font-bold">ConnectX</span><div class="flex flex-col gap-[2px] w-4 py-1"><span class="h-[2px] w-full rounded-full bg-[#f58220]"></span><span class="h-[2px] w-full rounded-full bg-[#ffffff] shadow-[0_0_1px_rgba(0,0,0,0.2)]"></span><span class="h-[2px] w-full rounded-full bg-[#138808]"></span></div></div><nav class="hidden md:flex items-center gap-space-md ml-space-md" data-active-classes="bg-surface-container-high text-on-surface font-semibold rounded-lg"><a class="px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="overview" href="#">Overview</a><a class="px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="features" href="#">Features</a><a class="px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="developers" href="#">Developers</a><a class="px-space-md py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="enterprise" href="#">Enterprise</a></nav></div><div class="flex items-center gap-space-md"><a class="px-space-md py-space-xs font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface rounded-lg transition-all" data-path="login" href="#">Log In</a><a class="px-space-md py-space-xs font-label-md text-label-md bg-primary text-on-primary hover:bg-surface-container-highest hover:text-on-surface rounded-lg transition-all" data-path="signup" href="#">Get Started</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface"><div class="flex flex-col w-full">
+<div class="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center p-space-md sm:p-space-lg overflow-hidden">
+<!-- Architectural subtle ambient circles -->
+<div class="absolute -top-32 -left-28 w-96 h-96 rounded-full bg-secondary-container/5 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-36 -right-20 w-[420px] h-[420px] rounded-full bg-on-tertiary-container/5 blur-3xl pointer-events-none"></div>
+<!-- Micro watermark telemetry background -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.02]">
+<svg class="text-primary" fill="none" height="680" stroke="currentColor" stroke-width="0.75" viewbox="0 0 24 24" width="680">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07L19.07 4.93"></path>
+</svg>
+</div>
+<!-- Main Authentication Container -->
+<div class="relative w-full max-w-[440px] z-10">
+<!-- Surface Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-xl p-space-xl sm:p-8 flex flex-col transition-all">
+<!-- Top Brand Emblem -->
+<div class="flex items-center justify-between pb-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center shadow-sm">
+<span class="text-on-primary font-headline-sm text-headline-sm font-bold tracking-tight">C</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-primary">ConnectX</span>
+<!-- Subtle Tricolour Bar Element -->
+<div class="flex flex-col gap-[2px] w-3.5 py-0.5">
+<span class="h-[2px] w-full rounded-full bg-[#f58220]"></span>
+<span class="h-[2px] w-full rounded-full bg-surface-container-high shadow-xs"></span>
+<span class="h-[2px] w-full rounded-full bg-[#138808]"></span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest text-[9px] -mt-0.5">Sovereign Mesh</span>
+</div>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-container-low text-on-surface-variant font-code-sm text-code-sm text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#138808]"></span>
+<span>node-in-delhi</span>
+</div>
+</div>
+<!-- Heading & Subtitle -->
+<div class="mt-space-xs mb-space-lg">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight font-semibold">Welcome back</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Log in to continue your conversations.</p>
+</div>
+<!-- Inline Alert / Session Notification (Graceful notification state) -->
+<div class="hidden mb-space-md p-space-sm rounded-lg bg-surface-container-high text-on-surface font-body-sm text-body-sm flex items-start gap-2" id="status-banner">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">verified_user</span>
+<div class="flex-1">
+<p class="font-label-md text-label-md text-primary">Identity Verified</p>
+<p class="text-on-surface-variant text-[11px]">Secured via localized dual-key peer architecture.</p>
+</div>
+</div>
+<!-- Authentication Form -->
+<form class="flex flex-col gap-space-md" id="loginForm" onsubmit="event.preventDefault(); handleLoginSubmit();">
+<!-- Field 1: Identifier -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface font-medium" for="identifier">Username or Email</label>
+<span class="font-code-sm text-code-sm text-[11px] text-on-surface-variant">SSO / Mesh ID</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[18px] pointer-events-none">alternate_email</span>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-3 py-2.5 rounded-lg shadow-sm placeholder:text-on-surface-variant/60 focus:bg-surface-container-lowest focus:outline-none transition-all" id="identifier" placeholder="Enter your username or email" required="" type="text" value="arjun.mehta@peer.delhi.cx"/>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[11px] pl-1" id="identifier-hint">Authorized for Indian National Gateway &amp; Sovereign Nodes</span>
+</div>
+<!-- Field 2: Password with visibility switch -->
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-surface font-medium" for="password">Password</label>
+<span class="font-code-sm text-code-sm text-[11px] text-on-surface-variant">E2EE Protocol</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[18px] pointer-events-none">lock</span>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md pl-10 pr-10 py-2.5 rounded-lg shadow-sm placeholder:text-on-surface-variant/60 focus:outline-none transition-all" id="password" placeholder="Enter your password" required="" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-2.5 p-1 rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors focus:outline-none" id="togglePasswordBtn" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-[18px]" id="eyeIcon">visibility</span>
+</button>
+</div>
+<!-- Clean error demo state (interactive toggle demo below) -->
+<div class="hidden items-center gap-1 text-error text-[11px] font-body-sm pl-1 pt-0.5" id="passwordError">
+<span class="material-symbols-outlined text-[14px]">error</span>
+<span>Authentication key mismatch. Please check your credentials.</span>
+</div>
+</div>
+<!-- Utility Row: Remember Me & Forgot Password -->
+<div class="flex items-center justify-between pt-1">
+<label class="flex items-center gap-2 cursor-pointer select-none">
+<input checked="" class="w-4 h-4 rounded bg-surface-container text-primary focus:ring-0 focus:outline-none cursor-pointer" id="remember" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors">Remember me</span>
+</label>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors underline-offset-4 hover:underline" href="#">
+              Forgot password?
+            </a>
+</div>
+<!-- Primary CTA Button (Ashoka Chakra Navy: primary-container / deep navy with crisp white typography) -->
+<div class="pt-2">
+<button class="w-full h-11 bg-[#000080] hover:bg-[#000066] active:bg-[#00004d] text-[#ffffff] font-headline-sm text-headline-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group cursor-pointer" id="submitButton" type="submit">
+<span>Log In</span>
+<span class="material-symbols-outlined text-[18px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+</button>
+</div>
+<!-- Fast Hardware Security Key / Passkey Option -->
+<div class="relative flex items-center justify-center my-1">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full bg-surface-container-high h-[1px]"></div>
+</div>
+<span class="relative bg-surface-container-lowest px-3 font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant text-[10px]">or peer authenticators</span>
+</div>
+<button class="w-full h-10 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 hover:shadow" onclick="simulatePasskey()" type="button">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">passkey</span>
+<span>Authenticate with FIDO2 / Passkey</span>
+</button>
+</form>
+<!-- Footer Sign-up link with Saffron Accent -->
+<div class="mt-space-xl pt-space-md bg-surface-container-low -mx-space-xl -mb-space-xl sm:-mx-8 sm:-mb-8 p-space-md sm:px-8 rounded-b-xl flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Don't have an account?</span>
+<a class="font-headline-sm text-headline-sm font-semibold text-[#f58220] hover:text-[#d96e14] transition-colors flex items-center gap-1 group" href="#">
+<span>Sign Up</span>
+<span class="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-0.5">chevron_right</span>
+</a>
+</div>
+</div>
+<!-- Trust Badges & Sovereign Digital Security Footer -->
+<div class="mt-space-lg flex flex-col items-center gap-2">
+<div class="flex items-center gap-space-md text-on-surface-variant font-label-sm text-label-sm opacity-80">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-[#138808]">shield</span>
+            256-bit Post-Quantum Cryptography
+          </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock_clock</span>
+            Zero Sovereign Logging
+          </span>
+</div>
+<!-- Toggle button to review Error/Validation UI state -->
+<button class="font-code-sm text-code-sm text-on-surface-variant hover:text-primary transition-colors text-[11px] underline decoration-dotted" onclick="toggleErrorDemo()" type="button">
+          [Demo: toggle error state preview]
+        </button>
+</div>
+</div>
+</div>
+<script>
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('password');
+      const eyeIcon = document.getElementById('eyeIcon');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.textContent = 'visibility_off';
+      } else {
+        passwordInput.type = 'password';
+        eyeIcon.textContent = 'visibility';
+      }
+    }
+
+    function toggleErrorDemo() {
+      const errorDiv = document.getElementById('passwordError');
+      const passwordInput = document.getElementById('password');
+      const isHidden = errorDiv.classList.contains('hidden');
+      
+      if (isHidden) {
+        errorDiv.classList.remove('hidden');
+        errorDiv.classList.add('flex');
+        passwordInput.classList.add('bg-error-container/20');
+        passwordInput.focus();
+      } else {
+        errorDiv.classList.add('hidden');
+        errorDiv.classList.remove('flex');
+        passwordInput.classList.remove('bg-error-container/20');
+      }
+    }
+
+    function simulatePasskey() {
+      const banner = document.getElementById('status-banner');
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 4000);
+    }
+
+    function handleLoginSubmit() {
+      const btn = document.getElementById('submitButton');
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = `<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Verifying Node Keys...</span>`;
+      btn.disabled = true;
+      
+      setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        const banner = document.getElementById('status-banner');
+        banner.classList.remove('hidden');
+      }, 900);
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-low py-space-xl"><div class="w-full px-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md text-on-surface-variant font-body-sm text-body-sm"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-primary">ConnectX</span><span class="text-outline">•</span><span>Engineered for Sovereign Digital Collaboration</span></div><div>© 2025 ConnectX Platform. All rights reserved.</div></div></footer></body></html>

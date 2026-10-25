@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+frontend/dist/
+dist/
+backend/*.exe
+backend/*.o
+backend/src/*.o
+backend/tests/*.o
+*.obj
+
+# Databases
+*.db
+*.db-wal
+*.db-shm
+test_connectx.db
+
+# Environment and local configs
+.env
+.env.local
+frontend/.env
+frontend/.env.local
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Antigravity artifacts
+.gemini/

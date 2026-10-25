@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface": "#1a1c1b", "outline": "#76767e", "inverse-primary": "#bfc5e4", "surface": "#f9f9f6", "on-error-container": "#93000a", "on-surface-variant": "#46464d", "on-primary-fixed-variant": "#3f465f", "error": "#ba1a1a", "inverse-on-surface": "#f1f1ee", "on-tertiary-fixed-variant": "#723600", "secondary-fixed": "#dde1ff", "surface-dim": "#dadad7", "surface-container-lowest": "#ffffff", "secondary-container": "#4b69ea", "on-primary-container": "#7c839f", "primary": "#000000", "on-primary": "#ffffff", "primary-fixed-dim": "#bfc5e4", "primary-container": "#141a32", "outline-variant": "#c6c6ce", "on-secondary": "#ffffff", "tertiary-container": "#311300", "surface-container-low": "#f4f4f1", "surface-variant": "#e2e3e0", "on-tertiary-fixed": "#311300", "surface-container-highest": "#e2e3e0", "tertiary-fixed-dim": "#ffb786", "on-background": "#1a1c1b", "on-tertiary": "#ffffff", "on-secondary-fixed": "#001355", "background": "#f9f9f6", "tertiary": "#000000", "on-secondary-fixed-variant": "#0736ba", "inverse-surface": "#2f312f", "primary-fixed": "dce1ff", "on-secondary-container": "#fffbff", "on-tertiary-container": "#ce6700", "surface-container-high": "#e8e8e5" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-md": "0.75rem", "margin": "1.5rem", "space-xl": "2rem", "margin-mobile": "1rem", "space-sm": "0.5rem", "gutter": "1rem", "space-lg": "1.25rem", "gutter-mobile": "0.75rem", "space-xs": "0.25rem" }, "fontFamily": { "headline-lg-mobile": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "code-sm": ["JetBrains Mono"], "body-md": ["Inter"], "display-lg-mobile": ["Inter"], "label-sm": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Inter"], "headline-sm": ["Inter"], "display-lg": ["Inter"], "body-sm": ["Inter"] }, "fontSize": { "headline-lg-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600"}], "headline-md": ["18px", {"lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600"}], "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}], "code-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}], "body-md": ["13px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}], "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}], "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600"}], "body-lg": ["15px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400"}], "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}], "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}], "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}], "body-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}] } } } }</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; background-color: #f9f9f6; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.03)]"><div class="h-16 px-margin-mobile flex items-center justify-between"><div class="flex items-center gap-space-xs"><button class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-secondary rounded-full active:bg-surface-variant transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[20px]">arrow_back</span></button><img alt="ConnectX Logo" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VVGSe4Piiz4Ph79S7-_8ky1-BFNKQbkCyvvufWoUiTeeq2D1FS0n0sT5fia1OMl_uQY3fvXfO61Vd2xc75PAARJRE3iq7qu3Gk3PhWKloUkBFhbPuArPt1TDX8MVGMwZwUYoOYamhj63IJQs3RLCTWNDrxy0XBrCKSOnQobo25eAADGslpZHlRu8G5a9rQJIwWJJikoLPnGe8ef6lu_8l0HbNe6IkfMsY3w-alCYGoVer8I79-32dKrQ"/><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight ml-space-xs truncate">Conversation View</h1></div><div class="flex items-center gap-space-sm"><div class="w-11 h-11 flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhZPoiSgCebCltMq2-21jUVXmX108YbkjI0D4rkeCBB4iHXCxw-3vKzDI5-EyG4XEWXhktWBja4tPKRbOydjEzUEta3UTN7LLaCQRm803NB6HcmFFBZ69p6SvRn_C6oOBn3KH33Mg4SdibaBP_aAqs0FzsNga2rYh_oFbzKOoQ2Tr8XjXROKYpJH1UY6k3qZ4ofsnVCEk-JOUzvhO9i5NMzRJGJ5iksaQwwOzRkt4K8s4kMxU7-ouQ"/></div></div></div><div class="w-full h-[2px] flex"><div class="w-1/3 h-full bg-[#FF9933]"></div><div class="w-1/3 h-full bg-[#FFFFFF]"></div><div class="w-1/3 h-full bg-[#138808]"></div></div></header><main class="flex flex-col relative w-full pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full pb-safe">
+<!-- Pinned Conversation Sub-header with Peer Telemetry -->
+<div class="sticky top-0 z-40 bg-surface/90 backdrop-blur-md px-margin-mobile py-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative shrink-0">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Close up professional portrait of Aarav Sharma, a young South Asian software engineer with modern glasses and focused expression, cinematic warm lighting, clean studio background, highly detailed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPaL_I_nGropIT8BFYRR8EUWtUeSoTrPBEoUUT9ER9NIf4zxhT5Kyd36CAxZyYjERvCqgb7KjCnOyo-kUBvbWh7QbDt96qlGlzSOuzWVxQyzgSfRdw_fblP6-R8dtpaHQSbaBeKbenPCT_UWVxA1mSaqOpztOLL8a16sa_JVxOK0LtsSKGur9bhRctCuVjHAyeUOAk_LeBz2-gDAcBvGNQksN9HqL-bNoBQ1kfZcbZM_J9sXXRn9jF"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#138808] ring-2 ring-surface animate-pulse" title="Active Socket"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Aarav Sharma</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-[#138808]/10 text-[#138808] shrink-0">
+            TLS 1.3
+          </span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm truncate">
+<span class="w-1.5 h-1.5 rounded-full bg-[#138808]"></span>
+<span class="truncate">Online • C++ Client Active</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface shrink-0">
+<button aria-label="Audio Call" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+<button aria-label="Video Call" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">videocam</span>
+</button>
+<button aria-label="Options" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Message Stream Container -->
+<div class="flex flex-col px-margin-mobile py-space-md space-y-space-md min-w-0" id="message-canvas">
+<!-- System Event: Session Handshake Pill -->
+<div class="flex items-center justify-center my-space-xs">
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low shadow-sm">
+<div class="w-4 h-4 rounded-full flex items-center justify-center bg-gradient-to-b from-[#FF9933] via-white to-[#138808] p-[1px]">
+<div class="w-full h-full bg-surface-container-lowest rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-[#0A1128]" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant tracking-normal">Encrypted direct session established</span>
+<span class="text-[9px] font-code-sm text-on-surface-variant/70 uppercase">ECDH-P256</span>
+</div>
+</div>
+<!-- Timeline Marker -->
+<div class="flex items-center justify-center">
+<span class="text-[11px] font-label-md text-on-surface-variant/80 px-2.5 py-0.5 rounded-full bg-surface-container">Today</span>
+</div>
+<!-- Incoming Message 1 -->
+<div class="flex flex-col items-start max-w-[85%] self-start group">
+<div class="relative bg-[#F4F5F2] text-[#202124] px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm transition-transform active:scale-[0.99]">
+<p class="font-body-md text-body-md select-text">Hey! Have you started the project?</p>
+</div>
+<div class="flex items-center gap-1.5 mt-1 ml-1 text-on-surface-variant/70">
+<span class="font-label-sm text-label-sm">10:14 AM</span>
+</div>
+</div>
+<!-- Outgoing Message 1 -->
+<div class="flex flex-col items-end max-w-[85%] self-end group">
+<div class="relative bg-[#000080] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+<p class="font-body-md text-body-md select-text">Yes, I'm working on ConnectX.</p>
+</div>
+<div class="flex items-center gap-1 mt-1 mr-1 text-on-surface-variant/70">
+<span class="font-label-sm text-label-sm">10:15 AM</span>
+<span class="material-symbols-outlined text-[14px] text-secondary-container" style="font-variation-settings: 'FILL' 1;">done_all</span>
+</div>
+</div>
+<!-- Incoming Message 2 -->
+<div class="flex flex-col items-start max-w-[85%] self-start group">
+<div class="relative bg-[#F4F5F2] text-[#202124] px-4 py-2.5 rounded-2xl rounded-tl-sm shadow-sm">
+<p class="font-body-md text-body-md select-text">Can we test it together? I just compiled the multi-client server.</p>
+</div>
+<div class="flex items-center gap-1.5 mt-1 ml-1 text-on-surface-variant/70">
+<span class="font-label-sm text-label-sm">10:16 AM</span>
+</div>
+</div>
+<!-- Outgoing Message 2 with Telemetry Snippet -->
+<div class="flex flex-col items-end max-w-[85%] self-end group">
+<div class="relative bg-[#000080] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm space-y-2">
+<p class="font-body-md text-body-md select-text">Sure, I'll send you the link. It's connected to localhost:8080.</p>
+<div class="bg-[#050914] rounded-lg px-2.5 py-1.5 flex items-center justify-between gap-3 text-left">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="w-1.5 h-1.5 rounded-full bg-[#138808]"></span>
+<span class="font-code-sm text-code-sm text-inverse-on-surface truncate">ws://localhost:8080/sync</span>
+</div>
+<span class="font-label-sm text-label-sm text-[#FF9933] shrink-0 font-mono">PORT OPEN</span>
+</div>
+</div>
+<div class="flex items-center gap-1 mt-1 mr-1 text-on-surface-variant/70">
+<span class="font-label-sm text-label-sm">10:17 AM</span>
+<span class="material-symbols-outlined text-[14px] text-secondary-container" style="font-variation-settings: 'FILL' 1;">done_all</span>
+</div>
+</div>
+<!-- Peer Active Status Card (Delight Bento Component) -->
+<div class="w-full bg-surface-container-low rounded-xl p-space-sm flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center shrink-0 text-on-surface">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface truncate">Daemon: connectx-relay.service</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant truncate">0.2ms latency • 2 active nodes</span>
+</div>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-[#138808]/10 text-[#138808] font-label-sm text-label-sm font-semibold shrink-0">
+        SYNCED
+      </span>
+</div>
+<!-- Animated Typing Indicator Bubble -->
+<div class="flex flex-col items-start self-start" id="typing-indicator">
+<div class="inline-flex items-center gap-2 bg-[#F4F5F2] px-3.5 py-2 rounded-2xl rounded-tl-sm shadow-sm">
+<div class="flex items-center space-x-1">
+<span class="w-1.5 h-1.5 bg-[#000080]/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+<span class="w-1.5 h-1.5 bg-[#000080]/60 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+<span class="w-1.5 h-1.5 bg-[#000080]/60 rounded-full animate-bounce"></span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Aarav is typing...</span>
+</div>
+</div>
+</div>
+<!-- Bottom Spacer to prevent overlap with sticky composer -->
+<div class="h-28 w-full"></div>
+<!-- Anchored Real-time Message Composer -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl px-margin-mobile pt-space-xs pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+<!-- Quick Command Bar -->
+<div class="flex items-center gap-2 mb-space-xs overflow-x-auto no-scrollbar py-0.5">
+<button class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-variant transition-colors shrink-0">
+<span class="material-symbols-outlined text-[13px] text-[#FF9933]">bolt</span>
+<span>Ping :8080</span>
+</button>
+<button class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-variant transition-colors shrink-0">
+<span class="material-symbols-outlined text-[13px] text-secondary">code</span>
+<span>Share Git Branch</span>
+</button>
+<button class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-variant transition-colors shrink-0">
+<span class="material-symbols-outlined text-[13px] text-[#138808]">verified</span>
+<span>Request Verify</span>
+</button>
+</div>
+<!-- Active Text Composition Field -->
+<div class="flex items-end gap-space-xs bg-surface-container-lowest rounded-2xl p-1.5 shadow-sm">
+<!-- Attachment Trigger -->
+<button aria-label="Add attachment" class="w-10 h-10 flex items-center justify-center rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors shrink-0 active:scale-95" id="attachment-btn" onclick="toggleAttachmentMenu()">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</button>
+<!-- Multiline Flexible Input Area -->
+<div class="relative flex-1 min-w-0 flex items-center">
+<textarea class="w-full bg-transparent resize-none font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none max-h-32 py-2 px-1 leading-5" id="chat-input" oninput="handleInputAutoGrow(this)" onkeydown="handleKeyDown(event)" placeholder="Type a message..." rows="1"></textarea>
+</div>
+<!-- Emoji / Snippet Trigger -->
+<button aria-label="Insert expression" class="w-10 h-10 flex items-center justify-center rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors shrink-0 active:scale-95">
+<span class="material-symbols-outlined text-[20px]">mood</span>
+</button>
+<!-- Dynamic Send Button with Saffron/Navy Delight state -->
+<button aria-label="Send message" class="relative overflow-hidden w-10 h-10 flex items-center justify-center rounded-xl bg-[#000080] text-white hover:bg-[#3B5BDB] active:scale-95 shadow-md transition-all shrink-0 group focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50" id="send-button" onclick="dispatchUserMessage()">
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" style="font-variation-settings: 'FILL' 1;">send</span>
+<!-- Subtle saffron energy glow ring on hover/press -->
+<span class="absolute inset-0 rounded-xl bg-gradient-to-tr from-[#FF9933]/0 via-transparent to-[#FF9933]/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></span>
+</button>
+</div>
+<!-- Subtle Desktop/Tablet Hint line -->
+<div class="flex items-center justify-between px-2 pt-1 pb-1 text-on-surface-variant/60 font-label-sm text-label-sm">
+<span class="flex items-center gap-1 text-[10px]">
+<span class="w-1 h-1 rounded-full bg-[#138808]"></span> Direct peer socket active
+      </span>
+<span class="text-[10px]">Press <kbd class="px-1 py-0.2 bg-surface-container rounded text-on-surface">Enter</kbd> to send</span>
+</div>
+</div>
+</div>
+<script>
+  function handleInputAutoGrow(element) {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      dispatchUserMessage();
+    }
+  }
+
+  function dispatchUserMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const canvas = document.getElementById('message-canvas');
+    const typingIndicator = document.getElementById('typing-indicator');
+
+    // Create current time stamp
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const timeStr = `${hours}:${minutes} ${ampm}`;
+
+    // Build outbound message card
+    const msgNode = document.createElement('div');
+    msgNode.className = 'flex flex-col items-end max-w-[85%] self-end group transition-opacity duration-200';
+    msgNode.innerHTML = `
+      <div class="relative bg-[#000080] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-sm">
+        <p class="font-body-md text-body-md select-text">${escapeHtml(text)}</p>
+      </div>
+      <div class="flex items-center gap-1 mt-1 mr-1 text-on-surface-variant/70">
+        <span class="font-label-sm text-label-sm">${timeStr}</span>
+        <span class="material-symbols-outlined text-[14px] text-secondary-container" style="font-variation-settings: 'FILL' 1;">done</span>
+      </div>
+    `;
+
+    canvas.insertBefore(msgNode, typingIndicator);
+
+    // Reset textarea
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Scroll softly to bottom
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+
+  function escapeHtml(string) {
+    return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '=': '&#x3D;',
+        '`': '&#x60;'
+      }[s];
+    });
+  }
+
+  function toggleAttachmentMenu() {
+    const btn = document.getElementById('attachment-btn');
+    btn.classList.add('rotate-45');
+    setTimeout(() => btn.classList.remove('rotate-45'), 300);
+  }
+</script></main></body></html>

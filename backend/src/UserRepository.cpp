@@ -1,0 +1,136 @@
+#include "UserRepository.hpp"
+#include <iostream>
+
+namespace connectx {
+
+SqliteUserRepository::SqliteUserRepository(Database& db) : db_(db) {}
+
+User SqliteUserRepository::extractUser(Statement& stmt) {
+    User u;
+    u.id = stmt.getColumnInt64(0);
+    u.username = stmt.getColumnText(1);
+    u.email = stmt.getColumnText(2);
+    u.fullName = stmt.getColumnText(3);
+    u.passwordHash = stmt.getColumnText(4);
+    u.salt = stmt.getColumnText(5);
+    u.createdAt = stmt.getColumnText(6);
+    u.updatedAt = stmt.getColumnText(7);
+    return u;
+}
+
+std::optional<User> SqliteUserRepository::findById(int64_t id) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+                            "FROM users WHERE id = ? LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return std::nullopt;
+
+    stmt.bindInt64(1, id);
+    if (stmt.step() == SQLITE_ROW) {
+        return extractUser(stmt);
+    }
+    return std::nullopt;
+}
+
+std::optional<User> SqliteUserRepository::findByUsername(const std::string& username) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+                            "FROM users WHERE username = ? COLLATE NOCASE LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return std::nullopt;
+
+    stmt.bindText(1, username);
+    if (stmt.step() == SQLITE_ROW) {
+        return extractUser(stmt);
+    }
+    return std::nullopt;
+}
+
+std::optional<User> SqliteUserRepository::findByEmail(const std::string& email) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+                            "FROM users WHERE email = ? COLLATE NOCASE LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return std::nullopt;
+
+    stmt.bindText(1, email);
+    if (stmt.step() == SQLITE_ROW) {
+        return extractUser(stmt);
+    }
+    return std::nullopt;
+}
+
+std::optional<User> SqliteUserRepository::findByUsernameOrEmail(const std::string& identifier) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+                            "FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return std::nullopt;
+
+    stmt.bindText(1, identifier);
+    stmt.bindText(2, identifier);
+    if (stmt.step() == SQLITE_ROW) {
+        return extractUser(stmt);
+    }
+    return std::nullopt;
+}
+
+bool SqliteUserRepository::usernameExists(const std::string& username) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT 1 FROM users WHERE username = ? COLLATE NOCASE LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindText(1, username);
+    return stmt.step() == SQLITE_ROW;
+}
+
+bool SqliteUserRepository::emailExists(const std::string& email) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT 1 FROM users WHERE email = ? COLLATE NOCASE LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindText(1, email);
+    return stmt.step() == SQLITE_ROW;
+}
+
+std::optional<User> SqliteUserRepository::create(const std::string& username,
+                                                  const std::string& email,
+                                                  const std::string& fullName,
+                                                  const std::string& passwordHash,
+                                                  const std::string& salt) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "INSERT INTO users (username, email, full_name, password_hash, salt, created_at, updated_at) "
+                            "VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'));";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return std::nullopt;
+
+    stmt.bindText(1, username);
+    stmt.bindText(2, email);
+    stmt.bindText(3, fullName);
+    stmt.bindText(4, passwordHash);
+    stmt.bindText(5, salt);
+
+    if (stmt.step() != SQLITE_DONE) {
+        std::cerr << "[UserRepository] Failed to insert user: " << sqlite3_errmsg(db_.getHandle()) << std::endl;
+        return std::nullopt;
+    }
+
+    int64_t newId = sqlite3_last_insert_rowid(db_.getHandle());
+
+    // Fetch the newly inserted user
+    const std::string selectSql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+                                  "FROM users WHERE id = ? LIMIT 1;";
+    Statement selectStmt(db_.getHandle(), selectSql);
+    if (selectStmt.isValid()) {
+        selectStmt.bindInt64(1, newId);
+        if (selectStmt.step() == SQLITE_ROW) {
+            return extractUser(selectStmt);
+        }
+    }
+
+    return std::nullopt;
+}
+
+} // namespace connectx

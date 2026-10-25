@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-background": "#1a1c1b",
+          "background": "#f9f9f6",
+          "surface-container": "#eeeeeb",
+          "on-secondary-container": "#fffbff",
+          "surface-container-high": "#e8e8e5",
+          "on-tertiary-fixed": "#311300",
+          "secondary": "#2d4fcf",
+          "surface-tint": "#575d78",
+          "surface-bright": "#f9f9f6",
+          "on-primary": "#ffffff",
+          "primary-fixed": "#dce1ff",
+          "inverse-on-surface": "#f1f1ee",
+          "on-tertiary": "#ffffff",
+          "secondary-container": "#4b69ea",
+          "surface-dim": "#dadad7",
+          "surface-container-lowest": "#ffffff",
+          "error": "#ba1a1a",
+          "secondary-fixed": "#dde1ff",
+          "on-error-container": "#93000a",
+          "on-secondary": "#ffffff",
+          "primary": "#000000",
+          "tertiary": "#000000",
+          "on-primary-fixed": "#141a32",
+          "on-error": "#ffffff",
+          "on-surface-variant": "#46464d",
+          "primary-fixed-dim": "#bfc5e4",
+          "inverse-primary": "#bfc5e4",
+          "outline": "#76767e",
+          "surface-variant": "#e2e3e0",
+          "secondary-fixed-dim": "#b8c3ff",
+          "on-primary-container": "#7c839f",
+          "outline-variant": "#c6c6ce",
+          "on-secondary-fixed": "#001355",
+          "primary-container": "#141a32",
+          "on-primary-fixed-variant": "#3f465f",
+          "on-tertiary-container": "#ce6700",
+          "tertiary-fixed-dim": "#ffb786",
+          "surface": "#f9f9f6",
+          "surface-container-highest": "#e2e3e0",
+          "surface-container-low": "#f4f4f1",
+          "on-surface": "#1a1c1b",
+          "on-tertiary-fixed-variant": "#723600",
+          "tertiary-container": "#311300",
+          "inverse-surface": "#2f312f",
+          "error-container": "#ffdad6",
+          "on-secondary-fixed-variant": "#0736ba",
+          "tertiary-fixed": "#ffdcc6"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-md": "0.75rem",
+          "space-lg": "1.25rem",
+          "space-sm": "0.5rem",
+          "margin": "1.5rem",
+          "gutter-mobile": "0.75rem",
+          "margin-mobile": "1rem",
+          "space-xl": "2rem",
+          "gutter": "1rem",
+          "space-xs": "0.25rem"
+        },
+        "fontFamily": {
+          "code-sm": ["JetBrains Mono"],
+          "display-lg": ["Inter"],
+          "headline-lg": ["Inter"],
+          "display-lg-mobile": ["Inter"],
+          "label-md": ["Inter"],
+          "body-md": ["Inter"],
+          "body-lg": ["Inter"],
+          "headline-md": ["Inter"],
+          "body-sm": ["Inter"],
+          "label-sm": ["Inter"],
+          "headline-sm": ["Inter"],
+          "headline-lg-mobile": ["Inter"]
+        },
+        "fontSize": {
+          "code-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "600"}],
+          "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+          "display-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+          "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+          "body-md": ["13px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "body-lg": ["15px", {"lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400"}],
+          "headline-md": ["18px", {"lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+          "body-sm": ["12px", {"lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400"}],
+          "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+          "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "headline-lg-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600"}]
+        }
+      }
+    }
+  }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-[68px] bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col items-center justify-between py-space-lg"><div class="flex flex-col items-center w-full gap-space-lg"><div class="flex flex-col items-center gap-1 group cursor-pointer"><div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center"><span class="text-on-primary font-headline-sm text-headline-sm font-bold">CX</span></div><div class="flex gap-[2px] w-6 pt-1"><span class="h-1 flex-1 rounded-full bg-[#f58220]"></span><span class="h-1 flex-1 rounded-full bg-[#ffffff] shadow-[0_0_1px_rgba(0,0,0,0.25)]"></span><span class="h-1 flex-1 rounded-full bg-[#138808]"></span></div></div><nav class="flex flex-col items-center gap-space-sm w-full px-space-xs" data-active-classes="bg-surface-container-high text-on-surface font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-[#f58220]"><a class="relative w-12 h-12 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="chats" href="#"><span class="material-symbols-outlined text-[22px]">forum</span></a><a class="relative w-12 h-12 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="find-people" href="#"><span class="material-symbols-outlined text-[22px]">group_add</span></a><a class="relative w-12 h-12 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="settings" href="#"><span class="material-symbols-outlined text-[22px]">tune</span></a></nav></div><div class="flex flex-col items-center gap-space-md"><div class="w-2 h-2 rounded-full bg-[#138808]"></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></aside><div class="pl-[68px]"><header class="fixed top-0 left-[68px] right-0 h-14 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-md"><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Workspace</span><span class="text-outline">•</span><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Secure Mesh</span></div><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs px-space-sm py-1 bg-surface-container rounded-lg"><span class="w-2 h-2 rounded-full bg-[#138808]"></span><span class="font-code-sm text-code-sm text-on-surface-variant">DEL-NODE-01</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="w-full pt-14 bg-surface min-h-screen"><div class="flex flex-col w-full h-[calc(100vh-3.5rem)] overflow-hidden">
+<div class="flex flex-1 w-full h-full overflow-hidden">
+<!-- Central Directory Column -->
+<section class="flex-1 flex flex-col min-w-0 bg-surface">
+<!-- Search & Filters Header Bar -->
+<div class="p-space-lg flex flex-col gap-space-md bg-surface-container-low shadow-sm">
+<div class="flex items-end justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant">Peer Network</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Find People</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Search and discover registered peers on the ConnectX network.</p>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs font-code-sm text-code-sm text-on-surface-variant bg-surface px-space-sm py-1 rounded-lg shadow-sm">
+<span class="inline-block w-2 h-2 rounded-full bg-[#138808]"></span>
+<span>48 peers active now</span>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-space-md top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-surface text-on-surface font-body-md text-body-md pl-11 pr-space-md py-space-sm rounded-xl shadow-sm focus:outline-none focus:bg-surface-container-lowest transition-all placeholder:text-on-surface-variant" id="peer-search" placeholder="Search by name or username..." type="text"/>
+<button class="hidden absolute right-space-md top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" id="clear-search">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<!-- Filter Chips -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1" id="filter-container">
+<button class="filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-primary text-on-primary transition-all" data-filter="all">All Users</button>
+<button class="filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-surface text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-1.5 shadow-sm" data-filter="active">
+<span class="w-1.5 h-1.5 rounded-full bg-[#138808]"></span> Active Now
+          </button>
+<button class="filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-surface text-on-surface-variant hover:bg-surface-container-high transition-all shadow-sm" data-filter="cse">Computer Science</button>
+<button class="filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-surface text-on-surface-variant hover:bg-surface-container-high transition-all shadow-sm" data-filter="recent">Recent</button>
+</div>
+</div>
+<!-- Peer Directory List -->
+<div class="flex-1 overflow-y-auto p-space-lg space-y-space-sm" id="directory-list">
+<!-- Peer Row 1: Vikram Malhotra -->
+<div class="peer-row group flex items-center justify-between p-space-md bg-surface-container-lowest hover:bg-surface-container-low rounded-xl cursor-pointer shadow-sm transition-all relative overflow-hidden" data-active="true" data-dept="cse" data-peer-id="vikram" onclick="selectPeer('vikram')">
+<div class="peer-active-bar absolute left-0 top-2 bottom-2 w-1 bg-[#f58220] rounded-r-full opacity-100"></div>
+<div class="flex items-center gap-space-md min-w-0 pl-space-xs">
+<div class="relative flex-shrink-0">
+<img class="w-11 h-11 rounded-full object-cover shadow-sm" data-alt="Portrait photo of Vikram Malhotra, an Indian male college engineering student in his early twenties smiling warmly in a high-tech modern university library, ambient daylight, clean contemporary style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD32MMTqpXyWw4Jcj_uZaPzdfOGnw8SdIEMN0XORraaKyRELFhLTatEi29HFNvMRhqOfXWuVtErmzTFbZbRlq02ONKXJ8XCiz6perVQZSPBYH7iHnSWmhQZSECTQ2v74W0hamZPWaR63FRPFr0Pt5DVb5tofom80Ei05wmfXs6Bfdsk59SbO736MvkNd-IKmkcxkZL4BOwrSFTjT2FH7qUOC6fDe9wTS5pwdu-hgyHjT3OfOurITBFA"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#138808] rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Vikram Malhotra</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">@vikram_m</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium">3rd Year CSE</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden md:inline">Distributed Systems • AI Club</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-surface-container-highest hover:text-on-surface transition-all flex items-center gap-1 shadow-sm" onclick="event.stopPropagation(); startDirectMessage('Vikram Malhotra', '@vikram_m')">
+<span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+<span>Message</span>
+</button>
+</div>
+</div>
+<!-- Peer Row 2: Ananya Sharma -->
+<div class="peer-row group flex items-center justify-between p-space-md bg-surface-container-lowest hover:bg-surface-container-low rounded-xl cursor-pointer shadow-sm transition-all relative overflow-hidden" data-active="true" data-dept="cse" data-peer-id="ananya" onclick="selectPeer('ananya')">
+<div class="peer-active-bar absolute left-0 top-2 bottom-2 w-1 bg-[#f58220] rounded-r-full opacity-0"></div>
+<div class="flex items-center gap-space-md min-w-0 pl-space-xs">
+<div class="relative flex-shrink-0">
+<img class="w-11 h-11 rounded-full object-cover shadow-sm" data-alt="Close-up portrait of Ananya Sharma, a female Indian tech student with hair tied back and glasses, sitting in an airy design lab with sleek laptops, minimal warm lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFgmSYIfksV86vvZP5JLIOtNtJ-sT9P4U6h744qvrYZjy_mMUNzpR2voiPqU_kyitekc4Iy8scANdEsXHVd9yTEIuHxv0Czq9JZX1nP0CfE0-D312hN2UvDq0YTGZFZVf4-6LQttxjtln1CLV2XCg8nApzwiXkm_fKpuYdQbCSpgsdfe7_A3J4ZvjdfOGUXVNUqfu-oI-jcyeZMr1P1A5aXHpoioCsPZLj89bXhpu1Wv1LJp4fI7iL"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#138808] rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Ananya Sharma</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">@ananyash</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium">4th Year CSE</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden md:inline">Cloud Native • Kubernetes</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-surface-container-highest hover:text-on-surface transition-all flex items-center gap-1 shadow-sm" onclick="event.stopPropagation(); startDirectMessage('Ananya Sharma', '@ananyash')">
+<span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+<span>Message</span>
+</button>
+</div>
+</div>
+<!-- Peer Row 3: Rohan Gupta -->
+<div class="peer-row group flex items-center justify-between p-space-md bg-surface-container-lowest hover:bg-surface-container-low rounded-xl cursor-pointer shadow-sm transition-all relative overflow-hidden" data-active="false" data-dept="ece" data-peer-id="rohan" onclick="selectPeer('rohan')">
+<div class="peer-active-bar absolute left-0 top-2 bottom-2 w-1 bg-[#f58220] rounded-r-full opacity-0"></div>
+<div class="flex items-center gap-space-md min-w-0 pl-space-xs">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface font-headline-sm text-headline-sm font-semibold shadow-sm">
+                RG
+              </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-outline rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Rohan Gupta</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">@r_gupta</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium">2nd Year ECE</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden md:inline">Embedded Robotics • IoT</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all flex items-center gap-1 shadow-sm" onclick="event.stopPropagation(); startDirectMessage('Rohan Gupta', '@r_gupta')">
+<span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+<span>Message</span>
+</button>
+</div>
+</div>
+<!-- Peer Row 4: Priya Sundaram -->
+<div class="peer-row group flex items-center justify-between p-space-md bg-surface-container-lowest hover:bg-surface-container-low rounded-xl cursor-pointer shadow-sm transition-all relative overflow-hidden" data-active="true" data-dept="cse" data-peer-id="priya" onclick="selectPeer('priya')">
+<div class="peer-active-bar absolute left-0 top-2 bottom-2 w-1 bg-[#f58220] rounded-r-full opacity-0"></div>
+<div class="flex items-center gap-space-md min-w-0 pl-space-xs">
+<div class="relative flex-shrink-0">
+<img class="w-11 h-11 rounded-full object-cover shadow-sm" data-alt="Portrait photograph of Priya Sundaram, a young Indian woman wearing a minimal blazer in a modern co-working tech hub with clean architectural lines and warm diffused lights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHY2dzJO-RX4izO5QTpDDc0qKuEFvwsSNiBZO5vEAt7umb6P0QALi2JffHwyiocyL2yWDyku0qdz4WIBbdNzxzw4JoAsk9n51MIyP5HyU-4qOfExyELHDfyNcDCHLsgH_HDQutHrShHX3BIoE9g3dWVFOY4Ngbg76oQb4v2maw8hv5aB7rcCEmQFLVvRkBC0r6I4xJQAfUHeqIbY-SQOzPD28vWBdHOxV_jSGtRuHjvvHcHcQyteEB"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#138808] rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Priya Sundaram</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">@priya_sun</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium">3rd Year CSE</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden md:inline">Cybersecurity &amp; Cryptography</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-surface-container-highest hover:text-on-surface transition-all flex items-center gap-1 shadow-sm" onclick="event.stopPropagation(); startDirectMessage('Priya Sundaram', '@priya_sun')">
+<span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+<span>Message</span>
+</button>
+</div>
+</div>
+<!-- Peer Row 5: Devansh Nair -->
+<div class="peer-row group flex items-center justify-between p-space-md bg-surface-container-lowest hover:bg-surface-container-low rounded-xl cursor-pointer shadow-sm transition-all relative overflow-hidden" data-active="false" data-dept="me" data-peer-id="devansh" onclick="selectPeer('devansh')">
+<div class="peer-active-bar absolute left-0 top-2 bottom-2 w-1 bg-[#f58220] rounded-r-full opacity-0"></div>
+<div class="flex items-center gap-space-md min-w-0 pl-space-xs">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-semibold shadow-sm">
+                DN
+              </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-outline rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Devansh Nair</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">@dev_nair</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium">Final Year ME</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden md:inline">Computational Fluid Dynamics</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-high text-on-surface font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all flex items-center gap-1 shadow-sm" onclick="event.stopPropagation(); startDirectMessage('Devansh Nair', '@dev_nair')">
+<span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+<span>Message</span>
+</button>
+</div>
+</div>
+<!-- Peer Row 6: Tanvi Kulkarni -->
+<div class="peer-row group flex items-center justify-between p-space-md bg-surface-container-lowest hover:bg-surface-container-low rounded-xl cursor-pointer shadow-sm transition-all relative overflow-hidden" data-active="true" data-dept="cse" data-peer-id="tanvi" onclick="selectPeer('tanvi')">
+<div class="peer-active-bar absolute left-0 top-2 bottom-2 w-1 bg-[#f58220] rounded-r-full opacity-0"></div>
+<div class="flex items-center gap-space-md min-w-0 pl-space-xs">
+<div class="relative flex-shrink-0">
+<div class="w-11 h-11 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-semibold shadow-sm">
+                TK
+              </div>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-[#138808] rounded-full ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Tanvi Kulkarni</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">@tkulkarni</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface font-medium">3rd Year CSE</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant hidden md:inline">Full-Stack &amp; Systems</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<button class="px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-surface-container-highest hover:text-on-surface transition-all flex items-center gap-1 shadow-sm" onclick="event.stopPropagation(); startDirectMessage('Tanvi Kulkarni', '@tkulkarni')">
+<span class="material-symbols-outlined text-[16px]">chat_bubble</span>
+<span>Message</span>
+</button>
+</div>
+</div>
+<!-- Empty State Container (Hidden by default) -->
+<div class="hidden flex flex-col items-center justify-center py-16 px-space-lg text-center bg-surface-container-lowest rounded-2xl shadow-sm" id="empty-state">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant mb-space-md">
+<span class="material-symbols-outlined text-[28px]">person_search</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface">No peers found</h3>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-sm mt-1">We couldn't find anyone matching your current search query or active filter. Try another keyword or reset filters.</p>
+<button class="mt-space-lg px-space-lg py-2 rounded-xl bg-surface-container-high text-on-surface font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all" id="reset-filters">
+            Reset All Filters
+          </button>
+</div>
+</div>
+</section>
+<!-- Right Profile Preview Column (360px - 400px Fixed) -->
+<aside class="w-96 flex-shrink-0 bg-surface-container-low flex flex-col overflow-y-auto hidden lg:flex shadow-sm">
+<!-- Panel Header -->
+<div class="h-14 px-space-lg flex items-center justify-between bg-surface-container shadow-sm flex-shrink-0">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Peer Details</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Preview Content -->
+<div class="p-space-lg flex flex-col gap-space-lg flex-1" id="preview-panel">
+<!-- Peer Profile Card -->
+<div class="flex flex-col items-center text-center p-space-lg bg-surface-container-lowest rounded-2xl shadow-sm relative">
+<div class="relative mb-space-md">
+<img class="w-20 h-20 rounded-full object-cover shadow-sm" data-alt="Portrait photo of Vikram Malhotra, an Indian male college engineering student in his early twenties smiling warmly in a high-tech modern university library, ambient daylight, clean contemporary style." id="detail-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTHTAHqYPisTEMxDnb8ji_y_im7GtDddUg8Q8I3jiXJa7prGF0vhJcR_lygAIdXZNg6ZGYW0MWg-fwKXC1L39pWir3yiDozWvw3rRa0ckmQZvJXXN9FaBD8gL2fqRXu8olBPrtRSDqphosF9GD6Y7G1moflEXaQcM2mLHoAtdEcahEFi4OEBHHRRTKfhM43LGKo-wlMbKtKn8IdieoRRNHZC-nLpVgs-g1_-aKVNFXZbozQP42ZQf6"/>
+<span class="absolute bottom-1 right-1 w-4 h-4 bg-[#138808] rounded-full ring-2 ring-surface-container-lowest" id="detail-status-dot"></span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold" id="detail-name">Vikram Malhotra</h2>
+<span class="font-code-sm text-code-sm text-on-surface-variant mt-0.5" id="detail-handle">@vikram_m</span>
+<div class="flex items-center gap-space-xs mt-space-sm">
+<span class="px-space-sm py-1 rounded bg-surface-container font-label-md text-label-md text-on-surface font-medium" id="detail-role">3rd Year CSE</span>
+<span class="flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-[#138808]" id="detail-status-pill">
+<span class="w-1.5 h-1.5 rounded-full bg-[#138808]"></span> Active Now
+            </span>
+</div>
+<div class="w-full mt-space-lg pt-space-md flex flex-col gap-space-sm">
+<button class="w-full py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-label-md hover:bg-surface-container-highest hover:text-on-surface transition-all flex items-center justify-center gap-2 shadow-sm" id="cta-start-conversation">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>Start Conversation</span>
+</button>
+<button class="w-full py-2 rounded-xl bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-all">
+              View Profile Record
+            </button>
+</div>
+</div>
+<!-- Mutual Network & Connections -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface font-medium">Mutual Connections</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">14 peers</span>
+</div>
+<div class="flex items-center -space-x-2 overflow-hidden py-1">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest ring-2 ring-surface-container-lowest flex items-center justify-center text-[10px] font-bold text-on-surface">AS</div>
+<div class="w-7 h-7 rounded-full bg-secondary-fixed ring-2 ring-surface-container-lowest flex items-center justify-center text-[10px] font-bold text-on-secondary-fixed">PS</div>
+<div class="w-7 h-7 rounded-full bg-tertiary-fixed ring-2 ring-surface-container-lowest flex items-center justify-center text-[10px] font-bold text-on-tertiary-fixed">RG</div>
+<div class="w-7 h-7 rounded-full bg-surface-container-high ring-2 ring-surface-container-lowest flex items-center justify-center text-[10px] text-on-surface-variant font-medium">+11</div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Connected with Ananya Sharma and Priya Sundaram</span>
+</div>
+<!-- Activity & Projects -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<span class="font-label-md text-label-md text-on-surface font-medium">Technical Specialization</span>
+<div class="flex flex-wrap gap-space-xs pt-1">
+<span class="px-space-sm py-1 rounded-lg bg-surface-container font-code-sm text-code-sm text-on-surface">Rust</span>
+<span class="px-space-sm py-1 rounded-lg bg-surface-container font-code-sm text-code-sm text-on-surface">Distributed Systems</span>
+<span class="px-space-sm py-1 rounded-lg bg-surface-container font-code-sm text-code-sm text-on-surface">Raft Consensus</span>
+<span class="px-space-sm py-1 rounded-lg bg-surface-container font-code-sm text-code-sm text-on-surface">Microservices</span>
+</div>
+</div>
+<!-- Verified Network Trust Badge -->
+<div class="p-space-md rounded-xl bg-surface-container flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-[#f58220]/15 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[#f58220] text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">ConnectX Campus Verified</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Validated student credential node.</span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+<script>
+  // Peer Database for Instant Dynamic Detail Swapping
+  const peerData = {
+    vikram: {
+      name: "Vikram Malhotra",
+      handle: "@vikram_m",
+      role: "3rd Year CSE",
+      active: true,
+      activeStatusText: "Active Now",
+      bio: "Distributed Systems • AI Club",
+      mutualCount: "14 peers",
+      mutualDesc: "Connected with Ananya Sharma and Priya Sundaram",
+      skills: ["Rust", "Distributed Systems", "Raft Consensus", "Microservices"],
+      avatarAlt: "Portrait photo of Vikram Malhotra, an Indian male college engineering student in his early twenties smiling warmly in a high-tech modern university library, ambient daylight, clean contemporary style."
+    },
+    ananya: {
+      name: "Ananya Sharma",
+      handle: "@ananyash",
+      role: "4th Year CSE",
+      active: true,
+      activeStatusText: "Active Now",
+      bio: "Cloud Native • Kubernetes",
+      mutualCount: "19 peers",
+      mutualDesc: "Connected with Vikram Malhotra and Priya Sundaram",
+      skills: ["Go", "Kubernetes", "DevOps", "gRPC", "Docker"],
+      avatarAlt: "Close-up portrait of Ananya Sharma, a female Indian tech student with hair tied back and glasses, sitting in an airy design lab with sleek laptops, minimal warm lighting."
+    },
+    rohan: {
+      name: "Rohan Gupta",
+      handle: "@r_gupta",
+      role: "2nd Year ECE",
+      active: false,
+      activeStatusText: "Offline (Last seen 2h ago)",
+      bio: "Embedded Robotics • IoT",
+      mutualCount: "6 peers",
+      mutualDesc: "Connected with Devansh Nair and Tanvi Kulkarni",
+      skills: ["C++", "RTOS", "Verilog", "ESP32", "PCB Design"],
+      avatarAlt: "Rohan Gupta avatar"
+    },
+    priya: {
+      name: "Priya Sundaram",
+      handle: "@priya_sun",
+      role: "3rd Year CSE",
+      active: true,
+      activeStatusText: "Active Now",
+      bio: "Cybersecurity & Cryptography",
+      mutualCount: "22 peers",
+      mutualDesc: "Connected with Vikram Malhotra and Ananya Sharma",
+      skills: ["Cryptography", "Zero Knowledge", "Python", "Solidity"],
+      avatarAlt: "Portrait photograph of Priya Sundaram, a young Indian woman wearing a minimal blazer in a modern co-working tech hub with clean architectural lines and warm diffused lights."
+    },
+    devansh: {
+      name: "Devansh Nair",
+      handle: "@dev_nair",
+      role: "Final Year ME",
+      active: false,
+      activeStatusText: "Offline (Last seen yesterday)",
+      bio: "Computational Fluid Dynamics",
+      mutualCount: "4 peers",
+      mutualDesc: "Connected with Rohan Gupta",
+      skills: ["OpenFOAM", "ANSYS", "Python", "Thermal Analysis"],
+      avatarAlt: "Devansh Nair avatar"
+    },
+    tanvi: {
+      name: "Tanvi Kulkarni",
+      handle: "@tkulkarni",
+      role: "3rd Year CSE",
+      active: true,
+      activeStatusText: "Active Now",
+      bio: "Full-Stack & Systems",
+      mutualCount: "11 peers",
+      mutualDesc: "Connected with Vikram Malhotra and Rohan Gupta",
+      skills: ["TypeScript", "Next.js", "PostgreSQL", "Tailwind CSS"],
+      avatarAlt: "Tanvi Kulkarni avatar"
+    }
+  };
+
+  let currentSelectedPeerId = 'vikram';
+
+  function selectPeer(peerId) {
+    currentSelectedPeerId = peerId;
+    const data = peerData[peerId];
+    if (!data) return;
+
+    // Update active highlight strip across all peer rows
+    document.querySelectorAll('.peer-row').forEach(row => {
+      const activeBar = row.querySelector('.peer-active-bar');
+      if (row.getAttribute('data-peer-id') === peerId) {
+        activeBar.classList.remove('opacity-0');
+        activeBar.classList.add('opacity-100');
+        row.classList.add('bg-surface-container-low');
+        row.classList.remove('bg-surface-container-lowest');
+      } else {
+        activeBar.classList.add('opacity-0');
+        activeBar.classList.remove('opacity-100');
+        row.classList.remove('bg-surface-container-low');
+        row.classList.add('bg-surface-container-lowest');
+      }
+    });
+
+    // Update right panel details
+    const nameEl = document.getElementById('detail-name');
+    const handleEl = document.getElementById('detail-handle');
+    const roleEl = document.getElementById('detail-role');
+    const statusPillEl = document.getElementById('detail-status-pill');
+    const statusDotEl = document.getElementById('detail-status-dot');
+
+    if (nameEl) nameEl.textContent = data.name;
+    if (handleEl) handleEl.textContent = data.handle;
+    if (roleEl) roleEl.textContent = data.role;
+
+    if (statusDotEl) {
+      if (data.active) {
+        statusDotEl.className = "absolute bottom-1 right-1 w-4 h-4 bg-[#138808] rounded-full ring-2 ring-surface-container-lowest";
+      } else {
+        statusDotEl.className = "absolute bottom-1 right-1 w-4 h-4 bg-outline rounded-full ring-2 ring-surface-container-lowest";
+      }
+    }
+
+    if (statusPillEl) {
+      if (data.active) {
+        statusPillEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-[#138808]"></span> Active Now`;
+        statusPillEl.className = "flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-[#138808]";
+      } else {
+        statusPillEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> ${data.activeStatusText}`;
+        statusPillEl.className = "flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant";
+      }
+    }
+  }
+
+  function startDirectMessage(name, handle) {
+    const ctaBtn = document.getElementById('cta-start-conversation');
+    if (ctaBtn) {
+      ctaBtn.innerHTML = `<span class="material-symbols-outlined text-[18px]">check</span><span>Opening Thread with ${name.split(' ')[0]}...</span>`;
+      setTimeout(() => {
+        ctaBtn.innerHTML = `<span class="material-symbols-outlined text-[18px]">send</span><span>Start Conversation</span>`;
+      }, 1800);
+    }
+  }
+
+  // Search and Filter Handling
+  const searchInput = document.getElementById('peer-search');
+  const clearBtn = document.getElementById('clear-search');
+  const filterChips = document.querySelectorAll('.filter-chip');
+  const peerRows = document.querySelectorAll('.peer-row');
+  const emptyState = document.getElementById('empty-state');
+  const resetBtn = document.getElementById('reset-filters');
+
+  let activeFilter = 'all';
+
+  function applyFilters() {
+    const query = searchInput.value.trim().toLowerCase();
+    let visibleCount = 0;
+
+    peerRows.forEach(row => {
+      const peerId = row.getAttribute('data-peer-id');
+      const data = peerData[peerId];
+      if (!data) return;
+
+      const matchesQuery = !query || 
+        data.name.toLowerCase().includes(query) || 
+        data.handle.toLowerCase().includes(query) ||
+        data.role.toLowerCase().includes(query) ||
+        data.bio.toLowerCase().includes(query);
+
+      let matchesFilter = true;
+      if (activeFilter === 'active') {
+        matchesFilter = data.active === true;
+      } else if (activeFilter === 'cse') {
+        matchesFilter = row.getAttribute('data-dept') === 'cse';
+      } else if (activeFilter === 'recent') {
+        matchesFilter = (peerId === 'vikram' || peerId === 'ananya');
+      }
+
+      if (matchesQuery && matchesFilter) {
+        row.classList.remove('hidden');
+        row.classList.add('flex');
+        visibleCount++;
+      } else {
+        row.classList.add('hidden');
+        row.classList.remove('flex');
+      }
+    });
+
+    if (visibleCount === 0) {
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+    }
+
+    if (query.length > 0) {
+      clearBtn.classList.remove('hidden');
+    } else {
+      clearBtn.classList.add('hidden');
+    }
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyFilters);
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      applyFilters();
+      searchInput.focus();
+    });
+  }
+
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      filterChips.forEach(c => {
+        c.className = "filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-surface text-on-surface-variant hover:bg-surface-container-high transition-all shadow-sm";
+      });
+      chip.className = "filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-primary text-on-primary transition-all";
+      activeFilter = chip.getAttribute('data-filter');
+      applyFilters();
+    });
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      activeFilter = 'all';
+      filterChips.forEach(c => {
+        if (c.getAttribute('data-filter') === 'all') {
+          c.className = "filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-primary text-on-primary transition-all";
+        } else {
+          c.className = "filter-chip px-space-md py-1 rounded-full font-label-md text-label-md bg-surface text-on-surface-variant hover:bg-surface-container-high transition-all shadow-sm";
+        }
+      });
+      applyFilters();
+    });
+  }
+
+  const ctaBtn = document.getElementById('cta-start-conversation');
+  if (ctaBtn) {
+    ctaBtn.addEventListener('click', () => {
+      const data = peerData[currentSelectedPeerId];
+      if (data) startDirectMessage(data.name, data.handle);
+    });
+  }
+</script></main></div></body></html>
