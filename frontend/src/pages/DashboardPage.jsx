@@ -6,6 +6,7 @@ import { Sidebar } from '../components/Sidebar';
 import { TricolourBadge } from '../components/TricolourBadge';
 import { AlertBanner } from '../components/AlertBanner';
 import { ChatPanel } from '../components/ChatPanel';
+import { ProfileModal } from '../components/ProfileModal';
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -16,7 +17,11 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'unread', 'direct', 'messages'
+
+  const [selfProfileOpen, setSelfProfileOpen] = useState(false);
+  const [globalResults, setGlobalResults] = useState([]);
+  const [globalLoading, setGlobalLoading] = useState(false);
 
   const pollIntervalRef = useRef(null);
   const activeConversationIdRef = useRef(conversationId);
@@ -62,6 +67,36 @@ export function DashboardPage() {
       }
     };
   }, [fetchConversations]);
+
+  // Debounced global message search effect when 'messages' tab is selected
+  useEffect(() => {
+    if (activeTab !== 'messages') return;
+    if (!searchQuery.trim()) {
+      setGlobalResults([]);
+      setGlobalLoading(false);
+      return;
+    }
+
+    let ignore = false;
+    setGlobalLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.searchGlobalMessages(searchQuery.trim());
+        if (!ignore) {
+          setGlobalResults(res?.messages || []);
+        }
+      } catch (err) {
+        if (!ignore) setGlobalResults([]);
+      } finally {
+        if (!ignore) setGlobalLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, activeTab]);
 
   // When conversationId changes in URL, clear unread count for that conversation in state
   useEffect(() => {
@@ -166,9 +201,14 @@ export function DashboardPage() {
               <span>Logged in as @{user?.username}</span>
             </div>
 
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold shadow-xs">
+            <button
+              type="button"
+              onClick={() => setSelfProfileOpen(true)}
+              className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold shadow-xs hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer"
+              title="Edit Profile"
+            >
               {(user?.fullName || user?.username || 'U')[0].toUpperCase()}
-            </div>
+            </button>
           </div>
         </header>
 
@@ -211,17 +251,21 @@ export function DashboardPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search conversations..."
+                  placeholder={
+                    activeTab === 'messages'
+                      ? 'Search all message history...'
+                      : 'Search conversations...'
+                  }
                   className="w-full pl-9 pr-3 py-2 bg-surface-container-low hover:bg-surface-container focus:bg-surface-container-lowest text-xs text-on-surface placeholder:text-outline rounded-lg border border-border-hairline focus:border-secondary focus:outline-none transition-all"
                 />
               </div>
 
               {/* Filter Chips */}
-              <div className="flex items-center gap-1.5 mt-3 pt-1">
+              <div className="flex items-center gap-1.5 mt-3 pt-1 overflow-x-auto no-scrollbar">
                 <button
                   type="button"
                   onClick={() => setActiveTab('all')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
                     activeTab === 'all'
                       ? 'bg-primary text-white shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-container'
@@ -232,7 +276,7 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('unread')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 ${
                     activeTab === 'unread'
                       ? 'bg-primary text-white shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-container'
@@ -248,13 +292,26 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('direct')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
                     activeTab === 'direct'
                       ? 'bg-primary text-white shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-container'
                   }`}
                 >
                   Direct
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('messages')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer shrink-0 ${
+                    activeTab === 'messages'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'text-on-surface-variant hover:bg-surface-container'
+                  }`}
+                  title="Search message history across all conversations"
+                >
+                  <span className="material-symbols-outlined text-[14px]">search</span>
+                  <span>Messages</span>
                 </button>
               </div>
             </div>
@@ -266,8 +323,72 @@ export function DashboardPage() {
               </div>
             )}
 
+            {/* Global Message Search Results View */}
+            {activeTab === 'messages' && (
+              <div className="flex-1 overflow-y-auto">
+                {!searchQuery.trim() ? (
+                  <div className="px-4 py-8 text-center flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-2">
+                      <span className="material-symbols-outlined text-[20px]">search</span>
+                    </div>
+                    <div className="text-xs font-semibold text-primary mb-1">Search Message History</div>
+                    <p className="text-[11px] text-on-surface-variant max-w-[200px]">
+                      Enter keywords in the search bar above to find matching messages across all your chats.
+                    </p>
+                  </div>
+                ) : globalLoading ? (
+                  <div className="p-3 space-y-2">
+                    {[1, 2, 3].map((n) => (
+                      <div key={n} className="p-3 rounded-xl bg-surface-container-low animate-pulse space-y-2">
+                        <div className="h-3 w-28 bg-surface-container-high rounded"></div>
+                        <div className="h-3.5 w-44 bg-surface-container rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : globalResults.length === 0 ? (
+                  <div className="px-4 py-8 text-center flex flex-col items-center">
+                    <span className="material-symbols-outlined text-[24px] text-outline mb-2">search_off</span>
+                    <div className="text-xs font-semibold text-primary mb-1">No messages found</div>
+                    <p className="text-[11px] text-on-surface-variant">
+                      No messages matched "{searchQuery}".
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border-hairline/60">
+                    <div className="px-3.5 py-2 bg-surface-container-low/50 text-[11px] font-mono text-outline flex items-center justify-between">
+                      <span>Found {globalResults.length} {globalResults.length === 1 ? 'match' : 'matches'}</span>
+                    </div>
+                    {globalResults.map((msg) => {
+                      const isMe = user && String(msg.senderId) === String(user.id);
+                      const displayName = isMe ? 'You' : (msg.senderFullName || `@${msg.senderUsername}`);
+                      const dateStr = formatPreviewTime(msg.createdAt);
+                      return (
+                        <div
+                          key={msg.id}
+                          onClick={() => navigate(`/dashboard/${msg.conversationId}`)}
+                          className="p-3 hover:bg-surface-container-low cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-primary truncate">
+                              {displayName}
+                            </span>
+                            <span className="text-[10px] text-outline font-mono shrink-0">
+                              {dateStr}
+                            </span>
+                          </div>
+                          <p className={`text-xs ${msg.isDeleted ? 'italic text-outline' : 'text-on-surface-variant'} line-clamp-2`}>
+                            {msg.isDeleted ? 'This message was deleted' : msg.body}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Loading Skeletons */}
-            {loading && (
+            {activeTab !== 'messages' && loading && (
               <div className="p-3 space-y-2">
                 {[1, 2, 3].map((n) => (
                   <div key={n} className="p-3 rounded-xl bg-surface-container-low animate-pulse flex items-center gap-3">
@@ -282,7 +403,7 @@ export function DashboardPage() {
             )}
 
             {/* Conversation Empty State List */}
-            {!loading && filteredConversations.length === 0 && (
+            {activeTab !== 'messages' && !loading && filteredConversations.length === 0 && (
               <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant mb-3">
                   <span className="material-symbols-outlined text-[24px]">chat_bubble_outline</span>
@@ -306,7 +427,7 @@ export function DashboardPage() {
             )}
 
             {/* Populated Conversation List */}
-            {!loading && filteredConversations.length > 0 && (
+            {activeTab !== 'messages' && !loading && filteredConversations.length > 0 && (
               <div className="flex-1 overflow-y-auto divide-y divide-border-hairline/60">
                 {filteredConversations.map((conv) => {
                   const peer = conv.participant;
@@ -322,6 +443,10 @@ export function DashboardPage() {
                   const timestamp = formatPreviewTime(lastMsg?.createdAt || conv.updatedAt);
                   const hasUnread = conv.unreadCount > 0;
                   const isActive = String(conv.id) === String(conversationId);
+
+                  const isPeerOnline =
+                    peer?.lastActiveAt &&
+                    (Date.now() - new Date(peer.lastActiveAt).getTime()) / 1000 < 120;
 
                   return (
                     <div
@@ -345,6 +470,12 @@ export function DashboardPage() {
                           <div className="w-10 h-10 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none">
                             {initials}
                           </div>
+                          {isPeerOnline && (
+                            <span
+                              className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-india-green rounded-full ring-2 ring-surface-container-lowest"
+                              title="Active now"
+                            ></span>
+                          )}
                         </div>
 
                         <div className="min-w-0 flex-1 pr-2">
@@ -497,6 +628,13 @@ export function DashboardPage() {
           </section>
         </div>
       </div>
+
+      {/* Self Profile Modal (Edit Mode) */}
+      <ProfileModal
+        isOpen={selfProfileOpen}
+        onClose={() => setSelfProfileOpen(false)}
+        mode="edit"
+      />
     </div>
   );
 }

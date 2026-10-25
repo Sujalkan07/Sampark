@@ -17,6 +17,8 @@ struct User {
     std::string salt;
     std::string createdAt;
     std::string updatedAt;
+    std::string bio;
+    std::string lastActiveAt;
 
     json toJson(bool includePrivate = false) const {
         json j = {
@@ -25,7 +27,9 @@ struct User {
             {"email", email},
             {"fullName", fullName},
             {"createdAt", createdAt},
-            {"updatedAt", updatedAt}
+            {"updatedAt", updatedAt},
+            {"bio", bio},
+            {"lastActiveAt", lastActiveAt}
         };
         if (includePrivate) {
             j["passwordHash"] = passwordHash;
@@ -39,7 +43,9 @@ struct User {
             {"id", id},
             {"username", username},
             {"fullName", fullName},
-            {"createdAt", createdAt}
+            {"createdAt", createdAt},
+            {"bio", bio},
+            {"lastActiveAt", lastActiveAt}
         };
     }
 };
@@ -66,6 +72,8 @@ struct Message {
     std::string body;
     std::string createdAt;
     std::optional<std::string> readAt;
+    std::optional<std::string> editedAt;
+    bool isDeleted = false;
 
     json toJson() const {
         json j = {
@@ -73,12 +81,18 @@ struct Message {
             {"conversationId", conversationId},
             {"senderId", senderId},
             {"body", body},
-            {"createdAt", createdAt}
+            {"createdAt", createdAt},
+            {"isDeleted", isDeleted}
         };
         if (readAt.has_value()) {
             j["readAt"] = *readAt;
         } else {
             j["readAt"] = nullptr;
+        }
+        if (editedAt.has_value()) {
+            j["editedAt"] = *editedAt;
+        } else {
+            j["editedAt"] = nullptr;
         }
         return j;
     }

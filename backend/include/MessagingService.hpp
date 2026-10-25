@@ -32,6 +32,12 @@ public:
     virtual MessagingResult getMessages(const std::string& sessionToken, int64_t conversationId, int limit, int64_t beforeId, int64_t afterId) = 0;
     virtual MessagingResult sendMessage(const std::string& sessionToken, int64_t conversationId, const std::string& body) = 0;
     virtual MessagingResult markAsRead(const std::string& sessionToken, int64_t conversationId) = 0;
+
+    // Phase 3 extensions
+    virtual MessagingResult editMessage(const std::string& sessionToken, int64_t messageId, const std::string& newBody) = 0;
+    virtual MessagingResult deleteMessage(const std::string& sessionToken, int64_t messageId) = 0;
+    virtual MessagingResult searchConversationMessages(const std::string& sessionToken, int64_t conversationId, const std::string& query, int limit = 50) = 0;
+    virtual MessagingResult searchGlobalMessages(const std::string& sessionToken, const std::string& query, int limit = 50) = 0;
 };
 
 class MessagingService : public IMessagingService {
@@ -47,6 +53,12 @@ public:
     MessagingResult getMessages(const std::string& sessionToken, int64_t conversationId, int limit, int64_t beforeId, int64_t afterId) override;
     MessagingResult sendMessage(const std::string& sessionToken, int64_t conversationId, const std::string& body) override;
     MessagingResult markAsRead(const std::string& sessionToken, int64_t conversationId) override;
+
+    // Phase 3 extensions
+    MessagingResult editMessage(const std::string& sessionToken, int64_t messageId, const std::string& newBody) override;
+    MessagingResult deleteMessage(const std::string& sessionToken, int64_t messageId) override;
+    MessagingResult searchConversationMessages(const std::string& sessionToken, int64_t conversationId, const std::string& query, int limit = 50) override;
+    MessagingResult searchGlobalMessages(const std::string& sessionToken, const std::string& query, int limit = 50) override;
 
 private:
     std::shared_ptr<IConversationRepository> convRepo_;

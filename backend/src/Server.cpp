@@ -92,13 +92,25 @@ void Server::setupRoutes() {
         authController_->handleMe(req, res);
     });
 
-    // 5. User Discovery Endpoints
+    // 5. User Discovery & Profile Endpoints
     svr_.Get("/api/users", [this](const httplib::Request& req, httplib::Response& res) {
         authController_->handleSearchUsers(req, res);
     });
 
     svr_.Get("/api/users/search", [this](const httplib::Request& req, httplib::Response& res) {
         authController_->handleSearchUsers(req, res);
+    });
+
+    svr_.Put("/api/users/profile", [this](const httplib::Request& req, httplib::Response& res) {
+        authController_->handleUpdateProfile(req, res);
+    });
+
+    svr_.Put("/api/auth/password", [this](const httplib::Request& req, httplib::Response& res) {
+        authController_->handleChangePassword(req, res);
+    });
+
+    svr_.Get(R"(/api/users/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+        authController_->handleGetUserProfile(req, res);
     });
 
     // 6. Conversation Endpoints
@@ -119,8 +131,24 @@ void Server::setupRoutes() {
         messagingController_->handleGetMessages(req, res);
     });
 
+    svr_.Get(R"(/api/conversations/(\d+)/messages/search)", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleSearchMessages(req, res);
+    });
+
+    svr_.Get("/api/messages/search", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleSearchGlobalMessages(req, res);
+    });
+
     svr_.Post(R"(/api/conversations/(\d+)/messages)", [this](const httplib::Request& req, httplib::Response& res) {
         messagingController_->handleSendMessage(req, res);
+    });
+
+    svr_.Put(R"(/api/messages/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleEditMessage(req, res);
+    });
+
+    svr_.Delete(R"(/api/messages/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleDeleteMessage(req, res);
     });
 
     svr_.Post(R"(/api/conversations/(\d+)/read)", [this](const httplib::Request& req, httplib::Response& res) {

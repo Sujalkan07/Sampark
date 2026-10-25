@@ -58,7 +58,7 @@ void MessagingController::handleCreateOrGetConversation(const httplib::Request& 
 
     try {
         json payload = json::parse(req.body);
-        if (!payload.contains("participantId") || !payload["participantId"].is_number()) {
+        if (!payload.is_object() || !payload.contains("participantId") || !payload["participantId"].is_number()) {
             sendError(res, 400, "Field 'participantId' is required and must be an integer.");
             return;
         }
@@ -199,7 +199,11 @@ void MessagingController::handleSendMessage(const httplib::Request& req, httplib
         int64_t conversationId = std::stoll(req.matches[1].str());
 
         json payload = json::parse(req.body);
-        std::string body = payload.value("body", "");
+        if (!payload.is_object() || !payload.contains("body") || !payload["body"].is_string()) {
+            sendError(res, 400, "Field 'body' is required and must be a string.");
+            return;
+        }
+        std::string body = payload["body"].get<std::string>();
 
         auto result = messagingService_->sendMessage(token, conversationId, body);
         if (!result.success) {
@@ -245,6 +249,149 @@ void MessagingController::handleMarkAsRead(const httplib::Request& req, httplib:
         std::cerr << "[MessagingController] Exception in handleMarkAsRead: " << e.what() << std::endl;
         sendError(res, 400, "Invalid conversation ID.");
     }
+}
+
+void MessagingController::handleEditMessage(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t messageId = std::stoll(req.matches[1].str());
+        json payload = json::parse(req.body);
+        if (!payload.is_object() || !payload.contains("body") || !payload["body"].is_string()) {
+            sendError(res, 400, "Field 'body' is required and must be a string.");
+            return;
+        }
+
+        std::string newBody = payload["body"].get<std::string>();
+        auto result = messagingService_->editMessage(token, messageId, newBody);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json responseBody = {
+            {"message", result.chatMessage->toJson()}
+        };
+        res.status = result.statusCode;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const json::parse_error&) {
+        sendError(res, 400, "Malformed JSON in request body.");
+    } catch (const std::exception& e) {
+        std::cerr << "[MessagingController] Exception in handleEditMessage: " << e.what() << std::endl;
+        sendError(res, 400, "Invalid message ID or request parameters.");
+    }
+}
+
+void MessagingController::handleDeleteMessage(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t messageId = std::stoll(req.matches[1].str());
+        auto result = messagingService_->deleteMessage(token, messageId);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message},
+            {"deletedMessage", result.chatMessage->toJson()}
+        };
+        res.status = result.statusCode;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const std::exception& e) {
+        std::cerr << "[MessagingController] Exception in handleDeleteMessage: " << e.what() << std::endl;
+        sendError(res, 400, "Invalid message ID.");
+    }
+}
+
+void MessagingController::handleSearchMessages(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t conversationId = std::stoll(req.matches[1].str());
+        std::string query = req.get_param_value("q");
+        int limit = 50;
+        if (req.has_param("limit")) {
+            try {
+                limit = std::stoi(req.get_param_value("limit"));
+            } catch (...) {
+                limit = 50;
+            }
+        }
+
+        auto result = messagingService_->searchConversationMessages(token, conversationId, query, limit);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json msgsArray = json::array();
+        for (const auto& m : result.messages) {
+            msgsArray.push_back(m.toJson());
+        }
+
+        json responseBody = {
+            {"messages", msgsArray},
+            {"count", result.messages.size()},
+            {"query", query}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const std::exception& e) {
+        std::cerr << "[MessagingController] Exception in handleSearchMessages: " << e.what() << std::endl;
+        sendError(res, 400, "Invalid request parameters.");
+    }
+}
+
+void MessagingController::handleSearchGlobalMessages(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    std::string query = req.get_param_value("q");
+    int limit = 50;
+    if (req.has_param("limit")) {
+        try {
+            limit = std::stoi(req.get_param_value("limit"));
+        } catch (...) {
+            limit = 50;
+        }
+    }
+
+    auto result = messagingService_->searchGlobalMessages(token, query, limit);
+    if (!result.success) {
+        sendError(res, result.statusCode, result.message);
+        return;
+    }
+
+    json msgsArray = json::array();
+    for (const auto& m : result.messages) {
+        msgsArray.push_back(m.toJson());
+    }
+
+    json responseBody = {
+        {"messages", msgsArray},
+        {"count", result.messages.size()},
+        {"query", query}
+    };
+    res.status = 200;
+    res.set_content(responseBody.dump(), "application/json");
 }
 
 } // namespace connectx

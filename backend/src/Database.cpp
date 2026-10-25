@@ -72,7 +72,9 @@ bool Database::initSchema() {
             password_hash TEXT NOT NULL,
             salt TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            bio TEXT DEFAULT '',
+            last_active_at TEXT DEFAULT (datetime('now'))
         );
 
         CREATE TABLE IF NOT EXISTS sessions (
@@ -98,7 +100,9 @@ bool Database::initSchema() {
             sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
             body TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            read_at TEXT DEFAULT NULL
+            read_at TEXT DEFAULT NULL,
+            edited_at TEXT DEFAULT NULL,
+            is_deleted INTEGER NOT NULL DEFAULT 0
         );
 
         CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -112,9 +116,32 @@ bool Database::initSchema() {
         CREATE INDEX IF NOT EXISTS idx_msg_conv_created ON messages(conversation_id, id ASC);
         CREATE INDEX IF NOT EXISTS idx_msg_sender ON messages(sender_id);
         CREATE INDEX IF NOT EXISTS idx_msg_unread ON messages(conversation_id, sender_id, read_at);
+        CREATE INDEX IF NOT EXISTS idx_msg_search ON messages(conversation_id, body);
     )";
 
-    return execute(schemaSql);
+    bool ok = execute(schemaSql);
+    if (!ok) return false;
+
+    migrateSchema();
+    return true;
+}
+
+void Database::migrateSchema() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!db_) return;
+
+    char* errMsg = nullptr;
+    sqlite3_exec(db_, "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT '';", nullptr, nullptr, &errMsg);
+    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+
+    sqlite3_exec(db_, "ALTER TABLE users ADD COLUMN last_active_at TEXT DEFAULT '';", nullptr, nullptr, &errMsg);
+    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+
+    sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN edited_at TEXT DEFAULT NULL;", nullptr, nullptr, &errMsg);
+    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+
+    sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0;", nullptr, nullptr, &errMsg);
+    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
 }
 
 // Statement implementation

@@ -13,6 +13,7 @@ public:
     static bool isValidEmail(const std::string& email, std::string& error);
     static bool isValidFullName(const std::string& fullName, std::string& error);
     static bool isValidPassword(const std::string& password, std::string& error);
+    static bool isValidBio(const std::string& bio, std::string& error);
 };
 
 } // namespace connectx

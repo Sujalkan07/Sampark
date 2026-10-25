@@ -146,4 +146,54 @@ export const api = {
       method: 'POST',
     });
   },
+
+  // Phase 3 Profile, Message Editing, and Search APIs
+  async updateProfile({ fullName, bio }) {
+    return request('/api/users/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ fullName, bio }),
+    });
+  },
+
+  async changePassword({ currentPassword, newPassword }) {
+    return request('/api/auth/password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  async getUserProfile(userId) {
+    return request(`/api/users/${userId}`, {
+      method: 'GET',
+    });
+  },
+
+  async editMessage(messageId, body) {
+    return request(`/api/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ body }),
+    });
+  },
+
+  async deleteMessage(messageId) {
+    return request(`/api/messages/${messageId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async searchConversationMessages(conversationId, query) {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    return request(`/api/conversations/${conversationId}/messages/search?${params.toString()}`, {
+      method: 'GET',
+    });
+  },
+
+  async searchGlobalMessages(query) {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    return request(`/api/messages/search?${params.toString()}`, {
+      method: 'GET',
+    });
+  },
 };

@@ -253,4 +253,176 @@ MessagingResult MessagingService::markAsRead(const std::string& sessionToken, in
     return res;
 }
 
+MessagingResult MessagingService::editMessage(const std::string& sessionToken, int64_t messageId, const std::string& newBody) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto msg = msgRepo_->getMessageById(messageId);
+    if (!msg) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Message not found.";
+        return res;
+    }
+
+    if (msg->senderId != *callerId) {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "Access denied. Only the author can edit this message.";
+        return res;
+    }
+
+    if (msg->isDeleted) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Cannot edit a deleted message.";
+        return res;
+    }
+
+    std::string trimmed = Validator::trim(newBody);
+    if (trimmed.empty()) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Message body cannot be empty.";
+        return res;
+    }
+
+    if (trimmed.length() > 4000) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Message exceeds maximum length of 4000 characters.";
+        return res;
+    }
+
+    if (!msgRepo_->updateMessageBody(messageId, trimmed)) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to update message.";
+        return res;
+    }
+
+    auto updatedMsg = msgRepo_->getMessageById(messageId);
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Message updated successfully.";
+    res.chatMessage = updatedMsg;
+    return res;
+}
+
+MessagingResult MessagingService::deleteMessage(const std::string& sessionToken, int64_t messageId) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto msg = msgRepo_->getMessageById(messageId);
+    if (!msg) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Message not found.";
+        return res;
+    }
+
+    if (msg->senderId != *callerId) {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "Access denied. Only the author can delete this message.";
+        return res;
+    }
+
+    if (!msgRepo_->deleteMessage(messageId)) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to delete message.";
+        return res;
+    }
+
+    auto deletedMsg = msgRepo_->getMessageById(messageId);
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Message deleted successfully.";
+    res.chatMessage = deletedMsg;
+    return res;
+}
+
+MessagingResult MessagingService::searchConversationMessages(const std::string& sessionToken,
+                                                             int64_t conversationId,
+                                                             const std::string& query,
+                                                             int limit) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+
+    if (!convRepo_->isParticipant(conversationId, *callerId)) {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "Access denied. You are not a participant in this conversation.";
+        return res;
+    }
+
+    std::string cleanQuery = Validator::trim(query);
+    if (cleanQuery.empty()) {
+        res.success = true;
+        res.statusCode = 200;
+        res.messages = {};
+        return res;
+    }
+
+    auto msgs = msgRepo_->searchMessages(conversationId, cleanQuery, limit);
+    res.success = true;
+    res.statusCode = 200;
+    res.messages = std::move(msgs);
+    return res;
+}
+
+MessagingResult MessagingService::searchGlobalMessages(const std::string& sessionToken,
+                                                       const std::string& query,
+                                                       int limit) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    std::string cleanQuery = Validator::trim(query);
+    if (cleanQuery.empty()) {
+        res.success = true;
+        res.statusCode = 200;
+        res.messages = {};
+        return res;
+    }
+
+    auto msgs = msgRepo_->searchAllUserMessages(*callerId, cleanQuery, limit);
+    res.success = true;
+    res.statusCode = 200;
+    res.messages = std::move(msgs);
+    return res;
+}
+
 } // namespace connectx

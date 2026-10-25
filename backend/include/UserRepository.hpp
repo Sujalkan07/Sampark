@@ -27,6 +27,9 @@ public:
     virtual std::vector<User> searchUsers(const std::string& query,
                                           int64_t excludeUserId,
                                           int limit = 50) = 0;
+    virtual bool updateProfile(int64_t userId, const std::string& fullName, const std::string& bio) = 0;
+    virtual bool updatePassword(int64_t userId, const std::string& newHash, const std::string& newSalt) = 0;
+    virtual bool updateLastActive(int64_t userId) = 0;
 };
 
 class SqliteUserRepository : public IUserRepository {
@@ -48,6 +51,9 @@ public:
     std::vector<User> searchUsers(const std::string& query,
                                   int64_t excludeUserId,
                                   int limit = 50) override;
+    bool updateProfile(int64_t userId, const std::string& fullName, const std::string& bio) override;
+    bool updatePassword(int64_t userId, const std::string& newHash, const std::string& newSalt) override;
+    bool updateLastActive(int64_t userId) override;
 
 private:
     Database& db_;

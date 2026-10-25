@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import { Sidebar } from '../components/Sidebar';
 import { TricolourBadge } from '../components/TricolourBadge';
 import { AlertBanner } from '../components/AlertBanner';
+import { ProfileModal } from '../components/ProfileModal';
 
 export function FindPeoplePage() {
   const { user } = useAuth();
@@ -16,6 +17,9 @@ export function FindPeoplePage() {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [connectingUserId, setConnectingUserId] = useState(null);
+
+  const [selfProfileOpen, setSelfProfileOpen] = useState(false);
+  const [viewingPeerId, setViewingPeerId] = useState(null);
 
   const fetchUsers = useCallback(async (query = '') => {
     try {
@@ -188,15 +192,30 @@ export function FindPeoplePage() {
                   <div className="text-xs text-on-surface-variant mt-0.5">
                     {user?.email}
                   </div>
+                  {user?.bio && (
+                    <div className="text-xs text-on-surface mt-1.5 italic line-clamp-2 max-w-md">
+                      "{user.bio}"
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container-low hover:bg-surface-container text-primary border border-border-hairline transition-colors"
-              >
-                Back to Chats
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelfProfileOpen(true)}
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container-high hover:bg-surface-container text-primary border border-border-hairline transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">edit</span>
+                  <span>Edit Profile</span>
+                </button>
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container-low hover:bg-surface-container text-primary border border-border-hairline transition-colors cursor-pointer"
+                >
+                  Back to Chats
+                </button>
+              </div>
             </div>
           </div>
 
@@ -309,15 +328,19 @@ export function FindPeoplePage() {
                       key={peer.id}
                       className="p-4 rounded-xl bg-surface-container-lowest border border-border-hairline hover:border-border-hairline/80 shadow-xs hover:shadow-sm transition-all flex items-center justify-between"
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
+                      <div
+                        className="flex items-center gap-3.5 min-w-0 cursor-pointer group/peer"
+                        onClick={() => setViewingPeerId(peer.id)}
+                        title="Click to view profile"
+                      >
                         <div className="relative shrink-0">
-                          <div className="w-11 h-11 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none">
+                          <div className="w-11 h-11 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none group-hover/peer:ring-2 group-hover/peer:ring-primary/40 transition-all">
                             {initials}
                           </div>
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-primary truncate">
+                            <span className="text-sm font-bold text-primary truncate group-hover/peer:underline">
                               {peer.fullName}
                             </span>
                             <span className="text-xs font-mono text-outline shrink-0">
@@ -327,10 +350,24 @@ export function FindPeoplePage() {
                           <div className="text-xs text-on-surface-variant mt-0.5">
                             Member since {joinedDate}
                           </div>
+                          {peer.bio && (
+                            <div className="text-xs text-on-surface-variant mt-1 line-clamp-1 italic">
+                              "{peer.bio}"
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="shrink-0 ml-4">
+                      <div className="shrink-0 ml-4 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setViewingPeerId(peer.id)}
+                          className="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant text-xs font-semibold flex items-center gap-1 border border-border-hairline transition-all cursor-pointer"
+                          title="View Profile"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">badge</span>
+                          <span className="hidden sm:inline">Profile</span>
+                        </button>
                         <button
                           type="button"
                           disabled={connectingUserId === peer.id}
@@ -358,6 +395,21 @@ export function FindPeoplePage() {
           </div>
         </div>
       </div>
+
+      {/* Self Profile Modal (Edit Mode) */}
+      <ProfileModal
+        isOpen={selfProfileOpen}
+        onClose={() => setSelfProfileOpen(false)}
+        mode="edit"
+      />
+
+      {/* Peer Profile Modal (View Mode) */}
+      <ProfileModal
+        isOpen={Boolean(viewingPeerId)}
+        onClose={() => setViewingPeerId(null)}
+        mode="view"
+        userId={viewingPeerId}
+      />
     </div>
   );
 }

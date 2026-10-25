@@ -15,12 +15,14 @@ User SqliteUserRepository::extractUser(Statement& stmt) {
     u.salt = stmt.getColumnText(5);
     u.createdAt = stmt.getColumnText(6);
     u.updatedAt = stmt.getColumnText(7);
+    u.bio = stmt.getColumnText(8);
+    u.lastActiveAt = stmt.getColumnText(9);
     return u;
 }
 
 std::optional<User> SqliteUserRepository::findById(int64_t id) {
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at, bio, last_active_at "
                             "FROM users WHERE id = ? LIMIT 1;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return std::nullopt;
@@ -34,7 +36,7 @@ std::optional<User> SqliteUserRepository::findById(int64_t id) {
 
 std::optional<User> SqliteUserRepository::findByUsername(const std::string& username) {
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at, bio, last_active_at "
                             "FROM users WHERE username = ? COLLATE NOCASE LIMIT 1;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return std::nullopt;
@@ -48,7 +50,7 @@ std::optional<User> SqliteUserRepository::findByUsername(const std::string& user
 
 std::optional<User> SqliteUserRepository::findByEmail(const std::string& email) {
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at, bio, last_active_at "
                             "FROM users WHERE email = ? COLLATE NOCASE LIMIT 1;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return std::nullopt;
@@ -62,7 +64,7 @@ std::optional<User> SqliteUserRepository::findByEmail(const std::string& email) 
 
 std::optional<User> SqliteUserRepository::findByUsernameOrEmail(const std::string& identifier) {
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+    const std::string sql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at, bio, last_active_at "
                             "FROM users WHERE username = ? COLLATE NOCASE OR email = ? COLLATE NOCASE LIMIT 1;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return std::nullopt;
@@ -101,8 +103,8 @@ std::optional<User> SqliteUserRepository::create(const std::string& username,
                                                   const std::string& passwordHash,
                                                   const std::string& salt) {
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "INSERT INTO users (username, email, full_name, password_hash, salt, created_at, updated_at) "
-                            "VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'));";
+    const std::string sql = "INSERT INTO users (username, email, full_name, password_hash, salt, created_at, updated_at, bio, last_active_at) "
+                            "VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'), '', datetime('now'));";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return std::nullopt;
 
@@ -120,7 +122,7 @@ std::optional<User> SqliteUserRepository::create(const std::string& username,
     int64_t newId = sqlite3_last_insert_rowid(db_.getHandle());
 
     // Fetch the newly inserted user
-    const std::string selectSql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at "
+    const std::string selectSql = "SELECT id, username, email, full_name, password_hash, salt, created_at, updated_at, bio, last_active_at "
                                   "FROM users WHERE id = ? LIMIT 1;";
     Statement selectStmt(db_.getHandle(), selectSql);
     if (selectStmt.isValid()) {
@@ -144,12 +146,12 @@ std::vector<User> SqliteUserRepository::searchUsers(const std::string& query, in
     bool hasQuery = !query.empty();
 
     if (hasQuery) {
-        sql = "SELECT id, username, '' as email, full_name, '' as password_hash, '' as salt, created_at, updated_at "
+        sql = "SELECT id, username, '' as email, full_name, '' as password_hash, '' as salt, created_at, updated_at, bio, last_active_at "
               "FROM users "
               "WHERE id != ? AND (username LIKE ? ESCAPE '\\' OR full_name LIKE ? ESCAPE '\\') "
               "ORDER BY username COLLATE NOCASE ASC LIMIT ?;";
     } else {
-        sql = "SELECT id, username, '' as email, full_name, '' as password_hash, '' as salt, created_at, updated_at "
+        sql = "SELECT id, username, '' as email, full_name, '' as password_hash, '' as salt, created_at, updated_at, bio, last_active_at "
               "FROM users "
               "WHERE id != ? "
               "ORDER BY created_at DESC LIMIT ?;";
@@ -181,6 +183,42 @@ std::vector<User> SqliteUserRepository::searchUsers(const std::string& query, in
     }
 
     return users;
+}
+
+bool SqliteUserRepository::updateProfile(int64_t userId, const std::string& fullName, const std::string& bio) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "UPDATE users SET full_name = ?, bio = ?, updated_at = datetime('now') WHERE id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindText(1, fullName);
+    stmt.bindText(2, bio);
+    stmt.bindInt64(3, userId);
+
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteUserRepository::updatePassword(int64_t userId, const std::string& newHash, const std::string& newSalt) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "UPDATE users SET password_hash = ?, salt = ?, updated_at = datetime('now') WHERE id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindText(1, newHash);
+    stmt.bindText(2, newSalt);
+    stmt.bindInt64(3, userId);
+
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteUserRepository::updateLastActive(int64_t userId) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "UPDATE users SET last_active_at = datetime('now') WHERE id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, userId);
+    return stmt.step() == SQLITE_DONE;
 }
 
 } // namespace connectx

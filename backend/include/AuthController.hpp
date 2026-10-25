@@ -15,6 +15,9 @@ public:
     void handleLogout(const httplib::Request& req, httplib::Response& res);
     void handleMe(const httplib::Request& req, httplib::Response& res);
     void handleSearchUsers(const httplib::Request& req, httplib::Response& res);
+    void handleUpdateProfile(const httplib::Request& req, httplib::Response& res);
+    void handleChangePassword(const httplib::Request& req, httplib::Response& res);
+    void handleGetUserProfile(const httplib::Request& req, httplib::Response& res);
 
     std::string extractSessionToken(const httplib::Request& req);
 

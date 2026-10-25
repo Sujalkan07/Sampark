@@ -57,6 +57,10 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
   const value = {
     user,
     loading,
@@ -65,6 +69,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     checkSession,
+    updateUser,
     isAuthenticated: !!user,
   };
 

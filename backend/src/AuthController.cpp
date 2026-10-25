@@ -209,4 +209,106 @@ void AuthController::handleSearchUsers(const httplib::Request& req, httplib::Res
     res.set_content(responseBody.dump(), "application/json");
 }
 
+void AuthController::handleUpdateProfile(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        json payload = json::parse(req.body);
+        if (!payload.is_object() || !payload.contains("fullName") || !payload["fullName"].is_string()) {
+            sendError(res, 400, "Field 'fullName' is required and must be a string.");
+            return;
+        }
+
+        std::string fullName = payload["fullName"].get<std::string>();
+        std::string bio = payload.value("bio", "");
+
+        auto result = authService_->updateProfile(token, fullName, bio);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json responseBody = {
+            {"message", result.message},
+            {"user", result.user->toJson()}
+        };
+        res.status = result.statusCode;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const json::parse_error&) {
+        sendError(res, 400, "Malformed JSON in request body.");
+    } catch (const std::exception& e) {
+        std::cerr << "[AuthController] Exception in handleUpdateProfile: " << e.what() << std::endl;
+        sendError(res, 400, "Invalid request payload.");
+    }
+}
+
+void AuthController::handleChangePassword(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        json payload = json::parse(req.body);
+        if (!payload.is_object() ||
+            !payload.contains("currentPassword") || !payload["currentPassword"].is_string() ||
+            !payload.contains("newPassword") || !payload["newPassword"].is_string()) {
+            sendError(res, 400, "Fields 'currentPassword' and 'newPassword' are required strings.");
+            return;
+        }
+
+        std::string currentPassword = payload["currentPassword"].get<std::string>();
+        std::string newPassword = payload["newPassword"].get<std::string>();
+
+        auto result = authService_->changePassword(token, currentPassword, newPassword);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message}
+        };
+        res.status = result.statusCode;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const json::parse_error&) {
+        sendError(res, 400, "Malformed JSON in request body.");
+    } catch (const std::exception& e) {
+        std::cerr << "[AuthController] Exception in handleChangePassword: " << e.what() << std::endl;
+        sendError(res, 400, "Invalid request payload.");
+    }
+}
+
+void AuthController::handleGetUserProfile(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t targetUserId = std::stoll(req.matches[1].str());
+        auto user = authService_->getUserById(token, targetUserId);
+        if (!user) {
+            sendError(res, 404, "User not found.");
+            return;
+        }
+
+        json responseBody = {
+            {"user", user->toPublicJson()}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const std::exception& e) {
+        std::cerr << "[AuthController] Exception in handleGetUserProfile: " << e.what() << std::endl;
+        sendError(res, 400, "Invalid user ID parameter.");
+    }
+}
+
 } // namespace connectx

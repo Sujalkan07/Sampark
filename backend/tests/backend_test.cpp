@@ -367,6 +367,80 @@ void runTests() {
         assert(firstConv.lastMessage.has_value());
         assert(firstConv.lastMessage->body == "Did you see my latest commit?");
         std::cout << "[PASS] Test 34: Conversation list contains other participant details and last message preview" << std::endl;
+
+        // Phase 3 Tests:
+        // Test 36: User profile update
+        auto profRes = authService->updateProfile(aaravToken, "Aarav S. Sharma", "Passionate systems programmer and C++ enthusiast.");
+        assert(profRes.success);
+        assert(profRes.statusCode == 200);
+        assert(profRes.user->fullName == "Aarav S. Sharma");
+        assert(profRes.user->bio == "Passionate systems programmer and C++ enthusiast.");
+        std::cout << "[PASS] Test 36: Profile update modifies full name and bio" << std::endl;
+
+        // Test 37: Oversized bio rejected
+        std::string hugeBio(350, 'A');
+        auto bigBioRes = authService->updateProfile(aaravToken, "Aarav S. Sharma", hugeBio);
+        assert(!bigBioRes.success);
+        assert(bigBioRes.statusCode == 400);
+        std::cout << "[PASS] Test 37: Oversized bio safely rejected with HTTP 400" << std::endl;
+
+        // Test 38: Password change
+        auto chgPassRes = authService->changePassword(aaravToken, "SecretPassword123!", "NewStrongPassword456!");
+        assert(chgPassRes.success);
+        assert(chgPassRes.statusCode == 200);
+        auto newLoginRes = authService->login("aarav_sharma", "NewStrongPassword456!");
+        assert(newLoginRes.success);
+        std::cout << "[PASS] Test 38: Password change verifies current password and accepts new password" << std::endl;
+
+        // Test 39: Password change with incorrect current password rejected
+        auto wrongPassRes = authService->changePassword(aaravToken, "WrongOldPassword!", "AnotherPassword789!");
+        assert(!wrongPassRes.success);
+        assert(wrongPassRes.statusCode == 401);
+        std::cout << "[PASS] Test 39: Password change with incorrect current password safely rejected (HTTP 401)" << std::endl;
+
+        // Test 40: Edit message by author
+        auto editRes = messagingService->editMessage(priyaToken, msg3Id, "Did you see my latest commit on GitHub?");
+        assert(editRes.success);
+        assert(editRes.statusCode == 200);
+        assert(editRes.chatMessage->body == "Did you see my latest commit on GitHub?");
+        assert(editRes.chatMessage->editedAt.has_value());
+        std::cout << "[PASS] Test 40: Author can edit message; body and editedAt updated" << std::endl;
+
+        // Test 41: Edit message by non-author rejected
+        auto unauthEditRes = messagingService->editMessage(aaravToken, msg3Id, "Tampered text");
+        assert(!unauthEditRes.success);
+        assert(unauthEditRes.statusCode == 403);
+        std::cout << "[PASS] Test 41: Unauthorized message edit by non-author rejected (HTTP 403)" << std::endl;
+
+        // Test 42: Delete message by author
+        auto delRes = messagingService->deleteMessage(priyaToken, msg3Id);
+        assert(delRes.success);
+        assert(delRes.statusCode == 200);
+        assert(delRes.chatMessage->isDeleted == true);
+        assert(delRes.chatMessage->body == "This message was deleted");
+        std::cout << "[PASS] Test 42: Author can delete message; message flagged as deleted with redacted body" << std::endl;
+
+        // Test 43: Delete message by non-author rejected
+        auto unauthDelRes = messagingService->deleteMessage(priyaToken, msg1Id);
+        assert(!unauthDelRes.success);
+        assert(unauthDelRes.statusCode == 403);
+        std::cout << "[PASS] Test 43: Unauthorized message deletion by non-author rejected (HTTP 403)" << std::endl;
+
+        // Test 44: Search messages in conversation finds matching query and excludes deleted messages
+        auto searchMsg = messagingService->sendMessage(aaravToken, convId, "Let's review the SQLite architecture docs.");
+        assert(searchMsg.success);
+        auto searchRes = messagingService->searchConversationMessages(aaravToken, convId, "SQLite", 10);
+        assert(searchRes.success);
+        assert(searchRes.messages.size() == 1);
+        assert(searchRes.messages[0].body == "Let's review the SQLite architecture docs.");
+        std::cout << "[PASS] Test 44: In-conversation search locates keyword and excludes deleted messages" << std::endl;
+
+        // Test 45: Global message search across participant's conversations
+        auto globalSearchRes = messagingService->searchGlobalMessages(priyaToken, "architecture", 10);
+        assert(globalSearchRes.success);
+        assert(globalSearchRes.messages.size() == 1);
+        assert(globalSearchRes.messages[0].body == "Let's review the SQLite architecture docs.");
+        std::cout << "[PASS] Test 45: Global message search across user's active conversations verified" << std::endl;
     } // DB is closed here
 
     // Test 35: Messages and conversations survive full database restart
@@ -390,11 +464,13 @@ void runTests() {
 
         // Verify messages persist
         auto msgs = msgRepo->getMessages(conv->id, 50, 0, 0);
-        assert(msgs.size() == 3);
+        assert(msgs.size() == 4);
         assert(msgs[0].body == "Hello Priya, how are you?");
         assert(msgs[1].body == "Hi Aarav! I am doing great, working on ConnectX.");
-        assert(msgs[2].body == "Did you see my latest commit?");
-        std::cout << "[PASS] Test 35: Full conversation and message history persists across database restarts" << std::endl;
+        assert(msgs[2].body == "This message was deleted");
+        assert(msgs[2].isDeleted == true);
+        assert(msgs[3].body == "Let's review the SQLite architecture docs.");
+        std::cout << "[PASS] Test 46: Full conversation, edited messages, and deletions persist across database restarts" << std::endl;
     }
 
     // Clean up test DB
@@ -403,7 +479,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 35 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 46 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

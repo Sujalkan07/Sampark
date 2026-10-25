@@ -20,6 +20,7 @@ public:
     void close();
 
     bool initSchema();
+    void migrateSchema();
 
     sqlite3* getHandle() const { return db_; }
     std::mutex& getMutex() { return mutex_; }

@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <optional>
+#include <vector>
 
 namespace connectx {
 
@@ -28,6 +29,17 @@ public:
     virtual std::optional<std::vector<User>> searchUsers(const std::string& token,
                                                          const std::string& query,
                                                          int limit = 50) = 0;
+
+    // Phase 3 extensions
+    virtual AuthResult updateProfile(const std::string& token,
+                                     const std::string& fullName,
+                                     const std::string& bio) = 0;
+
+    virtual AuthResult changePassword(const std::string& token,
+                                      const std::string& currentPassword,
+                                      const std::string& newPassword) = 0;
+
+    virtual std::optional<User> getUserById(const std::string& token, int64_t targetUserId) = 0;
 };
 
 class AuthService : public IAuthService {
@@ -51,6 +63,17 @@ public:
     std::optional<std::vector<User>> searchUsers(const std::string& token,
                                                  const std::string& query,
                                                  int limit = 50) override;
+
+    // Phase 3 extensions
+    AuthResult updateProfile(const std::string& token,
+                             const std::string& fullName,
+                             const std::string& bio) override;
+
+    AuthResult changePassword(const std::string& token,
+                              const std::string& currentPassword,
+                              const std::string& newPassword) override;
+
+    std::optional<User> getUserById(const std::string& token, int64_t targetUserId) override;
 
     // Cryptographic helper methods
     static std::string generateSalt(size_t byteCount = 16);

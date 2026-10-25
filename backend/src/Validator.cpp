@@ -83,4 +83,12 @@ bool Validator::isValidPassword(const std::string& password, std::string& error)
     return true;
 }
 
+bool Validator::isValidBio(const std::string& bio, std::string& error) {
+    if (bio.length() > 300) {
+        error = "Bio cannot exceed 300 characters.";
+        return false;
+    }
+    return true;
+}
+
 } // namespace connectx

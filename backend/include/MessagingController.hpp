@@ -17,6 +17,10 @@ public:
     void handleGetMessages(const httplib::Request& req, httplib::Response& res);
     void handleSendMessage(const httplib::Request& req, httplib::Response& res);
     void handleMarkAsRead(const httplib::Request& req, httplib::Response& res);
+    void handleEditMessage(const httplib::Request& req, httplib::Response& res);
+    void handleDeleteMessage(const httplib::Request& req, httplib::Response& res);
+    void handleSearchMessages(const httplib::Request& req, httplib::Response& res);
+    void handleSearchGlobalMessages(const httplib::Request& req, httplib::Response& res);
 
     static std::string extractSessionToken(const httplib::Request& req);
 

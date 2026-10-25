@@ -223,6 +223,7 @@ std::optional<User> AuthService::validateSession(const std::string& token) {
         return std::nullopt;
     }
 
+    userRepo_->updateLastActive(session->userId);
     return userRepo_->findById(session->userId);
 }
 
@@ -245,6 +246,108 @@ std::optional<std::vector<User>> AuthService::searchUsers(const std::string& tok
     if (limit > 100) limit = 100;
 
     return userRepo_->searchUsers(cleanQuery, session->userId, limit);
+}
+
+AuthResult AuthService::updateProfile(const std::string& token,
+                                      const std::string& fullName,
+                                      const std::string& bio) {
+    AuthResult res;
+    auto user = validateSession(token);
+    if (!user) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    std::string trimmedName = Validator::trim(fullName);
+    std::string trimmedBio = Validator::trim(bio);
+    std::string err;
+
+    if (!Validator::isValidFullName(trimmedName, err)) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = err;
+        return res;
+    }
+
+    if (!Validator::isValidBio(trimmedBio, err)) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = err;
+        return res;
+    }
+
+    if (!userRepo_->updateProfile(user->id, trimmedName, trimmedBio)) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to update profile.";
+        return res;
+    }
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Profile updated successfully.";
+    res.user = userRepo_->findById(user->id);
+    return res;
+}
+
+AuthResult AuthService::changePassword(const std::string& token,
+                                       const std::string& currentPassword,
+                                       const std::string& newPassword) {
+    AuthResult res;
+    auto user = validateSession(token);
+    if (!user) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    if (currentPassword.empty() || newPassword.empty()) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Current and new password are required.";
+        return res;
+    }
+
+    if (!verifyPassword(currentPassword, user->salt, user->passwordHash)) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Current password is incorrect.";
+        return res;
+    }
+
+    std::string err;
+    if (!Validator::isValidPassword(newPassword, err)) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = err;
+        return res;
+    }
+
+    std::string newSalt = generateSalt(16);
+    std::string newHash = hashPassword(newPassword, newSalt);
+
+    if (!userRepo_->updatePassword(user->id, newHash, newSalt)) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to update password.";
+        return res;
+    }
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Password changed successfully.";
+    res.user = userRepo_->findById(user->id);
+    return res;
+}
+
+std::optional<User> AuthService::getUserById(const std::string& token, int64_t targetUserId) {
+    auto caller = validateSession(token);
+    if (!caller) return std::nullopt;
+
+    return userRepo_->findById(targetUserId);
 }
 
 } // namespace connectx

@@ -1,38 +1,45 @@
-# ConnectX — Phase 1: Foundation & Authentication
+# Sampark — Full-Stack C++ OOP Messaging Platform
 
-ConnectX is a modern, high-performance multi-user chat platform designed as a C++ OOP engineering project. It combines an object-oriented C++ backend, SQLite database persistence, application-level cryptographic security, and a responsive frontend interface integrated from Google Stitch.
+**Sampark** is a modern, high-performance multi-user web messaging platform built with a high-performance **Object-Oriented C++ backend**, **SQLite database persistence**, **cryptographic application security**, and a responsive **React + Vite + Tailwind CSS** frontend inspired by the Google Stitch Indian tricolour design system.
 
 ---
 
-## 1. Project Overview & Scope
+## 1. Project Overview & Capabilities (Phases 1, 2, & 3)
 
-### Phase 1 Included Capabilities
-- **C++ Backend Engine:** HTTP routing, controllers, services, repositories, and RAII database handle management.
-- **Persistent Data Store:** SQLite3 database with schema migrations, WAL mode, foreign keys, and indexes.
-- **Application Security:** PBKDF2-HMAC-SHA256 password hashing (100,000 iterations with 16-byte cryptographically secure random salt via OpenSSL), constant-time verification, and parameterized SQL statements preventing SQL injection.
+### Phase 1: Foundation, Security & Authentication
+- **C++ Backend Engine:** HTTP routing, controllers, services, repositories, and RAII database handle management via `cpp-httplib` and modern C++20.
+- **Persistent Data Store:** SQLite3 database with automatic non-destructive schema migrations, WAL mode, foreign keys, and indexed queries.
+- **Application Security:** PBKDF2-HMAC-SHA256 password hashing (100,000 iterations with 16-byte cryptographically secure random salt via OpenSSL), constant-time verification (`CRYPTO_memcmp`), and parameterized SQL queries (`sqlite3_bind_*`) preventing SQL injection.
 - **Session Architecture:** 32-byte cryptographically secure random session tokens, managed via `HttpOnly`, `SameSite=Lax` cookies with server-side validation and expiration enforcement.
 - **Multi-User Isolation:** Completely isolated user accounts and sessions. Authenticated identities are strictly resolved from server session state.
-- **Frontend Integration:** Full React + Vite + Tailwind CSS SPA reproducing the approved Google Stitch design tokens and responsive layouts.
-- **Screen Flow:** Public Landing Page (`/`), Sign Up (`/signup`), Log In (`/login`), Protected Chat Dashboard (`/dashboard`), Protected Find People Directory Shell (`/find-people`), and Active Conversation Shell (`/conversation`).
+- **Member Discovery:** Registered account discovery with search filtering (`/find-people`).
 
-### Explicit Phase 1 Boundaries
-- Real-time WebSocket packet delivery, message persistence, group creation, online presence broadcasts, typing indicators, and message editing/deletion are deferred to **Phase 2 & Phase 3**.
-- Empty states honestly inform the user that messaging functionality will be connected in Phase 2.
+### Phase 2: One-to-One Persistent Messaging & In-Place Dashboard
+- **Normalized One-to-One Conversations:** Deterministic conversation pairs (`user_low_id < user_high_id`) with idempotent creation and retrieval.
+- **Persistent Message Storage:** Strict chronological message persistence with millisecond-resolution ISO 8601 timestamps.
+- **Strict Server-Side Authorization:** Non-participants receive `403 Forbidden` if attempting to read or send messages in a conversation.
+- **Incremental Polling Sync:** High-efficiency message synchronization using cursor queries (`?after={lastMessageId}`) ensuring instant chat delivery without full history re-fetching.
+- **WhatsApp Web-Style In-Place Dashboard:** Split-screen layout (`/dashboard` and `/dashboard/:conversationId`) with fixed sidebar, live conversation list, unread message badges, and active chat stage.
+- **Read Receipts:** Unread message counts with automatic mark-as-read synchronization (`POST /api/conversations/:id/read`).
+
+### Phase 3: Profiles, Message Management, Search & Online Presence
+- **User Profiles & Bio:** Profile editing (`PUT /api/users/profile`) allowing users to update their full name and bio (up to 300 characters) with real-time character counters.
+- **Password Updates:** In-app authenticated password change (`PUT /api/auth/password`) with validation of current password and confirmation.
+- **Peer Profile View:** Interactive profile modal (`GET /api/users/:id`) to view peer bio, handle, join date, and genuine presence status.
+- **Message Editing:** Author-only message editing (`PUT /api/messages/:id`) with populated `edited_at` timestamp and an `(edited)` visual badge. Non-authors are rejected with `403 Forbidden`.
+- **Message Soft Deletion:** Author-only message deletion (`DELETE /api/messages/:id`) soft-deletes the message (`is_deleted = 1`), preserving conversation thread symmetry while displaying a tombstone indicator ("*This message was deleted*").
+- **In-Conversation Search:** Real-time keyword search (`GET /api/conversations/:id/messages/search?q=...`) with match highlights and hit navigation.
+- **Global Message Search:** Cross-conversation message history search (`GET /api/messages/search?q=...`) in the dashboard sidebar, jumping directly to the corresponding chat.
+- **Genuine Online Presence:** Activity-based online presence derived from database timestamps (`last_active_at` on `users`), showing "Active now" (within 120s) or "Active Xm ago", with visual presence indicators on avatars.
 
 ---
 
-## 2. Google Stitch MCP Integration & Design Tokens
+## 2. Visual Identity & Google Stitch Heritage
 
-### Design Source & Verification
-- **Stitch MCP Server:** Antigravity's lazy-loaded `StitchMCP` tool was inspected and utilized to query project `6993837939835101471` (ConnectX Tricolour).
-- **Retrieved Assets:** Screens were audited via `list_screens`, `get_screen`, and `download_file`. Specific empty state templates (`Desktop Chat Dashboard — Empty State`) and desktop auth flows were retrieved directly.
-- **Local Stitch Export:** The export in `stitch_export/stitch_connectx_tricolour_chat_ui` was audited against the live Stitch project to confirm complete design token parity.
-
-### Visual Identity Tokens
 - **Ashoka Chakra Navy (`#0A1128`):** Bedrock primary color for headings, primary CTAs, outgoing chat bubbles, and structural anchors.
-- **Saffron (`#F58220`):** Non-destructive attention anchor for badges, active thread highlights, and primary actions.
+- **Saffron (`#F58220`):** Attention anchor for badges, active thread highlights, and primary actions.
 - **India Green (`#138808`):** System telemetry, online indicators, and verified security statuses.
-- **Surfaces (`#FAFAF7`, `#F4F4F1`, `#FFFFFF`):** Expansive, warm alabaster surfaces.
+- **Surfaces (`#FAFAF7`, `#F4F4F1`, `#FFFFFF`):** Warm, expansive alabaster surfaces.
 - **Hairline Borders (`#E7E9E4`):** 1px structural framing.
 - **Typography:** `Inter` for interface hierarchy and `JetBrains Mono` for handles and system telemetry.
 
@@ -40,7 +47,7 @@ ConnectX is a modern, high-performance multi-user chat platform designed as a C+
 
 ## 3. C++ OOP Architecture
 
-The backend demonstrates strict Object-Oriented Programming (OOP) principles and separation of concerns:
+The backend demonstrates strict Object-Oriented Programming (OOP) principles, clean architecture, and separation of concerns:
 
 ```
 [ HTTP Request ]
@@ -51,21 +58,27 @@ The backend demonstrates strict Object-Oriented Programming (OOP) principles and
        ▼
 [ Controllers ]
   ├── HealthController ──────────► GET /api/health
-  └── AuthController   ──────────► POST /api/auth/register, /login, /logout, GET /me
+  ├── AuthController   ──────────► POST /api/auth/register, /login, /logout, GET /me,
+  │                                PUT /api/auth/password, PUT /api/users/profile, GET /api/users/:id
+  └── MessagingController ───────► POST/GET /api/conversations, GET/POST messages,
+                                  PUT/DELETE /api/messages/:id, search endpoints
        │
        ▼
 [ Services ]
-  ├── Validator ─────────────────► Format validation, trimming, sanitization
-  └── AuthService (IAuthService) ─► Password hashing (PBKDF2), session generation, auth logic
+  ├── Validator ─────────────────► Input validation, sanitization, length limits
+  ├── AuthService (IAuthService) ─► Password hashing (PBKDF2), session generation, profile updates
+  └── MessagingService (IMessagingService) ──► Conversation authorization, message lifecycle & search
        │
        ▼
 [ Repositories ]
-  ├── UserRepository (IUserRepository) ──────► User CRUD, parameterized SQL
-  └── SessionRepository (ISessionRepository) ─► Session lifecycle, expiration cleanup
+  ├── UserRepository (IUserRepository) ──────► User CRUD, profile & presence persistence
+  ├── SessionRepository (ISessionRepository) ─► Session lifecycle, expiration cleanup
+  ├── ConversationRepository ────────────────► Conversation normalization & idempotency
+  └── MessageRepository ─────────────────────► Message pagination, cursor sync, edits, search
        │
        ▼
 [ Database Layer ]
-  ├── Database (RAII Connection) ────────────► sqlite3* lifecycle, mutex synchronization
+  ├── Database (RAII Connection) ────────────► sqlite3* lifecycle, mutex synchronization, migrations
   └── Statement (RAII Statement Wrapper) ────► sqlite3_stmt* binding and stepping
        │
        ▼
@@ -74,7 +87,7 @@ The backend demonstrates strict Object-Oriented Programming (OOP) principles and
 
 ### Key OOP Principles
 1. **Encapsulation & RAII:** `Database` and `Statement` manage database handles and prepared statements via RAII, preventing memory and resource leaks.
-2. **Interface Segregation & Dependency Inversion:** `IUserRepository`, `ISessionRepository`, and `IAuthService` allow decoupled testing and mock injection.
+2. **Interface Segregation & Dependency Inversion:** `IUserRepository`, `ISessionRepository`, `IConversationRepository`, `IMessageRepository`, `IAuthService`, and `IMessagingService` decouple layers and enable mock injection for isolated unit testing.
 3. **Parameterization:** All queries use `sqlite3_bind_*` with zero untrusted SQL concatenation.
 4. **Thread Safety:** Database operations are synchronized using `std::mutex` with SQLite WAL mode.
 
@@ -89,8 +102,10 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL COLLATE NOCASE,
     email TEXT UNIQUE NOT NULL COLLATE NOCASE,
     full_name TEXT NOT NULL,
+    bio TEXT NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL,
     salt TEXT NOT NULL,
+    last_active_at TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -110,17 +125,67 @@ CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 ```
 
+### `conversations` Table
+```sql
+CREATE TABLE IF NOT EXISTS conversations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_low_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_high_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(user_low_id, user_high_id),
+    CHECK(user_low_id < user_high_id)
+);
+CREATE INDEX IF NOT EXISTS idx_conv_low ON conversations(user_low_id);
+CREATE INDEX IF NOT EXISTS idx_conv_high ON conversations(user_high_id);
+```
+
+### `messages` Table
+```sql
+CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    is_read INTEGER NOT NULL DEFAULT 0,
+    edited_at TEXT DEFAULT NULL,
+    is_deleted INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_messages_conv_created ON messages(conversation_id, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, is_read, sender_id);
+```
+
 ---
 
 ## 5. API Reference
 
+### Authentication & Profiles
 | Method | Endpoint | Description | Protected | Request Body | Success Code |
 |---|---|---|---|---|---|
 | `GET` | `/api/health` | Service health status | No | None | `200 OK` |
 | `POST` | `/api/auth/register` | Create account & start session | No | `{ username, email, fullName, password }` | `201 Created` |
 | `POST` | `/api/auth/login` | Authenticate & start session | No | `{ identifier, password }` | `200 OK` |
 | `POST` | `/api/auth/logout` | Terminate session & clear cookie | No | None | `200 OK` |
-| `GET` | `/api/auth/me` | Fetch authenticated user profile | **Yes** | None (reads cookie / Bearer token) | `200 OK` |
+| `GET` | `/api/auth/me` | Fetch authenticated user profile | **Yes** | None | `200 OK` |
+| `PUT` | `/api/auth/password` | Change user password | **Yes** | `{ currentPassword, newPassword }` | `200 OK` |
+| `GET` | `/api/users` | List registered members for discovery | **Yes** | Optional query `?q=` | `200 OK` |
+| `GET` | `/api/users/:id` | Fetch peer public profile (bio, presence) | **Yes** | None | `200 OK` |
+| `PUT` | `/api/users/profile` | Update profile (full name, bio) | **Yes** | `{ fullName, bio }` | `200 OK` |
+
+### Messaging & Search
+| Method | Endpoint | Description | Protected | Request Body | Success Code |
+|---|---|---|---|---|---|
+| `POST` | `/api/conversations` | Create or get 1-on-1 conversation | **Yes** | `{ participantId }` | `200/201` |
+| `GET` | `/api/conversations` | List user's conversations with preview | **Yes** | None | `200 OK` |
+| `GET` | `/api/conversations/:id` | Get single conversation details | **Yes** | None | `200 OK` |
+| `GET` | `/api/conversations/:id/messages`| Get message stream (supports `?after=`, `?before=`) | **Yes** | None | `200 OK` |
+| `POST` | `/api/conversations/:id/messages`| Send message to conversation | **Yes** | `{ body }` | `201 Created` |
+| `POST` | `/api/conversations/:id/read` | Mark all unread messages as read | **Yes** | None | `200 OK` |
+| `PUT` | `/api/messages/:id` | Edit message (author only) | **Yes** | `{ body }` | `200 OK` |
+| `DELETE` | `/api/messages/:id` | Soft delete message (author only) | **Yes** | None | `200 OK` |
+| `GET` | `/api/conversations/:id/messages/search`| Search messages in conversation | **Yes** | Query `?q=keyword` | `200 OK` |
+| `GET` | `/api/messages/search` | Global search across all user's chats | **Yes** | Query `?q=keyword` | `200 OK` |
 
 ---
 
@@ -150,7 +215,7 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
    ```bash
    .\server.exe 0.0.0.0 8080 connectx.db
    ```
-   The server will start on `http://localhost:8080` and automatically initialize `connectx.db`.
+   The server will start on `http://localhost:8080` and automatically initialize or migrate `connectx.db`.
 
 ### Build & Run Frontend
 
@@ -170,7 +235,7 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
    ```
    Open `http://localhost:5173` in your browser. Requests to `/api` are automatically proxied to `http://localhost:8080`.
 
-4. (Optional) Build for production:
+4. Build for production:
    ```bash
    npm run build
    ```
@@ -179,26 +244,21 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 
 ## 7. Automated Testing
 
-### Backend Unit & Integration Tests (15 Tests)
-The C++ test suite verifies schema creation, input validation, salted PBKDF2 hashing, duplicate rejections, authentication, multi-user isolation, SQL injection prevention, session invalidation, and persistence across server restarts.
+### 1. Backend Unit & Integration Tests (46 Tests)
+The C++ test suite verifies schema creation, input validation, salted PBKDF2 hashing, duplicate rejections, authentication, multi-user isolation, SQL injection prevention, session invalidation, conversation normalization, messaging permissions, chronological pagination, delta cursor polling, unread count tracking, profile editing, bio length validation, password updates, message editing, soft deletion, in-conversation search, global message search, and complete persistence across server restarts.
 
-Run the C++ test suite:
+Run the C++ unit test suite:
 ```bash
 cd backend
 mingw32-make test
+# or manually:
+# .\test_suite.exe
 ```
+**Result:** 46/46 tests passing (100%).
 
-### End-to-End HTTP API Integration Tests (10 Tests)
-Spawns the compiled C++ server on a live TCP port, executes real HTTP network calls (health, registration, duplicate checks, session validation, multi-user isolation, wrong password rejection, logout, and protected route denials), and verifies response integrity:
+### 2. End-to-End HTTP API Integration Tests (38 Tests)
+Spawns the compiled C++ server on a live TCP port, executes real HTTP network calls (health, registration, multi-user session isolation, 1-on-1 messaging, read receipts, privacy boundaries, profile updates, password change, message editing, soft deletion, search queries, server restart, and database persistence), and verifies response integrity:
 ```bash
 powershell -ExecutionPolicy Bypass -File .\e2e_integration_test.ps1
 ```
-
----
-
-## 8. Security Specifications
-
-1. **Password Protection:** Plaintext passwords are never persisted. Passwords are salted with 16 bytes from OpenSSL's cryptographically secure pseudo-random number generator (`RAND_bytes`) and hashed using PBKDF2-HMAC-SHA256 (100,000 iterations). Verification is executed using OpenSSL's constant-time comparison (`CRYPTO_memcmp`).
-2. **Session Security:** Sessions use 32-byte cryptographic random hex strings (64 characters). Cookies are dispatched with `HttpOnly`, `SameSite=Lax`, and `Path=/`.
-3. **Server-Side Authorization:** Every protected endpoint verifies the session token against the database. No client-side identity claim is trusted without verified session mapping.
-4. **Injection Immunity:** All SQL queries are strictly compiled and executed through prepared statements (`sqlite3_bind_*`).
+**Result:** 38/38 tests passing (100%).
