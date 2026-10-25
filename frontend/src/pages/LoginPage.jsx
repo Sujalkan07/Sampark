@@ -63,7 +63,7 @@ export function LoginPage() {
                     <TricolourBadge size="sm" />
                   </div>
                   <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
-                    C++ Backend
+                    Secure Access
                   </span>
                 </div>
               </div>
@@ -78,7 +78,7 @@ export function LoginPage() {
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-primary tracking-tight">Welcome back</h1>
               <p className="text-sm text-on-surface-variant mt-1">
-                Log in to continue your authenticated session.
+                Log in to continue your conversations.
               </p>
             </div>
 

@@ -86,10 +86,10 @@ export function FindPeoplePage() {
             </button>
           </div>
 
-          {/* Current User Record (Live Data from C++ backend) */}
+          {/* Current User Record */}
           <div className="mb-6">
-            <h2 className="text-xs font-semibold uppercase font-mono tracking-wider text-outline mb-3">
-              Your Registered Profile (Current Session)
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-outline mb-3">
+              Your Profile
             </h2>
             <div className="p-4 rounded-xl bg-surface-container-lowest border border-border-hairline shadow-xs flex items-center justify-between">
               <div className="flex items-center gap-3.5">
@@ -113,7 +113,7 @@ export function FindPeoplePage() {
                     </span>
                   </div>
                   <div className="text-xs text-on-surface-variant mt-0.5">
-                    {user?.email} • Account #{user?.id}
+                    {user?.email}
                   </div>
                 </div>
               </div>
@@ -127,19 +127,20 @@ export function FindPeoplePage() {
             </div>
           </div>
 
-          {/* Honest Empty State / Phase 2 Boundary Card */}
+          {/* Directory Status Card */}
           <div className="p-8 rounded-2xl bg-surface-container-low border border-border-hairline text-center flex flex-col items-center">
             <div className="w-12 h-12 rounded-2xl bg-surface-container-lowest border border-border-hairline flex items-center justify-center text-primary mb-3 shadow-xs">
               <span className="material-symbols-outlined text-[24px]">group_add</span>
             </div>
             <h3 className="text-base font-bold text-primary mb-1">
-              Phase 1 Directory Shell
+              Connect with Members
             </h3>
             <p className="text-xs text-on-surface-variant max-w-md leading-relaxed mb-4">
-              Real account creation, PBKDF2 password authentication, and multi-user database isolation are live. Global peer search and conversation initialization will be enabled in Phase 2.
+              Find and connect with people on ConnectX. As more members join the network, they will appear in this directory.
             </p>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest border border-border-hairline text-[11px] font-mono text-on-surface-variant">
-              <span>Database table: <code>users</code> • Active records persisted in SQLite</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-highest border border-border-hairline text-[11px] font-medium text-on-surface-variant">
+              <span className="w-1.5 h-1.5 rounded-full bg-india-green"></span>
+              <span>Directory ready for new connections</span>
             </div>
           </div>
         </div>

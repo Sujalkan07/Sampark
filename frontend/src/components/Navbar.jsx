@@ -34,10 +34,10 @@ export function Navbar() {
             Features
           </a>
           <a
-            href="#tech"
+            href="#preview"
             className="px-3 py-1.5 rounded-lg text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-medium"
           >
-            C++ Architecture
+            Product Preview
           </a>
         </nav>
 

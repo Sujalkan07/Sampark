@@ -124,7 +124,7 @@ export function DashboardPage() {
               </div>
               <h2 className="text-sm font-semibold text-primary mb-1">No conversations yet</h2>
               <p className="text-xs text-on-surface-variant max-w-[240px] leading-relaxed mb-4">
-                Messaging and live WebSocket delivery will connect to the C++ server in Phase 2.
+                Start by finding someone to connect with. New chats will appear here.
               </p>
               <button
                 onClick={() => navigate('/find-people')}
@@ -141,8 +141,8 @@ export function DashboardPage() {
                   <span className="material-symbols-outlined text-[18px]">hub</span>
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-on-surface">Network Directory</div>
-                  <div className="text-[10px] text-outline font-mono">Peer Discovery Shell</div>
+                  <div className="text-xs font-semibold text-on-surface">Member Directory</div>
+                  <div className="text-[10px] text-outline font-mono">Connect with peers</div>
                 </div>
               </div>
               <button
@@ -178,7 +178,7 @@ export function DashboardPage() {
             {/* Notice Modal/Alert if triggered */}
             {showNotice && (
               <div className="w-full max-w-md my-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center justify-between z-20">
-                <span>Phase 1 Scope: Direct messaging and socket delivery will arrive in Phase 2.</span>
+                <span>Direct messaging will be available in the upcoming release. You can search member profiles in Find People.</span>
                 <button onClick={() => setShowNotice(false)} className="text-blue-700 hover:text-blue-900 font-bold ml-2">
                   ×
                 </button>
@@ -246,9 +246,9 @@ export function DashboardPage() {
 
             {/* Bottom Status Footer */}
             <footer className="w-full flex items-center justify-center z-10">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-border-hairline text-xs font-mono text-on-surface-variant">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-border-hairline text-xs font-medium text-on-surface-variant">
                 <span className="w-2 h-2 rounded-full bg-india-green"></span>
-                <span>Connected to ConnectX C++ Backend • Localhost:8080</span>
+                <span>Connected to ConnectX Server • Active</span>
               </div>
             </footer>
           </section>

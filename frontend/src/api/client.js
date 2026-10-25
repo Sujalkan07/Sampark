@@ -44,7 +44,7 @@ async function request(endpoint, options = {}) {
     }
     // Network / server connection failure
     throw new ApiError(
-      'Unable to connect to the ConnectX backend server. Please make sure the C++ server is running.',
+      'Unable to connect to the ConnectX server. Please check your network connection or try again.',
       0,
       { originalError: error.message }
     );

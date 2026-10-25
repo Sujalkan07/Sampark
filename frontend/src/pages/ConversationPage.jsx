@@ -8,12 +8,12 @@ export function ConversationPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [inputText, setInputText] = useState('');
-  const [showPhase2Notice, setShowPhase2Notice] = useState(false);
+  const [showNotice, setShowNotice] = useState(false);
 
   const handleSend = (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-    setShowPhase2Notice(true);
+    setShowNotice(true);
     setInputText('');
   };
 
@@ -27,7 +27,7 @@ export function ConversationPage() {
           <div className="flex items-center gap-3">
             <span className="font-bold text-base text-primary tracking-tight">ConnectX</span>
             <span className="text-outline/50">•</span>
-            <span className="text-sm font-medium text-on-surface-variant">Conversation Shell (Phase 1)</span>
+            <span className="text-sm font-medium text-on-surface-variant">Conversation Preview</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -43,16 +43,16 @@ export function ConversationPage() {
           </div>
         </header>
 
-        {/* Phase 1 Boundary Banner */}
-        <div className="bg-amber-50 border-b border-amber-200 px-6 py-2.5 text-xs text-amber-900 flex items-center justify-between">
+        {/* Informational Banner */}
+        <div className="bg-amber-50/70 border-b border-amber-200/80 px-6 py-2.5 text-xs text-amber-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px] text-saffron">info</span>
             <span>
-              <strong>Phase 1 UI Shell:</strong> This demonstrates the approved conversation layout and bubble alignments (incoming-left, outgoing-right). WebSocket delivery and conversation persistence will be implemented in Phase 2.
+              Preview mode. Direct one-to-one messaging will be enabled in the upcoming release.
             </span>
           </div>
           <button
-            onClick={() => setShowPhase2Notice(false)}
+            onClick={() => setShowNotice(false)}
             className="text-amber-700 hover:text-amber-900 font-bold"
           >
             ×
@@ -65,8 +65,8 @@ export function ConversationPage() {
           <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             {/* Timestamp separator */}
             <div className="text-center my-4">
-              <span className="px-3 py-1 rounded-full bg-surface-container-high text-[11px] font-mono text-outline">
-                Illustrative Layout Sample
+              <span className="px-3 py-1 rounded-full bg-surface-container-high text-[11px] font-medium text-outline">
+                Conversation Preview
               </span>
             </div>
 
@@ -76,9 +76,9 @@ export function ConversationPage() {
                 CX
               </div>
               <div className="bg-surface-container-lowest border border-border-hairline text-on-surface p-3.5 rounded-2xl rounded-bl-xs shadow-xs text-sm leading-relaxed">
-                <p className="font-semibold text-xs text-primary mb-1">ConnectX System Peer</p>
+                <p className="font-semibold text-xs text-primary mb-1">ConnectX Welcome</p>
                 <p>
-                  Welcome to ConnectX! Your account <strong>@{user?.username}</strong> is securely registered and authenticated against the C++ backend.
+                  Welcome to ConnectX, <strong>{user?.fullName || user?.username}</strong>! Your account is active and ready to connect.
                 </p>
                 <span className="text-[10px] text-outline block text-right mt-1 font-mono">10:00 AM</span>
               </div>
@@ -87,15 +87,15 @@ export function ConversationPage() {
             {/* Self Outgoing Bubble (Right aligned, Ashoka Navy) */}
             <div className="flex items-end justify-end gap-2.5 max-w-[80%] ml-auto">
               <div className="bg-primary text-white p-3.5 rounded-2xl rounded-br-xs shadow-xs text-sm leading-relaxed">
-                <p>Hello! Testing the Phase 1 UI integration and layout styling.</p>
+                <p>Hello! Looking forward to connecting and sharing updates.</p>
                 <span className="text-[10px] text-white/70 block text-right mt-1 font-mono">10:02 AM • Sent</span>
               </div>
             </div>
 
             {/* Notice if user types and sends */}
-            {showPhase2Notice && (
+            {showNotice && (
               <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 text-center animate-fade-in">
-                Real-time message transmission and database delivery are scheduled for <strong>Phase 2</strong>.
+                Live chat messaging will be active in the upcoming release.
               </div>
             )}
           </div>
@@ -107,7 +107,7 @@ export function ConversationPage() {
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type a message (Phase 1 composer preview)..."
+                placeholder="Type a message..."
                 className="flex-1 bg-surface-container-lowest text-sm text-on-surface placeholder:text-outline pl-4 pr-12 py-3 rounded-xl border border-border-hairline focus:border-secondary focus:outline-none shadow-xs transition-all"
               />
               <button
