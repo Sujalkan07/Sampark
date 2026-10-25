@@ -53,7 +53,7 @@ export function FindPeoplePage() {
       setError(null);
       const res = await api.createOrGetConversation(targetUser.id);
       if (res && res.conversation && res.conversation.id) {
-        navigate(`/conversation/${res.conversation.id}`);
+        navigate(`/dashboard/${res.conversation.id}`);
       } else {
         throw new Error('Failed to open conversation. Please try again.');
       }
@@ -141,10 +141,10 @@ export function FindPeoplePage() {
                     <p className="font-semibold">{notice}</p>
                     <button
                       type="button"
-                      onClick={() => navigate('/conversation')}
+                      onClick={() => navigate('/dashboard')}
                       className="text-secondary hover:underline font-semibold mt-1 inline-block"
                     >
-                      View Conversation Layout Preview →
+                      View Messages in Dashboard →
                     </button>
                   </div>
                 </div>
@@ -311,10 +311,9 @@ export function FindPeoplePage() {
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="relative shrink-0">
-                          <div className="w-11 h-11 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                          <div className="w-11 h-11 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none">
                             {initials}
                           </div>
-                          <span className="absolute bottom-0 right-0 w-3 h-3 bg-india-green rounded-full ring-2 ring-surface-container-lowest"></span>
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">

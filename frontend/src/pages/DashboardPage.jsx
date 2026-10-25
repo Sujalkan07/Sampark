@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { Sidebar } from '../components/Sidebar';
 import { TricolourBadge } from '../components/TricolourBadge';
 import { AlertBanner } from '../components/AlertBanner';
+import { ChatPanel } from '../components/ChatPanel';
 
 export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { conversationId } = useParams();
 
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,12 +19,25 @@ export function DashboardPage() {
   const [activeTab, setActiveTab] = useState('all');
 
   const pollIntervalRef = useRef(null);
+  const activeConversationIdRef = useRef(conversationId);
+  activeConversationIdRef.current = conversationId;
 
-  const fetchConversations = async (isInitial = false) => {
+  const fetchConversations = useCallback(async (isInitial = false) => {
     try {
       if (isInitial) setLoading(true);
       const data = await api.getConversations();
-      setConversations(data?.conversations || []);
+      const rawList = data?.conversations || [];
+
+      // If a conversation is currently open, force its unreadCount to 0 locally
+      const currentActiveId = activeConversationIdRef.current;
+      const normalizedList = rawList.map((c) => {
+        if (currentActiveId && String(c.id) === String(currentActiveId)) {
+          return { ...c, unreadCount: 0 };
+        }
+        return c;
+      });
+
+      setConversations(normalizedList);
       setError(null);
     } catch (err) {
       if (isInitial) {
@@ -31,7 +46,7 @@ export function DashboardPage() {
     } finally {
       if (isInitial) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchConversations(true);
@@ -46,7 +61,47 @@ export function DashboardPage() {
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, []);
+  }, [fetchConversations]);
+
+  // When conversationId changes in URL, clear unread count for that conversation in state
+  useEffect(() => {
+    if (conversationId) {
+      setConversations((prev) =>
+        prev.map((c) =>
+          String(c.id) === String(conversationId) ? { ...c, unreadCount: 0 } : c
+        )
+      );
+    }
+  }, [conversationId]);
+
+  // Callback from ChatPanel whenever a message is sent or received
+  const handleConversationActivity = useCallback(
+    ({ conversationId: activityId, lastMessage }) => {
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => String(c.id) === String(activityId));
+        if (index === -1) {
+          fetchConversations(false);
+          return prev;
+        }
+
+        const current = prev[index];
+        const isCurrentOpen =
+          activeConversationIdRef.current &&
+          String(activeConversationIdRef.current) === String(activityId);
+
+        const updated = {
+          ...current,
+          lastMessage,
+          updatedAt: lastMessage.createdAt,
+          unreadCount: isCurrentOpen ? 0 : (current.unreadCount || 0) + 1,
+        };
+
+        const remaining = prev.filter((_, i) => i !== index);
+        return [updated, ...remaining];
+      });
+    },
+    [fetchConversations]
+  );
 
   // Format preview timestamp
   const formatPreviewTime = (isoString) => {
@@ -117,12 +172,16 @@ export function DashboardPage() {
           </div>
         </header>
 
-        {/* Studio Body: Split View */}
+        {/* Dashboard Body: Split View */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Conversation List Sidebar (340px) */}
-          <aside className="w-full md:w-[340px] shrink-0 bg-surface-container-lowest border-r border-border-hairline flex flex-col h-full z-10">
+          {/* Conversation List Sidebar: visible always on desktop, hidden on mobile if chat open */}
+          <aside
+            className={`${
+              conversationId ? 'hidden md:flex' : 'flex'
+            } w-full md:w-[340px] shrink-0 bg-surface-container-lowest border-r border-border-hairline flex-col h-full z-10`}
+          >
             {/* Header */}
-            <div className="p-5 pb-3">
+            <div className="p-4 sm:p-5 pb-3">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
                   <h1 className="text-lg font-bold text-primary tracking-tight">Messages</h1>
@@ -134,7 +193,7 @@ export function DashboardPage() {
                 <button
                   onClick={() => navigate('/find-people')}
                   className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all active:scale-95 group shadow-xs cursor-pointer"
-                  title="Start new conversation"
+                  title="Find People to message"
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[19px] group-hover:rotate-90 transition-transform">
@@ -162,7 +221,7 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('all')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
                     activeTab === 'all'
                       ? 'bg-primary text-white shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-container'
@@ -173,7 +232,7 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('unread')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
                     activeTab === 'unread'
                       ? 'bg-primary text-white shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-container'
@@ -189,7 +248,7 @@ export function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('direct')}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
                     activeTab === 'direct'
                       ? 'bg-primary text-white shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-container'
@@ -239,6 +298,7 @@ export function DashboardPage() {
                 <button
                   onClick={() => navigate('/find-people')}
                   className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container text-primary hover:bg-surface-container-high transition-colors border border-border-hairline cursor-pointer"
+                  type="button"
                 >
                   Find People
                 </button>
@@ -261,28 +321,37 @@ export function DashboardPage() {
                   const snippet = lastMsg?.body || 'No messages yet';
                   const timestamp = formatPreviewTime(lastMsg?.createdAt || conv.updatedAt);
                   const hasUnread = conv.unreadCount > 0;
+                  const isActive = String(conv.id) === String(conversationId);
 
                   return (
                     <div
                       key={conv.id}
-                      onClick={() => navigate(`/conversation/${conv.id}`)}
-                      className={`p-3.5 flex items-center justify-between hover:bg-surface-container-low transition-colors cursor-pointer group ${
-                        hasUnread ? 'bg-surface-container-low/60' : ''
+                      onClick={() => navigate(`/dashboard/${conv.id}`)}
+                      className={`relative p-3.5 flex items-center justify-between transition-colors cursor-pointer group ${
+                        isActive
+                          ? 'bg-[#fff9f2]'
+                          : hasUnread
+                          ? 'bg-surface-container-low/60 hover:bg-surface-container-low'
+                          : 'hover:bg-surface-container-low'
                       }`}
                     >
+                      {/* Active indicator bar */}
+                      {isActive && (
+                        <span className="absolute left-0 top-2 bottom-2 w-1 bg-saffron rounded-r-full"></span>
+                      )}
+
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="relative shrink-0">
-                          <div className="w-10 h-10 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                          <div className="w-10 h-10 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none">
                             {initials}
                           </div>
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-india-green rounded-full ring-2 ring-surface-container-lowest"></span>
                         </div>
 
                         <div className="min-w-0 flex-1 pr-2">
                           <div className="flex items-center justify-between mb-0.5">
                             <span
-                              className={`text-xs font-semibold truncate ${
-                                hasUnread ? 'text-primary font-bold' : 'text-on-surface'
+                              className={`text-xs truncate ${
+                                isActive || hasUnread ? 'text-primary font-bold' : 'text-on-surface'
                               }`}
                             >
                               {peer?.fullName || `@${peer?.username}`}
@@ -302,7 +371,7 @@ export function DashboardPage() {
                             >
                               {snippet}
                             </p>
-                            {hasUnread && (
+                            {hasUnread && !isActive && (
                               <span className="px-1.5 py-0.2 rounded-full bg-saffron text-white text-[10px] font-bold shrink-0 ml-1">
                                 {conv.unreadCount}
                               </span>
@@ -331,87 +400,105 @@ export function DashboardPage() {
                 onClick={() => navigate('/find-people')}
                 className="w-7 h-7 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant transition-colors cursor-pointer"
                 title="Open Directory"
+                type="button"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
               </button>
             </div>
           </aside>
 
-          {/* Main Empty State Stage (Approved Stitch Empty State) */}
-          <section className="hidden md:flex flex-1 bg-surface flex-col justify-between items-center relative overflow-hidden select-none p-6">
-            {/* Ambient Decorative Motif */}
-            <div className="absolute -top-32 right-12 w-96 h-96 rounded-full bg-gradient-to-br from-secondary/5 via-primary/5 to-transparent blur-3xl pointer-events-none"></div>
-            <div className="absolute -bottom-24 -left-20 w-80 h-80 rounded-full bg-gradient-to-tr from-saffron/5 via-india-green/5 to-transparent blur-3xl pointer-events-none"></div>
+          {/* Right Stage: In-place Active Chat or Empty State */}
+          <section
+            className={`${
+              conversationId ? 'flex' : 'hidden md:flex'
+            } flex-1 flex-col h-full bg-[#fafaf7] min-w-0 overflow-hidden relative`}
+          >
+            {conversationId ? (
+              <ChatPanel
+                conversationId={conversationId}
+                onConversationActivity={handleConversationActivity}
+                onBack={() => navigate('/dashboard')}
+              />
+            ) : (
+              /* Approved Stitch Empty State Stage */
+              <div className="flex-1 flex flex-col justify-between items-center relative overflow-hidden select-none p-6">
+                {/* Ambient Decorative Motif */}
+                <div className="absolute -top-32 right-12 w-96 h-96 rounded-full bg-gradient-to-br from-secondary/5 via-primary/5 to-transparent blur-3xl pointer-events-none"></div>
+                <div className="absolute -bottom-24 -left-20 w-80 h-80 rounded-full bg-gradient-to-tr from-saffron/5 via-india-green/5 to-transparent blur-3xl pointer-events-none"></div>
 
-            {/* Top Stage Header */}
-            <header className="w-full flex items-center justify-between z-10">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-outline font-mono">
-                  Direct Communication Fabric
-                </span>
-                <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
-                <span className="text-xs text-on-surface-variant">Authenticated Session</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <TricolourBadge size="sm" />
-              </div>
-            </header>
+                {/* Top Stage Header */}
+                <header className="w-full flex items-center justify-between z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-outline font-mono">
+                      Direct Communication Fabric
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
+                    <span className="text-xs text-on-surface-variant">Authenticated Session</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TricolourBadge size="sm" />
+                  </div>
+                </header>
 
-            {/* Centered Minimal Hero Panel */}
-            <div className="w-full max-w-lg px-6 flex flex-col items-center text-center my-auto z-10">
-              <div className="relative mb-6 flex items-center justify-center">
-                <div className="w-16 h-16 p-3.5 rounded-2xl bg-surface-container-lowest border border-border-hairline shadow-sm flex items-center justify-center relative">
-                  <svg className="w-10 h-10" fill="none" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="29" cy="11" fill="#F58220" r="3.5" />
-                    <circle cx="11" cy="29" fill="#138808" r="2.5" />
-                    <path d="M12 28L28 12" stroke="#0A1128" strokeDasharray="2 2" strokeLinecap="round" strokeWidth="2" />
-                    <rect fill="#0A1128" height="14" rx="4" width="16" x="8" y="10" />
-                    <path d="M14 24L11 27V24H14Z" fill="#0A1128" />
-                    <rect fill="#2D4FCF" height="12" rx="3.5" width="14" x="18" y="18" />
-                    <circle cx="13.5" cy="17" fill="#FFFFFF" r="1.25" />
-                    <circle cx="18.5" cy="17" fill="#FFFFFF" r="1.25" />
-                    <path d="M23 24H27" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="1.5" />
-                  </svg>
+                {/* Centered Minimal Hero Panel */}
+                <div className="w-full max-w-lg px-6 flex flex-col items-center text-center my-auto z-10">
+                  <div className="relative mb-6 flex items-center justify-center">
+                    <div className="w-16 h-16 p-3.5 rounded-2xl bg-surface-container-lowest border border-border-hairline shadow-sm flex items-center justify-center relative">
+                      <svg className="w-10 h-10" fill="none" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="29" cy="11" fill="#F58220" r="3.5" />
+                        <circle cx="11" cy="29" fill="#138808" r="2.5" />
+                        <path d="M12 28L28 12" stroke="#0A1128" strokeDasharray="2 2" strokeLinecap="round" strokeWidth="2" />
+                        <rect fill="#0A1128" height="14" rx="4" width="16" x="8" y="10" />
+                        <path d="M14 24L11 27V24H14Z" fill="#0A1128" />
+                        <rect fill="#2D4FCF" height="12" rx="3.5" width="14" x="18" y="18" />
+                        <circle cx="13.5" cy="17" fill="#FFFFFF" r="1.25" />
+                        <circle cx="18.5" cy="17" fill="#FFFFFF" r="1.25" />
+                        <path d="M23 24H27" stroke="#FFFFFF" strokeLinecap="round" strokeWidth="1.5" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <h2 className="text-2xl font-bold text-primary tracking-tight mb-2">
+                    Your conversations start here.
+                  </h2>
+
+                  <p className="text-sm text-on-surface-variant max-w-sm mb-6 leading-relaxed">
+                    Choose someone from your chats or find a person on the Sampark network to send your first message.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/find-people')}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover active:scale-[0.98] transition-all font-semibold text-sm shadow-xs flex items-center justify-center gap-2 group cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[19px] group-hover:scale-110 transition-transform">
+                        person_search
+                      </span>
+                      <span>Find People</span>
+                    </button>
+                  </div>
+
+                  <div className="mt-8 flex items-center gap-2 text-outline text-xs">
+                    <span>Welcome to Sampark,</span>
+                    <span className="font-semibold text-primary">{user?.fullName || user?.username}</span>
+                  </div>
                 </div>
+
+                {/* Bottom Status Footer */}
+                <footer className="w-full flex items-center justify-center z-10">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-border-hairline text-xs font-medium text-on-surface-variant">
+                    <span className="w-2 h-2 rounded-full bg-india-green"></span>
+                    <span>Connected to Sampark Server • Active</span>
+                  </div>
+                </footer>
               </div>
-
-              <h2 className="text-2xl font-bold text-primary tracking-tight mb-2">
-                Your conversations start here.
-              </h2>
-
-              <p className="text-sm text-on-surface-variant max-w-sm mb-6 leading-relaxed">
-                Choose someone from your chats or find a person on the Sampark network to send your first message.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => navigate('/find-people')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary-hover active:scale-[0.98] transition-all font-semibold text-sm shadow-xs flex items-center justify-center gap-2 group cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[19px] group-hover:scale-110 transition-transform">
-                    person_search
-                  </span>
-                  <span>Find People</span>
-                </button>
-              </div>
-
-              <div className="mt-8 flex items-center gap-2 text-outline text-xs">
-                <span>Welcome to Sampark,</span>
-                <span className="font-semibold text-primary">{user?.fullName || user?.username}</span>
-              </div>
-            </div>
-
-            {/* Bottom Status Footer */}
-            <footer className="w-full flex items-center justify-center z-10">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-border-hairline text-xs font-medium text-on-surface-variant">
-                <span className="w-2 h-2 rounded-full bg-india-green"></span>
-                <span>Connected to Sampark Server • Active</span>
-              </div>
-            </footer>
+            )}
           </section>
         </div>
       </div>
     </div>
   );
 }
+
+export default DashboardPage;

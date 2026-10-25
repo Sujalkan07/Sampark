@@ -62,20 +62,6 @@ export function Sidebar() {
           >
             <span className="material-symbols-outlined text-[22px]">group_add</span>
           </NavLink>
-
-          <NavLink
-            to="/conversation"
-            title="Conversation"
-            className={({ isActive }) =>
-              `relative w-11 h-11 flex items-center justify-center rounded-xl transition-all ${
-                isActive
-                  ? 'bg-surface-container-high text-primary font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-saffron shadow-xs'
-                  : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-              }`
-            }
-          >
-            <span className="material-symbols-outlined text-[22px]">chat</span>
-          </NavLink>
         </nav>
       </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
@@ -7,7 +7,11 @@ import { LoginPage } from './pages/LoginPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { FindPeoplePage } from './pages/FindPeoplePage';
-import { ConversationPage } from './pages/ConversationPage';
+
+function ConversationRedirect() {
+  const { conversationId } = useParams();
+  return <Navigate to={conversationId ? `/dashboard/${conversationId}` : '/dashboard'} replace />;
+}
 
 export function App() {
   return (
@@ -43,6 +47,14 @@ export function App() {
             }
           />
           <Route
+            path="/dashboard/:conversationId"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/find-people"
             element={
               <ProtectedRoute>
@@ -54,7 +66,7 @@ export function App() {
             path="/conversation"
             element={
               <ProtectedRoute>
-                <ConversationPage />
+                <ConversationRedirect />
               </ProtectedRoute>
             }
           />
@@ -62,7 +74,7 @@ export function App() {
             path="/conversation/:conversationId"
             element={
               <ProtectedRoute>
-                <ConversationPage />
+                <ConversationRedirect />
               </ProtectedRoute>
             }
           />
