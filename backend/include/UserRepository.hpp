@@ -5,6 +5,7 @@
 #include <optional>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace connectx {
 
@@ -23,6 +24,9 @@ public:
                                          const std::string& fullName,
                                          const std::string& passwordHash,
                                          const std::string& salt) = 0;
+    virtual std::vector<User> searchUsers(const std::string& query,
+                                          int64_t excludeUserId,
+                                          int limit = 50) = 0;
 };
 
 class SqliteUserRepository : public IUserRepository {
@@ -41,6 +45,9 @@ public:
                                 const std::string& fullName,
                                 const std::string& passwordHash,
                                 const std::string& salt) override;
+    std::vector<User> searchUsers(const std::string& query,
+                                  int64_t excludeUserId,
+                                  int limit = 50) override;
 
 private:
     Database& db_;

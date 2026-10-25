@@ -133,4 +133,54 @@ std::optional<User> SqliteUserRepository::create(const std::string& username,
     return std::nullopt;
 }
 
+std::vector<User> SqliteUserRepository::searchUsers(const std::string& query, int64_t excludeUserId, int limit) {
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    std::vector<User> users;
+
+    if (limit <= 0) limit = 50;
+    if (limit > 100) limit = 100;
+
+    std::string sql;
+    bool hasQuery = !query.empty();
+
+    if (hasQuery) {
+        sql = "SELECT id, username, '' as email, full_name, '' as password_hash, '' as salt, created_at, updated_at "
+              "FROM users "
+              "WHERE id != ? AND (username LIKE ? ESCAPE '\\' OR full_name LIKE ? ESCAPE '\\') "
+              "ORDER BY username COLLATE NOCASE ASC LIMIT ?;";
+    } else {
+        sql = "SELECT id, username, '' as email, full_name, '' as password_hash, '' as salt, created_at, updated_at "
+              "FROM users "
+              "WHERE id != ? "
+              "ORDER BY created_at DESC LIMIT ?;";
+    }
+
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return users;
+
+    stmt.bindInt64(1, excludeUserId);
+
+    if (hasQuery) {
+        std::string escaped;
+        for (char c : query) {
+            if (c == '%' || c == '_' || c == '\\') {
+                escaped += '\\';
+            }
+            escaped += c;
+        }
+        std::string pattern = "%" + escaped + "%";
+        stmt.bindText(2, pattern);
+        stmt.bindText(3, pattern);
+        stmt.bindInt64(4, limit);
+    } else {
+        stmt.bindInt64(2, limit);
+    }
+
+    while (stmt.step() == SQLITE_ROW) {
+        users.push_back(extractUser(stmt));
+    }
+
+    return users;
+}
+
 } // namespace connectx

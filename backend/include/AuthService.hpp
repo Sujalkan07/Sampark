@@ -24,6 +24,10 @@ public:
     virtual bool logout(const std::string& token) = 0;
 
     virtual std::optional<User> validateSession(const std::string& token) = 0;
+
+    virtual std::optional<std::vector<User>> searchUsers(const std::string& token,
+                                                         const std::string& query,
+                                                         int limit = 50) = 0;
 };
 
 class AuthService : public IAuthService {
@@ -43,6 +47,10 @@ public:
     bool logout(const std::string& token) override;
 
     std::optional<User> validateSession(const std::string& token) override;
+
+    std::optional<std::vector<User>> searchUsers(const std::string& token,
+                                                 const std::string& query,
+                                                 int limit = 50) override;
 
     // Cryptographic helper methods
     static std::string generateSalt(size_t byteCount = 16);

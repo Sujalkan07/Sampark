@@ -139,9 +139,65 @@ void runTests() {
         auto loggedOutUser = authService->validateSession(userSessionToken);
         assert(!loggedOutUser.has_value());
         std::cout << "[PASS] Test 14: Logout terminates session; subsequent verification fails" << std::endl;
+
+        // Re-authenticate Aarav to obtain a fresh session for discovery tests
+        auto reLoginAarav = authService->login("aarav_sharma", "SecretPassword123!");
+        assert(reLoginAarav.success);
+        std::string aaravToken = reLoginAarav.session->token;
+
+        // Test 15: User Discovery & Self-exclusion
+        // Priya searches: should find Aarav and exclude Priya
+        auto priyaDiscovers = authService->searchUsers(priyaToken, "");
+        assert(priyaDiscovers.has_value());
+        assert(priyaDiscovers->size() == 1);
+        assert((*priyaDiscovers)[0].username == "aarav_sharma");
+        assert((*priyaDiscovers)[0].fullName == "Aarav Sharma");
+
+        // Aarav searches: should find Priya and exclude Aarav
+        auto aaravDiscovers = authService->searchUsers(aaravToken, "");
+        assert(aaravDiscovers.has_value());
+        assert(aaravDiscovers->size() == 1);
+        assert((*aaravDiscovers)[0].username == "priya_patel");
+        assert((*aaravDiscovers)[0].fullName == "Priya Patel");
+        std::cout << "[PASS] Test 15: User discovery excludes caller and discovers registered peers" << std::endl;
+
+        // Test 16: Partial and Case-Insensitive Search
+        auto searchPriyaCase = authService->searchUsers(aaravToken, "PRIYA");
+        assert(searchPriyaCase.has_value() && searchPriyaCase->size() == 1);
+        assert((*searchPriyaCase)[0].username == "priya_patel");
+
+        auto searchFullName = authService->searchUsers(priyaToken, "Sharma");
+        assert(searchFullName.has_value() && searchFullName->size() == 1);
+        assert((*searchFullName)[0].username == "aarav_sharma");
+
+        auto searchNonExistent = authService->searchUsers(aaravToken, "ghost_user_xyz");
+        assert(searchNonExistent.has_value() && searchNonExistent->empty());
+        std::cout << "[PASS] Test 16: Case-insensitive username and display name search" << std::endl;
+
+        // Test 17: Unauthenticated discovery rejection
+        auto unauthSearch = authService->searchUsers("bad_token_999", "");
+        assert(!unauthSearch.has_value());
+        std::cout << "[PASS] Test 17: Unauthenticated search request rejected (nullopt)" << std::endl;
+
+        // Test 18: SQL injection protection in search query
+        auto sqlInjSearch = authService->searchUsers(aaravToken, "' OR '1'='1");
+        assert(sqlInjSearch.has_value() && sqlInjSearch->empty());
+        std::cout << "[PASS] Test 18: SQL injection search payload safely handled without data leakage" << std::endl;
+
+        // Test 19: Privacy verification (No password hash, salt, or private tokens)
+        auto discoveredUser = (*priyaDiscovers)[0];
+        assert(discoveredUser.passwordHash.empty());
+        assert(discoveredUser.salt.empty());
+        connectx::json publicJson = discoveredUser.toPublicJson();
+        assert(!publicJson.contains("passwordHash"));
+        assert(!publicJson.contains("salt"));
+        assert(!publicJson.contains("email"));
+        assert(publicJson.contains("username"));
+        assert(publicJson.contains("fullName"));
+        std::cout << "[PASS] Test 19: User discovery payload does not expose hashes, salts, or emails" << std::endl;
     } // DB is closed and destructed here
 
-    // Test 15: Database persistence survives application restart
+    // Test 20: Database persistence survives application restart
     {
         connectx::Database db(testDbPath);
         auto userRepo = std::make_shared<connectx::SqliteUserRepository>(db);
@@ -158,7 +214,7 @@ void runTests() {
         assert(reAuth.success);
         assert(reAuth.user.has_value());
         assert(reAuth.user->username == "aarav_sharma");
-        std::cout << "[PASS] Test 15: Database persistence survives application restart" << std::endl;
+        std::cout << "[PASS] Test 20: Database persistence survives application restart" << std::endl;
     }
 
     // Clean up test DB
@@ -167,7 +223,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 15 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 20 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

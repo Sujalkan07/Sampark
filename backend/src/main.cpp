@@ -5,6 +5,7 @@
 #include "Server.hpp"
 #include <iostream>
 #include <cstdlib>
+#include <filesystem>
 
 int main(int argc, char* argv[]) {
     std::cout << "========================================" << std::endl;
@@ -30,7 +31,15 @@ int main(int argc, char* argv[]) {
     if (argc > 2) port = std::atoi(argv[2]);
     if (argc > 3) dbPath = argv[3];
 
-    std::cout << "[Config] Database Path: " << dbPath << std::endl;
+    // If default path was used without explicit override, check if database exists in backend/ subfolder
+    if (argc <= 3 && !std::getenv("DATABASE_PATH")) {
+        if (!std::filesystem::exists("connectx.db") && std::filesystem::exists("backend/connectx.db")) {
+            dbPath = "backend/connectx.db";
+        }
+    }
+
+    std::cout << "[Config] Database Path: " << dbPath
+              << " (" << std::filesystem::absolute(dbPath).string() << ")" << std::endl;
     std::cout << "[Config] Host: " << host << ", Port: " << port << std::endl;
 
     connectx::Database db(dbPath);

@@ -81,4 +81,15 @@ export const api = {
       method: 'GET',
     });
   },
+
+  async searchUsers(query = '', limit = 50) {
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (limit) params.append('limit', limit.toString());
+    const queryString = params.toString();
+    const endpoint = queryString ? `/api/users?${queryString}` : '/api/users';
+    return request(endpoint, {
+      method: 'GET',
+    });
+  },
 };

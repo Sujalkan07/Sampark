@@ -226,4 +226,25 @@ std::optional<User> AuthService::validateSession(const std::string& token) {
     return userRepo_->findById(session->userId);
 }
 
+std::optional<std::vector<User>> AuthService::searchUsers(const std::string& token,
+                                                         const std::string& query,
+                                                         int limit) {
+    if (token.empty()) return std::nullopt;
+
+    auto session = sessionRepo_->findSession(token);
+    if (!session) {
+        return std::nullopt;
+    }
+
+    std::string cleanQuery = Validator::trim(query);
+    if (cleanQuery.length() > 50) {
+        cleanQuery = cleanQuery.substr(0, 50);
+    }
+
+    if (limit <= 0) limit = 50;
+    if (limit > 100) limit = 100;
+
+    return userRepo_->searchUsers(cleanQuery, session->userId, limit);
+}
+
 } // namespace connectx

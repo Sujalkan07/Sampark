@@ -33,6 +33,15 @@ struct User {
         }
         return j;
     }
+
+    json toPublicJson() const {
+        return {
+            {"id", id},
+            {"username", username},
+            {"fullName", fullName},
+            {"createdAt", createdAt}
+        };
+    }
 };
 
 struct Session {

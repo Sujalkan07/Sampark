@@ -71,6 +71,15 @@ void Server::setupRoutes() {
     svr_.Get("/api/auth/me", [this](const httplib::Request& req, httplib::Response& res) {
         authController_->handleMe(req, res);
     });
+
+    // 5. User Discovery Endpoints
+    svr_.Get("/api/users", [this](const httplib::Request& req, httplib::Response& res) {
+        authController_->handleSearchUsers(req, res);
+    });
+
+    svr_.Get("/api/users/search", [this](const httplib::Request& req, httplib::Response& res) {
+        authController_->handleSearchUsers(req, res);
+    });
 }
 
 bool Server::listen(const std::string& host, int port) {

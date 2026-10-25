@@ -172,4 +172,41 @@ void AuthController::handleMe(const httplib::Request& req, httplib::Response& re
     res.set_content(responseBody.dump(), "application/json");
 }
 
+void AuthController::handleSearchUsers(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    std::string query = req.get_param_value("q");
+    int limit = 50;
+    if (req.has_param("limit")) {
+        try {
+            limit = std::stoi(req.get_param_value("limit"));
+        } catch (...) {
+            limit = 50;
+        }
+    }
+
+    auto usersOpt = authService_->searchUsers(token, query, limit);
+    if (!usersOpt) {
+        clearSessionCookie(res);
+        sendError(res, 401, "Session expired or invalid. Please log in again.");
+        return;
+    }
+
+    json userArray = json::array();
+    for (const auto& u : *usersOpt) {
+        userArray.push_back(u.toPublicJson());
+    }
+
+    json responseBody = {
+        {"users", userArray},
+        {"count", userArray.size()}
+    };
+    res.status = 200;
+    res.set_content(responseBody.dump(), "application/json");
+}
+
 } // namespace connectx
