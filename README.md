@@ -596,21 +596,6 @@ Sampark is built with a defense-in-depth approach to application security:
 - **Path Traversal Defenses:** File upload names are stripped of path separators and stored under non-guessable random hex disk paths.
 - **Privacy Enforcement:** Read receipts can be disabled in user preferences; the server actively nullifies read timestamps in message responses when privacy mode is active.
 
----
-
-## 🖼️ UI Showcase
-
-<div align="center">
-
-| Active Conversation Stage | Member Discovery |
-|---|---|
-| <img src="stitch_export/stitch_connectx_tricolour_chat_ui/active_conversation/screen.png" width="450" alt="Active Chat" style="border-radius: 8px; border: 1px solid #ddd;" /> | <img src="stitch_export/stitch_connectx_tricolour_chat_ui/desktop_find_people/screen.png" width="450" alt="Find People" style="border-radius: 8px; border: 1px solid #ddd;" /> |
-
-| Public Landing Page | Authentication Interface |
-|---|---|
-| <img src="stitch_export/stitch_connectx_tricolour_chat_ui/desktop_landing_page/screen.png" width="450" alt="Landing Page" style="border-radius: 8px; border: 1px solid #ddd;" /> | <img src="stitch_export/stitch_connectx_tricolour_chat_ui/desktop_log_in/screen.png" width="450" alt="Login" style="border-radius: 8px; border: 1px solid #ddd;" /> |
-
-</div>
 
 ---
 
