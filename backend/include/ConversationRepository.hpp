@@ -33,6 +33,8 @@ public:
     virtual bool deleteGroup(int64_t conversationId) = 0;
     virtual std::optional<std::string> getMemberRole(int64_t conversationId, int64_t userId) = 0;
     virtual bool transferAdmin(int64_t conversationId, int64_t currentAdminId, int64_t newAdminId) = 0;
+    virtual bool updateLastReadMessage(int64_t conversationId, int64_t userId) = 0;
+    virtual bool updateMemberRole(int64_t conversationId, int64_t userId, const std::string& newRole) = 0;
 };
 
 class SqliteConversationRepository : public IConversationRepository {
@@ -60,6 +62,8 @@ public:
     bool deleteGroup(int64_t conversationId) override;
     std::optional<std::string> getMemberRole(int64_t conversationId, int64_t userId) override;
     bool transferAdmin(int64_t conversationId, int64_t currentAdminId, int64_t newAdminId) override;
+    bool updateLastReadMessage(int64_t conversationId, int64_t userId) override;
+    bool updateMemberRole(int64_t conversationId, int64_t userId, const std::string& newRole) override;
 
 private:
     Database& db_;

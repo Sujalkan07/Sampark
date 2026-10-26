@@ -138,15 +138,37 @@ CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 ```sql
 CREATE TABLE IF NOT EXISTS conversations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_low_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    user_high_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type TEXT NOT NULL DEFAULT 'direct',      -- 'direct' or 'group'
+    name TEXT NOT NULL DEFAULT '',            -- Group name (empty for direct)
+    description TEXT NOT NULL DEFAULT '',     -- Optional group topic/description
+    avatar_url TEXT NOT NULL DEFAULT '',      -- Optional group avatar
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    user_low_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    user_high_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE(user_low_id, user_high_id),
-    CHECK(user_low_id < user_high_id)
+    CHECK (
+        (type = 'direct' AND user_low_id IS NOT NULL AND user_high_id IS NOT NULL AND user_low_id < user_high_id)
+        OR (type = 'group' AND name != '')
+    )
 );
-CREATE INDEX IF NOT EXISTS idx_conv_low ON conversations(user_low_id);
-CREATE INDEX IF NOT EXISTS idx_conv_high ON conversations(user_high_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conv_direct_pair 
+    ON conversations(user_low_id, user_high_id) 
+    WHERE type = 'direct';
+CREATE INDEX IF NOT EXISTS idx_conv_type ON conversations(type);
+```
+
+### `conversation_members` Table
+```sql
+CREATE TABLE IF NOT EXISTS conversation_members (
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'member',     -- 'admin' or 'member'
+    joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+    last_read_message_id INTEGER DEFAULT 0,  -- Per-member unread pointer
+    PRIMARY KEY (conversation_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_conv_members_user ON conversation_members(user_id);
 ```
 
 ### `messages` Table
@@ -156,6 +178,7 @@ CREATE TABLE IF NOT EXISTS messages (
     conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
     sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
+    reply_to_id INTEGER REFERENCES messages(id) ON DELETE SET NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     read_at TEXT DEFAULT NULL,
     edited_at TEXT DEFAULT NULL,
@@ -163,6 +186,49 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_messages_conv_created ON messages(conversation_id, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, read_at, sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_reply_to ON messages(reply_to_id);
+```
+
+### `message_reactions` Table
+```sql
+CREATE TABLE IF NOT EXISTS message_reactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id INTEGER NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    emoji TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(message_id, user_id, emoji)
+);
+CREATE INDEX IF NOT EXISTS idx_reactions_message ON message_reactions(message_id);
+```
+
+### `attachments` Table
+```sql
+CREATE TABLE IF NOT EXISTS attachments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    uploader_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message_id INTEGER REFERENCES messages(id) ON DELETE SET NULL,
+    file_name TEXT NOT NULL,                  -- Sanitized original display name
+    file_path TEXT NOT NULL,                  -- Safe server-side disk storage path
+    file_size INTEGER NOT NULL,
+    mime_type TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_attachments_conv ON attachments(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_msg ON attachments(message_id);
+```
+
+### `user_preferences` Table
+```sql
+CREATE TABLE IF NOT EXISTS user_preferences (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    theme TEXT NOT NULL DEFAULT 'system',    -- 'light', 'dark', 'system'
+    sound_notifications INTEGER NOT NULL DEFAULT 1,
+    desktop_notifications INTEGER NOT NULL DEFAULT 0,
+    read_receipts_enabled INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 ```
 
 ---
@@ -182,29 +248,58 @@ CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, read
 | `GET` | `/api/users/:id` | Fetch peer public profile (bio, presence) | **Yes** | None | `200 OK` |
 | `PUT` | `/api/users/profile` | Update profile (full name, bio) | **Yes** | `{ fullName, bio }` | `200 OK` |
 
-### Messaging & Search
+### Messaging, Replies & Search
 | Method | Endpoint | Description | Protected | Request Body | Success Code |
 |---|---|---|---|---|---|
 | `POST` | `/api/conversations` | Create or get 1-on-1 conversation | **Yes** | `{ participantId }` | `200/201` |
 | `GET` | `/api/conversations` | List user's conversations with preview | **Yes** | None | `200 OK` |
 | `GET` | `/api/conversations/:id` | Get single conversation details | **Yes** | None | `200 OK` |
 | `GET` | `/api/conversations/:id/messages`| Get message stream (supports `?after=`, `?before=`) | **Yes** | None | `200 OK` |
-| `POST` | `/api/conversations/:id/messages`| Send message to conversation | **Yes** | `{ body }` | `201 Created` |
+| `POST` | `/api/conversations/:id/messages`| Send message (supports `replyToId`, `attachmentId`) | **Yes** | `{ body, replyToId?, attachmentId? }` | `201 Created` |
 | `POST` | `/api/conversations/:id/read` | Mark all unread messages as read | **Yes** | None | `200 OK` |
 | `PUT` | `/api/messages/:id` | Edit message (author only) | **Yes** | `{ body }` | `200 OK` |
 | `DELETE` | `/api/messages/:id` | Soft delete message (author only) | **Yes** | None | `200 OK` |
+| `POST` | `/api/messages/:id/reactions` | Toggle emoji reaction on message | **Yes** | `{ emoji }` | `200 OK` |
 | `GET` | `/api/conversations/:id/messages/search`| Search messages in conversation | **Yes** | Query `?q=keyword` | `200 OK` |
 | `GET` | `/api/messages/search` | Global search across all user's chats | **Yes** | Query `?q=keyword` | `200 OK` |
+
+### Group Management
+| Method | Endpoint | Description | Protected | Request Body | Success Code |
+|---|---|---|---|---|---|
+| `POST` | `/api/groups` | Create group chat with initial members | **Yes** | `{ name, description?, memberIds }` | `201 Created` |
+| `GET` | `/api/conversations/:id/members` | List members of a group with roles | **Yes** | None | `200 OK` |
+| `POST` | `/api/conversations/:id/members` | Add new member to group (admin only) | **Yes** | `{ userId }` | `200 OK` |
+| `DELETE` | `/api/conversations/:id/members/:userId` | Remove member from group (admin only) | **Yes** | None | `200 OK` |
+| `PUT` | `/api/conversations/:id/members/:userId` | Promote/demote member role (`admin`/`member`) | **Yes** | `{ role }` | `200 OK` |
+| `POST` | `/api/conversations/:id/leave` | Leave group (transfers admin if sole admin) | **Yes** | None | `200 OK` |
+| `PUT` | `/api/conversations/:id` | Update group name/description (admin only) | **Yes** | `{ name, description }` | `200 OK` |
+| `DELETE` | `/api/conversations/:id` | Disband group completely (admin only) | **Yes** | None | `200 OK` |
+
+### File Attachments & Upload Security
+| Method | Endpoint | Description | Protected | Request Body | Success Code |
+|---|---|---|---|---|---|
+| `POST` | `/api/conversations/:id/attachments` | Upload attachment (magic bytes checked, max 10MB) | **Yes** | Multipart form-data or raw bytes | `201 Created` |
+| `GET` | `/api/attachments/:id` | Download attachment (conversation participant only) | **Yes** | None | `200 OK` |
+| `DELETE` | `/api/attachments/:id` | Delete unlinked attachment before message send | **Yes** | None | `200 OK` |
+
+### User Preferences & Settings
+| Method | Endpoint | Description | Protected | Request Body | Success Code |
+|---|---|---|---|---|---|
+| `GET` | `/api/users/preferences` | Retrieve user preferences | **Yes** | None | `200 OK` |
+| `PUT` | `/api/users/preferences` | Update preferences (theme, audio, receipts) | **Yes** | `{ theme?, soundNotifications?, ... }` | `200 OK` |
 
 ---
 
 ## 6. Local Setup and Execution
 
 ### Prerequisites
-- **C++ Compiler:** GCC supporting C++20 (e.g. MSYS2 UCRT64 `g++` 16.2.0 or modern Linux GCC / Clang).
-- **Libraries:** `sqlite3`, `libssl`, `libcrypto`, `ws2_32` (Windows) or `pthread` (Linux).
+- **C++ Compiler:** GCC supporting C++20 (WSL Ubuntu `g++` recommended on Windows, or MSYS2 / Linux GCC 11+).
+- **Libraries:** `sqlite3`, `libssl`, `libcrypto`, `pthread`.
 - **Node.js:** v18+ (tested on Node.js v22).
-- **Make:** `mingw32-make` or standard `make`.
+- **Make:** Standard GNU `make`.
+
+> [!NOTE]
+> On modern Windows systems with Windows Defender Application Control (WDAC) or AppLocker policies active in user profiles, compiling and running the backend binaries inside **WSL (Ubuntu)** is the documented and verified approach (and is used automatically by `e2e_integration_test.ps1`).
 
 ### Build & Run C++ Backend
 
@@ -215,14 +310,15 @@ CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, read
 
 2. Compile the server:
    ```bash
-   mingw32-make server.exe
-   # or on Linux/macOS:
-   # make server.exe
+   # On Linux or WSL (Ubuntu):
+   make server
+   # or on Windows with MinGW:
+   mingw32-make server
    ```
 
 3. Run the server:
    ```bash
-   .\server.exe 0.0.0.0 8080 connectx.db
+   ./server 0.0.0.0 8080 connectx.db
    ```
    The server will start on `http://localhost:8080` and automatically initialize or migrate `connectx.db`.
 
@@ -233,7 +329,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, read
    cd frontend
    ```
 
-2. Install dependencies (if not already installed):
+2. Install dependencies:
    ```bash
    npm install
    ```
@@ -253,17 +349,17 @@ CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, read
 
 ## 7. Automated Testing
 
-### 1. Backend Unit & Integration Tests (61 Tests)
-The C++ test suite verifies schema creation, input validation, salted PBKDF2 hashing, duplicate rejections, authentication, multi-user isolation, SQL injection prevention, session invalidation, conversation normalization, messaging permissions, chronological pagination, delta cursor polling, unread count tracking, profile editing, bio length validation, password updates, message editing, soft deletion, in-conversation search, global message search, CORS allowlist verification, concurrent session revocation, redundant soft-delete rejection, search wildcard escaping, schema migration idempotency, and complete persistence across server restarts, as well as Phase 4 group management, message replies, emoji reactions, attachment limits & validation, and user preference synchronization.
+### 1. Backend Unit & Integration Tests (72 Tests)
+The C++ test suite verifies schema creation, input validation, salted PBKDF2 hashing, duplicate rejections, authentication, multi-user isolation, SQL injection prevention, session invalidation, conversation normalization, messaging permissions, chronological pagination, delta cursor polling, unread count tracking, profile editing, bio length validation, password updates, message editing, soft deletion, in-conversation search, global message search, CORS allowlist verification, concurrent session revocation, redundant soft-delete rejection, search wildcard escaping, schema migration idempotency, persistence across server restarts, group chat administration, role updates, admin departure auto-transfer, message replies, cross-conversation reply rejection, emoji reaction toggling & aggregation, file attachment upload security (magic byte sniffing for JPEG/PNG/GIF/WebP/PDF/DOCX/DOC/TXT, 10MB limits, mismatched signature/extension rejection, binary-in-text rejection, path traversal sanitization, random storage name generation, access control, unlinked attachment deletion, reuse prevention), user preferences CRUD and read receipt privacy suppression, and complete legacy SQLite schema migration with foreign key integrity checks.
 
 Run the C++ unit test suite:
 ```bash
 cd backend
 make test
-# or manually in WSL / Linux:
-# ./test_suite
+# or via WSL on Windows:
+wsl -d Ubuntu --cd backend make test
 ```
-**Result:** 61/61 tests passing (100%).
+**Result:** 72/72 tests passing (100%).
 
 ### 2. End-to-End HTTP API Integration Tests (26 Multi-Step Tests)
 Spawns the compiled C++ server on a live TCP port, executes real HTTP network calls across the entire feature surface (health check, CORS preflight allowlist and untrusted origin rejection, user registration, session token security, multi-user session isolation, 1-on-1 messaging, read receipts, privacy boundaries, profile updates, group creation, member management, group message delivery, message replies, emoji reactions, file attachment uploads and downloads, user preferences & Dark Mode updates, group admin actions, group disbanding, and database persistence), and verifies response integrity:

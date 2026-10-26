@@ -27,6 +27,7 @@ public:
     void handleGetGroupMembers(const httplib::Request& req, httplib::Response& res);
     void handleAddGroupMember(const httplib::Request& req, httplib::Response& res);
     void handleRemoveGroupMember(const httplib::Request& req, httplib::Response& res);
+    void handleUpdateGroupMemberRole(const httplib::Request& req, httplib::Response& res);
     void handleUpdateGroup(const httplib::Request& req, httplib::Response& res);
     void handleDeleteGroup(const httplib::Request& req, httplib::Response& res);
     void handleLeaveGroup(const httplib::Request& req, httplib::Response& res);
@@ -37,6 +38,7 @@ public:
     // Phase 4: Attachment Handlers
     void handleUploadAttachment(const httplib::Request& req, httplib::Response& res);
     void handleGetAttachment(const httplib::Request& req, httplib::Response& res);
+    void handleDeleteAttachment(const httplib::Request& req, httplib::Response& res);
 
     // Phase 4: Preferences Handlers
     void handleGetPreferences(const httplib::Request& req, httplib::Response& res);

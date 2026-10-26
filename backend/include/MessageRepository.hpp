@@ -33,6 +33,8 @@ public:
     virtual bool linkAttachmentToMessage(int64_t attachmentId, int64_t messageId) = 0;
     virtual std::optional<Attachment> getAttachmentById(int64_t attachmentId) = 0;
     virtual std::optional<Attachment> getMessageAttachment(int64_t messageId) = 0;
+    virtual bool deleteAttachment(int64_t attachmentId) = 0;
+    virtual int cleanupOrphanedAttachments(int maxAgeHours = 24) = 0;
     virtual UserPreferences getUserPreferences(int64_t userId) = 0;
     virtual bool updateUserPreferences(const UserPreferences& prefs) = 0;
 };
@@ -62,6 +64,8 @@ public:
     bool linkAttachmentToMessage(int64_t attachmentId, int64_t messageId) override;
     std::optional<Attachment> getAttachmentById(int64_t attachmentId) override;
     std::optional<Attachment> getMessageAttachment(int64_t messageId) override;
+    bool deleteAttachment(int64_t attachmentId) override;
+    int cleanupOrphanedAttachments(int maxAgeHours = 24) override;
     UserPreferences getUserPreferences(int64_t userId) override;
     bool updateUserPreferences(const UserPreferences& prefs) override;
 

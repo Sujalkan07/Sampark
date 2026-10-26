@@ -5,45 +5,14 @@
 #include <filesystem>
 #include <chrono>
 #include <algorithm>
+#include <random>
+#include <sstream>
+#include <iomanip>
+#include <openssl/rand.h>
 
 namespace connectx {
 
 namespace fs = std::filesystem;
-
-static std::string sanitizeFileName(const std::string& input) {
-    std::string safe;
-    for (char c : input) {
-        if (c == '/' || c == '\\' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|' || c == '\0') {
-            continue;
-        }
-        safe.push_back(c);
-    }
-    if (safe.empty() || safe == ".." || safe == ".") {
-        safe = "attachment.dat";
-    }
-    return safe;
-}
-
-static bool isAllowedExtension(const std::string& ext) {
-    std::string lower = ext;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-    return (lower == ".jpg" || lower == ".jpeg" || lower == ".png" || lower == ".webp" || lower == ".gif" ||
-            lower == ".pdf" || lower == ".txt" || lower == ".docx" || lower == ".doc");
-}
-
-static std::string detectMimeType(const std::string& ext, const std::string& declaredMime) {
-    std::string lower = ext;
-    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-    if (lower == ".jpg" || lower == ".jpeg") return "image/jpeg";
-    if (lower == ".png") return "image/png";
-    if (lower == ".webp") return "image/webp";
-    if (lower == ".gif") return "image/gif";
-    if (lower == ".pdf") return "application/pdf";
-    if (lower == ".txt") return "text/plain";
-    if (lower == ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    if (lower == ".doc") return "application/msword";
-    return declaredMime.empty() ? "application/octet-stream" : declaredMime;
-}
 
 MessagingService::MessagingService(std::shared_ptr<IConversationRepository> convRepo,
                                    std::shared_ptr<IMessageRepository> msgRepo,
@@ -204,6 +173,20 @@ MessagingResult MessagingService::getMessages(const std::string& sessionToken, i
 
     auto msgs = msgRepo_->getMessages(conversationId, limit, beforeId, afterId, *callerId);
 
+    // Read receipt privacy enforcement:
+    // If either participant in a direct conversation has disabled read receipts,
+    // suppress readAt timestamps so read status is not disclosed.
+    if (conv->type == "direct") {
+        int64_t otherId = (conv->userLowId == *callerId) ? conv->userHighId : conv->userLowId;
+        auto myPrefs = msgRepo_->getUserPreferences(*callerId);
+        auto otherPrefs = msgRepo_->getUserPreferences(otherId);
+        if (!myPrefs.readReceiptsEnabled || !otherPrefs.readReceiptsEnabled) {
+            for (auto& m : msgs) {
+                m.readAt = std::nullopt;
+            }
+        }
+    }
+
     res.success = true;
     res.statusCode = 200;
     res.conversation = conv;
@@ -272,8 +255,35 @@ MessagingResult MessagingService::sendMessage(const std::string& sessionToken, i
         }
     }
 
+    // Validate attachment if provided
+    if (attachmentId.has_value() && *attachmentId > 0) {
+        auto att = msgRepo_->getAttachmentById(*attachmentId);
+        if (!att || att->conversationId != conversationId || att->uploaderId != *callerId) {
+            res.success = false;
+            res.statusCode = 400;
+            res.message = "Invalid attachment reference: attachment does not belong to this conversation or user.";
+            return res;
+        }
+        if (att->messageId.has_value() && *att->messageId > 0) {
+            res.success = false;
+            res.statusCode = 400;
+            res.message = "Attachment is already linked to another message.";
+            return res;
+        }
+    }
+
     auto createdMsg = msgRepo_->createMessage(conversationId, *callerId, trimmedBody, replyToId);
     if (!createdMsg) {
+        // If message creation failed and an unlinked attachment was provided, clean up the attachment to avoid orphans
+        if (attachmentId.has_value() && *attachmentId > 0) {
+            auto att = msgRepo_->getAttachmentById(*attachmentId);
+            if (att && att->uploaderId == *callerId && !att->messageId.has_value()) {
+                try {
+                    if (fs::exists(att->filePath)) fs::remove(att->filePath);
+                } catch (...) {}
+                msgRepo_->deleteAttachment(*attachmentId);
+            }
+        }
         res.success = false;
         res.statusCode = 500;
         res.message = "Failed to persist message.";
@@ -283,8 +293,9 @@ MessagingResult MessagingService::sendMessage(const std::string& sessionToken, i
     // Link attachment if provided
     if (attachmentId.has_value() && *attachmentId > 0) {
         auto att = msgRepo_->getAttachmentById(*attachmentId);
-        if (att && att->conversationId == conversationId && att->uploaderId == *callerId) {
+        if (att && att->conversationId == conversationId && att->uploaderId == *callerId && !att->messageId.has_value()) {
             msgRepo_->linkAttachmentToMessage(*attachmentId, createdMsg->id);
+            att->messageId = createdMsg->id;
             createdMsg->attachment = att;
         }
     }
@@ -305,14 +316,19 @@ MessagingResult MessagingService::markAsRead(const std::string& sessionToken, in
         return res;
     }
 
-    if (!convRepo_->isParticipant(conversationId, *callerId)) {
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv || !convRepo_->isParticipant(conversationId, *callerId)) {
         res.success = false;
         res.statusCode = 403;
         res.message = "Access denied: you are not a participant in this conversation.";
         return res;
     }
 
-    msgRepo_->markAsRead(conversationId, *callerId);
+    if (conv->type == "group") {
+        convRepo_->updateLastReadMessage(conversationId, *callerId);
+    } else {
+        msgRepo_->markAsRead(conversationId, *callerId);
+    }
 
     res.success = true;
     res.statusCode = 200;
@@ -578,6 +594,13 @@ MessagingResult MessagingService::addGroupMember(const std::string& sessionToken
         return res;
     }
 
+    if (convRepo_->isParticipant(conversationId, targetUserId)) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "User is already a member of this group.";
+        return res;
+    }
+
     bool ok = convRepo_->addMember(conversationId, targetUserId, "member");
     if (!ok) {
         res.success = false;
@@ -603,14 +626,23 @@ MessagingResult MessagingService::removeGroupMember(const std::string& sessionTo
         return res;
     }
 
-    if (*callerId != targetUserId) {
-        auto role = convRepo_->getMemberRole(conversationId, *callerId);
-        if (!role || *role != "admin") {
-            res.success = false;
-            res.statusCode = 403;
-            res.message = "Only group administrators can remove other members.";
-            return res;
-        }
+    if (!convRepo_->isParticipant(conversationId, targetUserId)) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "User is not a member of this group.";
+        return res;
+    }
+
+    if (*callerId == targetUserId) {
+        return leaveGroup(sessionToken, conversationId);
+    }
+
+    auto role = convRepo_->getMemberRole(conversationId, *callerId);
+    if (!role || *role != "admin") {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "Only group administrators can remove other members.";
+        return res;
     }
 
     bool ok = convRepo_->removeMember(conversationId, targetUserId);
@@ -624,6 +656,67 @@ MessagingResult MessagingService::removeGroupMember(const std::string& sessionTo
     res.success = true;
     res.statusCode = 200;
     res.message = "Member removed from group.";
+    return res;
+}
+
+MessagingResult MessagingService::updateGroupMemberRole(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId, const std::string& role) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto myRole = convRepo_->getMemberRole(conversationId, *callerId);
+    if (!myRole || *myRole != "admin") {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "Only group administrators can change member roles.";
+        return res;
+    }
+
+    if (role != "admin" && role != "member") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Invalid role. Allowed roles: 'admin', 'member'.";
+        return res;
+    }
+
+    if (!convRepo_->isParticipant(conversationId, targetUserId)) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Target user is not a member of this group.";
+        return res;
+    }
+
+    if (*callerId == targetUserId && role == "member") {
+        auto members = convRepo_->getGroupMembers(conversationId);
+        int adminCount = 0;
+        for (const auto& m : members) {
+            if (m.role == "admin") adminCount++;
+        }
+        if (adminCount <= 1) {
+            res.success = false;
+            res.statusCode = 400;
+            res.message = "Cannot demote the sole group administrator. Promote another admin first.";
+            return res;
+        }
+    }
+
+    bool ok = convRepo_->updateMemberRole(conversationId, targetUserId, role);
+    if (!ok) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to update member role.";
+        return res;
+    }
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Member role updated successfully.";
+    res.members = convRepo_->getGroupMembers(conversationId);
     return res;
 }
 
@@ -788,6 +881,13 @@ MessagingResult MessagingService::toggleReaction(const std::string& sessionToken
         return res;
     }
 
+    if (msg->isDeleted) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Cannot react to a deleted message.";
+        return res;
+    }
+
     auto [ok, action] = msgRepo_->toggleReaction(messageId, *callerId, emoji);
     if (!ok) {
         res.success = false;
@@ -806,6 +906,7 @@ MessagingResult MessagingService::toggleReaction(const std::string& sessionToken
 // Phase 4: Attachments
 MessagingResult MessagingService::uploadAttachment(const std::string& sessionToken, int64_t conversationId,
                                                    const std::string& fileName, const std::string& rawBytes, const std::string& mimeType) {
+    (void)mimeType; // Unused - server determines MIME strictly from file signatures
     MessagingResult res;
     auto callerId = authenticate(sessionToken);
     if (!callerId) {
@@ -822,33 +923,27 @@ MessagingResult MessagingService::uploadAttachment(const std::string& sessionTok
         return res;
     }
 
-    if (rawBytes.empty()) {
+    auto valRes = Validator::validateAttachment(fileName, rawBytes);
+    if (!valRes.isValid) {
         res.success = false;
         res.statusCode = 400;
-        res.message = "Attachment file cannot be empty.";
+        res.message = valRes.error;
         return res;
     }
 
-    if (rawBytes.size() > 10 * 1024 * 1024) {
-        res.success = false;
-        res.statusCode = 400;
-        res.message = "Attachment size exceeds the 10MB limit.";
-        return res;
+    // Generate safe, server-controlled unique disk filename with zero user input in filename
+    unsigned char randBytes[16];
+    if (RAND_bytes(randBytes, sizeof(randBytes)) != 1) {
+        std::random_device rd;
+        for (int i = 0; i < 16; ++i) randBytes[i] = rd() & 0xFF;
     }
-
-    std::string safeName = sanitizeFileName(fileName);
-    std::string ext = fs::path(safeName).extension().string();
-    if (!isAllowedExtension(ext)) {
-        res.success = false;
-        res.statusCode = 400;
-        res.message = "File type not allowed. Supported formats: images (JPEG, PNG, WebP, GIF) and documents (PDF, TXT, DOCX, DOC).";
-        return res;
+    std::stringstream hexStream;
+    for (int i = 0; i < 16; ++i) {
+        hexStream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(randBytes[i]);
     }
-
-    // Path traversal protected unique filename
     int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
-    std::string diskName = std::to_string(timestamp) + "_" + std::to_string(*callerId) + "_" + safeName;
+    std::string diskName = std::to_string(timestamp) + "_" + std::to_string(*callerId) + "_" + hexStream.str() + valRes.safeStorageExt;
     std::string fullPath = "uploads/" + diskName;
 
     std::ofstream out(fullPath, std::ios::binary);
@@ -861,11 +956,9 @@ MessagingResult MessagingService::uploadAttachment(const std::string& sessionTok
     out.write(rawBytes.data(), rawBytes.size());
     out.close();
 
-    std::string effectiveMime = detectMimeType(ext, mimeType);
-
-    auto att = msgRepo_->createAttachment(*callerId, conversationId, safeName, fullPath, static_cast<int64_t>(rawBytes.size()), effectiveMime);
+    auto att = msgRepo_->createAttachment(*callerId, conversationId, valRes.sanitizedFileName, fullPath, static_cast<int64_t>(rawBytes.size()), valRes.detectedMime);
     if (!att) {
-        fs::remove(fullPath);
+        try { fs::remove(fullPath); } catch (...) {}
         res.success = false;
         res.statusCode = 500;
         res.message = "Failed to record attachment.";
@@ -903,6 +996,31 @@ MessagingResult MessagingService::getAttachment(const std::string& sessionToken,
         return res;
     }
 
+    // Check if the associated message was deleted
+    if (att->messageId.has_value() && *att->messageId > 0) {
+        auto msg = msgRepo_->getMessageById(*att->messageId, *callerId);
+        if (msg && msg->isDeleted) {
+            res.success = false;
+            res.statusCode = 404;
+            res.message = "Attachment is no longer available.";
+            return res;
+        }
+    }
+
+    try {
+        if (!fs::exists(att->filePath)) {
+            res.success = false;
+            res.statusCode = 404;
+            res.message = "Attachment file not found on disk.";
+            return res;
+        }
+    } catch (...) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Attachment file not found on disk.";
+        return res;
+    }
+
     std::ifstream in(att->filePath, std::ios::binary);
     if (!in.is_open()) {
         res.success = false;
@@ -919,6 +1037,56 @@ MessagingResult MessagingService::getAttachment(const std::string& sessionToken,
     res.fileMimeType = att->mimeType;
     res.fileName = att->fileName;
     return res;
+}
+
+MessagingResult MessagingService::deleteAttachment(const std::string& sessionToken, int64_t attachmentId) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto att = msgRepo_->getAttachmentById(attachmentId);
+    if (!att) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Attachment not found.";
+        return res;
+    }
+
+    if (att->uploaderId != *callerId) {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "Forbidden: you can only delete your own attachments.";
+        return res;
+    }
+
+    if (att->messageId.has_value() && *att->messageId > 0) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Cannot delete an attachment that is already linked to a message.";
+        return res;
+    }
+
+    try {
+        if (fs::exists(att->filePath)) {
+            fs::remove(att->filePath);
+        }
+    } catch (...) {}
+
+    msgRepo_->deleteAttachment(attachmentId);
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Attachment deleted.";
+    return res;
+}
+
+int MessagingService::cleanupOrphanedAttachments(int maxAgeHours) {
+    return msgRepo_->cleanupOrphanedAttachments(maxAgeHours);
 }
 
 // Phase 4: Preferences

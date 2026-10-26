@@ -387,15 +387,20 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
       setInputText((prev) => prev + emoji);
       return;
     }
-    const start = input.selectionStart || inputText.length;
-    const end = input.selectionEnd || inputText.length;
-    const nextText = inputText.substring(0, start) + emoji + inputText.substring(end);
+    const currentVal = input.value;
+    const hasStart = typeof input.selectionStart === 'number';
+    const hasEnd = typeof input.selectionEnd === 'number';
+    const start = hasStart ? input.selectionStart : currentVal.length;
+    const end = hasEnd ? input.selectionEnd : currentVal.length;
+
+    const nextText = currentVal.substring(0, start) + emoji + currentVal.substring(end);
     setInputText(nextText);
-    requestAnimationFrame(() => {
-      input.focus();
-      const pos = start + emoji.length;
-      input.setSelectionRange(pos, pos);
-    });
+
+    // Synchronize DOM input value and selection cursor immediately
+    input.value = nextText;
+    const pos = start + emoji.length;
+    input.focus();
+    input.setSelectionRange(pos, pos);
   };
 
   // Emoji Reaction Toggle

@@ -487,6 +487,19 @@ bool SqliteConversationRepository::transferAdmin(int64_t conversationId, int64_t
     if (conversationId <= 0 || newAdminId <= 0) return false;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
+
+    // Verify newAdminId is a member
+    {
+        const std::string checkSql = "SELECT 1 FROM conversation_members WHERE conversation_id = ? AND user_id = ? LIMIT 1;";
+        Statement checkStmt(db_.getHandle(), checkSql);
+        if (!checkStmt.isValid()) return false;
+        checkStmt.bindInt64(1, conversationId);
+        checkStmt.bindInt64(2, newAdminId);
+        if (checkStmt.step() != SQLITE_ROW) {
+            return false;
+        }
+    }
+
     char* errMsg = nullptr;
     sqlite3_exec(db_.getHandle(), "BEGIN IMMEDIATE TRANSACTION;", nullptr, nullptr, &errMsg);
 
@@ -525,6 +538,33 @@ bool SqliteConversationRepository::transferAdmin(int64_t conversationId, int64_t
 
     sqlite3_exec(db_.getHandle(), "COMMIT;", nullptr, nullptr, nullptr);
     return true;
+}
+
+bool SqliteConversationRepository::updateLastReadMessage(int64_t conversationId, int64_t userId) {
+    if (conversationId <= 0 || userId <= 0) return false;
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "UPDATE conversation_members "
+                            "SET last_read_message_id = (SELECT COALESCE(MAX(id), 0) FROM messages WHERE conversation_id = ?) "
+                            "WHERE conversation_id = ? AND user_id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+    stmt.bindInt64(1, conversationId);
+    stmt.bindInt64(2, conversationId);
+    stmt.bindInt64(3, userId);
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteConversationRepository::updateMemberRole(int64_t conversationId, int64_t userId, const std::string& newRole) {
+    if (conversationId <= 0 || userId <= 0) return false;
+    if (newRole != "admin" && newRole != "member") return false;
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "UPDATE conversation_members SET role = ? WHERE conversation_id = ? AND user_id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+    stmt.bindText(1, newRole);
+    stmt.bindInt64(2, conversationId);
+    stmt.bindInt64(3, userId);
+    return stmt.step() == SQLITE_DONE;
 }
 
 } // namespace connectx

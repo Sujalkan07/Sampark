@@ -2,20 +2,32 @@
 node_modules/
 package-lock.json
 
-# Build outputs
+# Build outputs & Binaries
 frontend/dist/
 dist/
-backend/*.exe
+*.exe
+server
+test_suite
+backend/server
+backend/test_suite
+*.o
+*.obj
 backend/*.o
 backend/src/*.o
 backend/tests/*.o
-*.obj
 
-# Databases
+# Uploads (preserve upload directory structure via .gitkeep)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Databases & SQLite Journal files
 *.db
 *.db-wal
 *.db-shm
 test_connectx.db
+e2e_test.db
+test_phase4.db
+test_legacy_migration.db
 
 # Environment and local configs
 .env
@@ -23,11 +35,12 @@ test_connectx.db
 frontend/.env
 frontend/.env.local
 
-# IDE and OS files
+# IDE, OS, and tool cache files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+.archify/
 
 # Antigravity artifacts
 .gemini/

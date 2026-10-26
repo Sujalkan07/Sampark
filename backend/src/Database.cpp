@@ -262,6 +262,8 @@ void Database::migrateSchema() {
         // Safe migration: disable foreign keys temporarily during table swap
         sqlite3_exec(db_, "PRAGMA foreign_keys = OFF;", nullptr, nullptr, nullptr);
         const char* migrateConvSql = R"(
+            BEGIN TRANSACTION;
+            DROP TABLE IF EXISTS conversations_phase4;
             CREATE TABLE conversations_phase4 (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type TEXT NOT NULL DEFAULT 'direct',
@@ -282,13 +284,15 @@ void Database::migrateSchema() {
             CREATE INDEX IF NOT EXISTS idx_conv_user_high ON conversations(user_high_id);
             CREATE INDEX IF NOT EXISTS idx_conv_type ON conversations(type);
             CREATE INDEX IF NOT EXISTS idx_conv_updated_at ON conversations(updated_at DESC);
+            COMMIT;
         )";
         int rc = sqlite3_exec(db_, migrateConvSql, nullptr, nullptr, &errMsg);
-        sqlite3_exec(db_, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
         if (rc != SQLITE_OK && errMsg) {
             std::cerr << "[Database] Migration warning (conversations phase4): " << errMsg << std::endl;
+            sqlite3_exec(db_, "ROLLBACK;", nullptr, nullptr, nullptr);
             sqlite3_free(errMsg); errMsg = nullptr;
         }
+        sqlite3_exec(db_, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
     }
 
     // conversation_members

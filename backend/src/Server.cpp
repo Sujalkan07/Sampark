@@ -76,6 +76,12 @@ Server::Server(Database& db,
 
     messagingController_ = std::make_unique<MessagingController>(messagingService_);
 
+    // Set maximum payload length to 15MB to protect against memory exhaustion before buffering
+    svr_.set_payload_max_length(15 * 1024 * 1024);
+
+    // Clean up any stale unlinked orphaned attachments older than 24h on server startup
+    messagingService_->cleanupOrphanedAttachments(24);
+
     setupRoutes();
 }
 
@@ -234,6 +240,10 @@ void Server::setupRoutes() {
         messagingController_->handleRemoveGroupMember(req, res);
     });
 
+    svr_.Put(R"(/api/conversations/(\d+)/members/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleUpdateGroupMemberRole(req, res);
+    });
+
     svr_.Put(R"(/api/conversations/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
         messagingController_->handleUpdateGroup(req, res);
     });
@@ -258,6 +268,10 @@ void Server::setupRoutes() {
 
     svr_.Get(R"(/api/attachments/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
         messagingController_->handleGetAttachment(req, res);
+    });
+
+    svr_.Delete(R"(/api/attachments/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleDeleteAttachment(req, res);
     });
 
     // 11. Phase 4: Preferences Endpoints

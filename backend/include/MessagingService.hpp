@@ -58,6 +58,7 @@ public:
     virtual MessagingResult getGroupMembers(const std::string& sessionToken, int64_t conversationId) = 0;
     virtual MessagingResult addGroupMember(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId) = 0;
     virtual MessagingResult removeGroupMember(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId) = 0;
+    virtual MessagingResult updateGroupMemberRole(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId, const std::string& role) = 0;
     virtual MessagingResult updateGroup(const std::string& sessionToken, int64_t conversationId,
                                         const std::string& name, const std::string& description, const std::string& avatarUrl) = 0;
     virtual MessagingResult deleteGroup(const std::string& sessionToken, int64_t conversationId) = 0;
@@ -70,6 +71,8 @@ public:
     virtual MessagingResult uploadAttachment(const std::string& sessionToken, int64_t conversationId,
                                              const std::string& fileName, const std::string& rawBytes, const std::string& mimeType) = 0;
     virtual MessagingResult getAttachment(const std::string& sessionToken, int64_t attachmentId) = 0;
+    virtual MessagingResult deleteAttachment(const std::string& sessionToken, int64_t attachmentId) = 0;
+    virtual int cleanupOrphanedAttachments(int maxAgeHours = 24) = 0;
 
     // Phase 4: Preferences
     virtual MessagingResult getUserPreferences(const std::string& sessionToken) = 0;
@@ -107,6 +110,7 @@ public:
     MessagingResult getGroupMembers(const std::string& sessionToken, int64_t conversationId) override;
     MessagingResult addGroupMember(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId) override;
     MessagingResult removeGroupMember(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId) override;
+    MessagingResult updateGroupMemberRole(const std::string& sessionToken, int64_t conversationId, int64_t targetUserId, const std::string& role) override;
     MessagingResult updateGroup(const std::string& sessionToken, int64_t conversationId,
                                 const std::string& name, const std::string& description, const std::string& avatarUrl) override;
     MessagingResult deleteGroup(const std::string& sessionToken, int64_t conversationId) override;
@@ -119,6 +123,8 @@ public:
     MessagingResult uploadAttachment(const std::string& sessionToken, int64_t conversationId,
                                      const std::string& fileName, const std::string& rawBytes, const std::string& mimeType) override;
     MessagingResult getAttachment(const std::string& sessionToken, int64_t attachmentId) override;
+    MessagingResult deleteAttachment(const std::string& sessionToken, int64_t attachmentId) override;
+    int cleanupOrphanedAttachments(int maxAgeHours = 24) override;
 
     // Phase 4: Preferences
     MessagingResult getUserPreferences(const std::string& sessionToken) override;

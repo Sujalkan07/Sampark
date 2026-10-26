@@ -1,9 +1,12 @@
 #include "MessageRepository.hpp"
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 
 namespace connectx {
+
+namespace fs = std::filesystem;
 
 SqliteMessageRepository::SqliteMessageRepository(Database& db) : db_(db) {}
 
@@ -111,24 +114,26 @@ Message SqliteMessageRepository::extractMessage(Statement& stmt, int64_t current
         }
     }
 
-    // Fetch attachment for this message
-    const std::string attSql = "SELECT id, message_id, uploader_id, conversation_id, file_name, file_path, file_size, mime_type, created_at "
-                               "FROM attachments WHERE message_id = ? LIMIT 1;";
-    Statement attStmt(db_.getHandle(), attSql);
-    if (attStmt.isValid()) {
-        attStmt.bindInt64(1, m.id);
-        if (attStmt.step() == SQLITE_ROW) {
-            Attachment att;
-            att.id = attStmt.getColumnInt64(0);
-            att.messageId = m.id;
-            att.uploaderId = attStmt.getColumnInt64(2);
-            att.conversationId = attStmt.getColumnInt64(3);
-            att.fileName = attStmt.getColumnText(4);
-            att.filePath = attStmt.getColumnText(5);
-            att.fileSize = attStmt.getColumnInt64(6);
-            att.mimeType = attStmt.getColumnText(7);
-            att.createdAt = attStmt.getColumnText(8);
-            m.attachment = att;
+    // Fetch attachment for this message (only if message is not deleted)
+    if (!m.isDeleted) {
+        const std::string attSql = "SELECT id, message_id, uploader_id, conversation_id, file_name, file_path, file_size, mime_type, created_at "
+                                   "FROM attachments WHERE message_id = ? LIMIT 1;";
+        Statement attStmt(db_.getHandle(), attSql);
+        if (attStmt.isValid()) {
+            attStmt.bindInt64(1, m.id);
+            if (attStmt.step() == SQLITE_ROW) {
+                Attachment att;
+                att.id = attStmt.getColumnInt64(0);
+                att.messageId = m.id;
+                att.uploaderId = attStmt.getColumnInt64(2);
+                att.conversationId = attStmt.getColumnInt64(3);
+                att.fileName = attStmt.getColumnText(4);
+                att.filePath = attStmt.getColumnText(5);
+                att.fileSize = attStmt.getColumnInt64(6);
+                att.mimeType = attStmt.getColumnText(7);
+                att.createdAt = attStmt.getColumnText(8);
+                m.attachment = att;
+            }
         }
     }
 
@@ -298,18 +303,46 @@ int SqliteMessageRepository::getUnreadCount(int64_t conversationId, int64_t reci
     if (conversationId <= 0 || recipientUserId <= 0) return 0;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "SELECT COUNT(*) FROM messages "
-                            "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
-    Statement stmt(db_.getHandle(), sql);
-    if (!stmt.isValid()) return 0;
 
-    stmt.bindInt64(1, conversationId);
-    stmt.bindInt64(2, recipientUserId);
-
-    if (stmt.step() == SQLITE_ROW) {
-        return static_cast<int>(stmt.getColumnInt64(0));
+    // Check if conversation is group
+    const std::string typeSql = "SELECT type FROM conversations WHERE id = ? LIMIT 1;";
+    Statement typeStmt(db_.getHandle(), typeSql);
+    std::string type = "direct";
+    if (typeStmt.isValid()) {
+        typeStmt.bindInt64(1, conversationId);
+        if (typeStmt.step() == SQLITE_ROW) {
+            type = typeStmt.getColumnText(0);
+        }
     }
-    return 0;
+
+    if (type == "group") {
+        const std::string groupSql = "SELECT COUNT(*) FROM messages "
+                                     "WHERE conversation_id = ? AND sender_id != ? "
+                                     "  AND id > (SELECT COALESCE(last_read_message_id, 0) FROM conversation_members WHERE conversation_id = ? AND user_id = ?);";
+        Statement stmt(db_.getHandle(), groupSql);
+        if (!stmt.isValid()) return 0;
+        stmt.bindInt64(1, conversationId);
+        stmt.bindInt64(2, recipientUserId);
+        stmt.bindInt64(3, conversationId);
+        stmt.bindInt64(4, recipientUserId);
+        if (stmt.step() == SQLITE_ROW) {
+            return static_cast<int>(stmt.getColumnInt64(0));
+        }
+        return 0;
+    } else {
+        const std::string sql = "SELECT COUNT(*) FROM messages "
+                                "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
+        Statement stmt(db_.getHandle(), sql);
+        if (!stmt.isValid()) return 0;
+
+        stmt.bindInt64(1, conversationId);
+        stmt.bindInt64(2, recipientUserId);
+
+        if (stmt.step() == SQLITE_ROW) {
+            return static_cast<int>(stmt.getColumnInt64(0));
+        }
+        return 0;
+    }
 }
 
 int SqliteMessageRepository::markAsRead(int64_t conversationId, int64_t recipientUserId) {
@@ -616,6 +649,44 @@ std::optional<Attachment> SqliteMessageRepository::getMessageAttachment(int64_t 
         return att;
     }
     return std::nullopt;
+}
+
+bool SqliteMessageRepository::deleteAttachment(int64_t attachmentId) {
+    if (attachmentId <= 0) return false;
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "DELETE FROM attachments WHERE id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+    stmt.bindInt64(1, attachmentId);
+    return stmt.step() == SQLITE_DONE;
+}
+
+int SqliteMessageRepository::cleanupOrphanedAttachments(int maxAgeHours) {
+    std::vector<std::pair<int64_t, std::string>> toDelete;
+    {
+        std::lock_guard<std::mutex> lock(db_.getMutex());
+        const std::string sql = "SELECT id, file_path FROM attachments "
+                                "WHERE message_id IS NULL AND created_at < datetime('now', '-' || ? || ' hours');";
+        Statement stmt(db_.getHandle(), sql);
+        if (stmt.isValid()) {
+            stmt.bindInt64(1, maxAgeHours);
+            while (stmt.step() == SQLITE_ROW) {
+                toDelete.emplace_back(stmt.getColumnInt64(0), stmt.getColumnText(1));
+            }
+        }
+    }
+
+    int count = 0;
+    for (const auto& [id, path] : toDelete) {
+        try {
+            if (fs::exists(path)) {
+                fs::remove(path);
+            }
+        } catch (...) {}
+        deleteAttachment(id);
+        count++;
+    }
+    return count;
 }
 
 // Phase 4: User Preferences

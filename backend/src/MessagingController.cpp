@@ -560,6 +560,49 @@ void MessagingController::handleRemoveGroupMember(const httplib::Request& req, h
     }
 }
 
+void MessagingController::handleUpdateGroupMemberRole(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t convId = std::stoll(req.matches[1]);
+        int64_t targetUserId = std::stoll(req.matches[2]);
+
+        json payload = json::parse(req.body);
+        if (!payload.contains("role") || !payload["role"].is_string()) {
+            sendError(res, 400, "Field 'role' is required.");
+            return;
+        }
+
+        std::string role = payload["role"].get<std::string>();
+        auto result = messagingService_->updateGroupMemberRole(token, convId, targetUserId, role);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json memArray = json::array();
+        for (const auto& m : result.members) {
+            memArray.push_back(m.toJson());
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message},
+            {"members", memArray}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const json::parse_error&) {
+        sendError(res, 400, "Malformed JSON.");
+    } catch (...) {
+        sendError(res, 400, "Invalid conversation or user ID.");
+    }
+}
+
 void MessagingController::handleUpdateGroup(const httplib::Request& req, httplib::Response& res) {
     std::string token = extractSessionToken(req);
     if (token.empty()) {
@@ -754,11 +797,45 @@ void MessagingController::handleGetAttachment(const httplib::Request& req, httpl
             return;
         }
 
+        std::string safeHeaderName;
+        for (char c : result.fileName) {
+            if (c != '"' && c != '\r' && c != '\n' && static_cast<unsigned char>(c) >= 32) {
+                safeHeaderName.push_back(c);
+            }
+        }
+        if (safeHeaderName.empty()) safeHeaderName = "attachment.dat";
+
         res.status = 200;
         res.set_header("Content-Type", result.fileMimeType.empty() ? "application/octet-stream" : result.fileMimeType);
         res.set_header("X-Content-Type-Options", "nosniff");
-        res.set_header("Content-Disposition", "inline; filename=\"" + result.fileName + "\"");
+        res.set_header("Content-Disposition", "inline; filename=\"" + safeHeaderName + "\"");
         res.set_content(result.fileContent, result.fileMimeType);
+    } catch (...) {
+        sendError(res, 400, "Invalid attachment ID.");
+    }
+}
+
+void MessagingController::handleDeleteAttachment(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t attachmentId = std::stoll(req.matches[1]);
+        auto result = messagingService_->deleteAttachment(token, attachmentId);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
     } catch (...) {
         sendError(res, 400, "Invalid attachment ID.");
     }
@@ -799,22 +876,56 @@ void MessagingController::handleUpdatePreferences(const httplib::Request& req, h
         if (existing.success && existing.preferences) {
             prefs = *existing.preferences;
         }
-        if (payload.contains("theme") && payload["theme"].is_string()) {
-            prefs.theme = payload["theme"].get<std::string>();
+        if (payload.contains("theme")) {
+            if (!payload["theme"].is_string()) {
+                sendError(res, 400, "Theme must be a string.");
+                return;
+            }
+            std::string th = payload["theme"].get<std::string>();
+            if (th == "light" || th == "dark" || th == "system") {
+                prefs.theme = th;
+            } else {
+                sendError(res, 400, "Theme must be one of: 'system', 'light', 'dark'.");
+                return;
+            }
         }
         if (payload.contains("soundNotifications")) {
+            if (!payload["soundNotifications"].is_boolean()) {
+                sendError(res, 400, "Field 'soundNotifications' must be a boolean.");
+                return;
+            }
             prefs.soundNotifications = payload["soundNotifications"].get<bool>();
         } else if (payload.contains("sound_enabled")) {
+            if (!payload["sound_enabled"].is_boolean()) {
+                sendError(res, 400, "Field 'sound_enabled' must be a boolean.");
+                return;
+            }
             prefs.soundNotifications = payload["sound_enabled"].get<bool>();
         }
         if (payload.contains("desktopNotifications")) {
+            if (!payload["desktopNotifications"].is_boolean()) {
+                sendError(res, 400, "Field 'desktopNotifications' must be a boolean.");
+                return;
+            }
             prefs.desktopNotifications = payload["desktopNotifications"].get<bool>();
         } else if (payload.contains("desktop_notifications_enabled")) {
+            if (!payload["desktop_notifications_enabled"].is_boolean()) {
+                sendError(res, 400, "Field 'desktop_notifications_enabled' must be a boolean.");
+                return;
+            }
             prefs.desktopNotifications = payload["desktop_notifications_enabled"].get<bool>();
         }
         if (payload.contains("readReceiptsEnabled")) {
+            if (!payload["readReceiptsEnabled"].is_boolean()) {
+                sendError(res, 400, "Field 'readReceiptsEnabled' must be a boolean.");
+                return;
+            }
             prefs.readReceiptsEnabled = payload["readReceiptsEnabled"].get<bool>();
         } else if (payload.contains("read_receipts_enabled")) {
+            if (!payload["read_receipts_enabled"].is_boolean()) {
+                sendError(res, 400, "Field 'read_receipts_enabled' must be a boolean.");
+                return;
+            }
             prefs.readReceiptsEnabled = payload["read_receipts_enabled"].get<bool>();
         }
 

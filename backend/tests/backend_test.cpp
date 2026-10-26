@@ -713,7 +713,7 @@ void runTests() {
         std::cout << "[PASS] Test 58: Emoji reaction toggling, aggregation, and user tracking" << std::endl;
 
         // Test 59: File & Image Attachment Persistence and Download Authorization
-        std::string sampleImageContent = "FAKE_JPEG_IMAGE_BINARY_DATA_FOR_TESTING";
+        std::string sampleImageContent = std::string("\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x01\x00\x60\x00\x60\x00\x00", 18) + "BINARY_JPEG_DATA";
         auto uploadRes = messagingService->uploadAttachment(
             priyaToken,
             groupId,
@@ -788,6 +788,193 @@ void runTests() {
         assert(db.hasColumn("conversations", "name"));
         assert(db.hasColumn("messages", "reply_to_id"));
         std::cout << "[PASS] Test 61: Phase 4 database tables, columns, and foreign keys verified" << std::endl;
+
+        // Test 62: Attachment Security — Disallowed extensions rejected
+        auto badExtRes = messagingService->uploadAttachment(priyaToken, groupId, "malware.exe", "MZ\x90\x00executable_bytes", "application/x-msdownload");
+        assert(!badExtRes.success);
+        assert(badExtRes.statusCode == 400);
+        std::cout << "[PASS] Test 62: Attachment security: Disallowed file extension rejected" << std::endl;
+
+        // Test 63: Attachment Security — Signature and extension mismatch rejected
+        std::string pngMagic = "\x89PNG\r\n\x1a\nfake_png_data";
+        auto mismatchRes = messagingService->uploadAttachment(priyaToken, groupId, "fake.jpg", pngMagic, "image/jpeg");
+        assert(!mismatchRes.success);
+        assert(mismatchRes.statusCode == 400);
+        std::cout << "[PASS] Test 63: Attachment security: Mismatched file signature and extension rejected" << std::endl;
+
+        // Test 64: Attachment Security — Empty and oversized files rejected
+        auto emptyRes = messagingService->uploadAttachment(priyaToken, groupId, "empty.png", "", "image/png");
+        assert(!emptyRes.success);
+        assert(emptyRes.statusCode == 400);
+
+        std::string hugeData(10 * 1024 * 1024 + 1, 'A');
+        auto hugeRes = messagingService->uploadAttachment(priyaToken, groupId, "huge.txt", hugeData, "text/plain");
+        assert(!hugeRes.success);
+        assert(hugeRes.statusCode == 400);
+        std::cout << "[PASS] Test 64: Attachment security: Empty and oversized files rejected" << std::endl;
+
+        // Test 65: Attachment Security — Binary null-byte payload disguised as text rejected
+        std::string binaryTxt = std::string("Hello\x00World\x01\x02", 14);
+        auto binTxtRes = messagingService->uploadAttachment(priyaToken, groupId, "evil.txt", binaryTxt, "text/plain");
+        assert(!binTxtRes.success);
+        assert(binTxtRes.statusCode == 400);
+        std::cout << "[PASS] Test 65: Attachment security: Binary/null-byte content disguised as .txt rejected" << std::endl;
+
+        // Test 66: Attachment Security — Path traversal in filename sanitized safely
+        std::string validText = "Safe plain text content for testing.";
+        auto traversalRes = messagingService->uploadAttachment(priyaToken, groupId, "../../etc/passwd.txt", validText, "text/plain");
+        assert(traversalRes.success);
+        assert(traversalRes.attachment.has_value());
+        assert(traversalRes.attachment->fileName == "passwd.txt");
+        assert(traversalRes.attachment->filePath.find("..") == std::string::npos);
+        int64_t travAttachId = traversalRes.attachment->id;
+        std::cout << "[PASS] Test 66: Attachment security: Path traversal in filename sanitized safely" << std::endl;
+
+        // Test 67: Attachment Security — Unlinked attachment deletion and cleanup
+        auto delAttRes = messagingService->deleteAttachment(priyaToken, travAttachId);
+        assert(delAttRes.success);
+        assert(delAttRes.statusCode == 200);
+        auto getDeletedAtt = messagingService->getAttachment(priyaToken, travAttachId);
+        assert(!getDeletedAtt.success);
+        assert(getDeletedAtt.statusCode == 404);
+        std::cout << "[PASS] Test 67: Attachment security: Unlinked attachment deletion verified" << std::endl;
+
+        // Test 68: Attachment Security — Reusing already-linked attachment is rejected
+        auto reuseAttMsg = messagingService->sendMessage(priyaToken, groupId, "Trying to reuse attachment", std::nullopt, attachId);
+        assert(!reuseAttMsg.success);
+        assert(reuseAttMsg.statusCode == 400);
+        std::cout << "[PASS] Test 68: Attachment security: Reusing already-linked attachment is rejected" << std::endl;
+
+        // Test 69: Group Permissions — Member role management & sole admin protection
+        auto promoteRes = messagingService->updateGroupMemberRole(priyaToken, groupId, ananyaUser->id, "admin");
+        assert(promoteRes.success);
+        auto demoteRes = messagingService->updateGroupMemberRole(priyaToken, groupId, ananyaUser->id, "member");
+        assert(demoteRes.success);
+        auto selfDemoteRes = messagingService->updateGroupMemberRole(priyaToken, groupId, p4Priya->id, "member");
+        assert(!selfDemoteRes.success);
+        assert(selfDemoteRes.statusCode == 400);
+        std::cout << "[PASS] Test 69: Group permissions: Member role management and sole admin protection verified" << std::endl;
+
+        // Test 70: Group Permissions — Removed member loses all group access
+        auto rohitMsg = messagingService->sendMessage(rohitToken, groupId, "Should be forbidden");
+        assert(!rohitMsg.success);
+        assert(rohitMsg.statusCode == 403);
+        auto rohitHistory = messagingService->getMessages(rohitToken, groupId, 50, 0, 0);
+        assert(!rohitHistory.success);
+        assert(rohitHistory.statusCode == 403);
+        std::cout << "[PASS] Test 70: Group permissions: Removed member loses access to messaging and history" << std::endl;
+
+        // Test 71: User Preferences — Read receipts privacy enforcement in direct messages
+        connectx::UserPreferences priyaNoReceipts;
+        priyaNoReceipts.theme = "light";
+        priyaNoReceipts.readReceiptsEnabled = false;
+        auto prefSetRes = messagingService->updateUserPreferences(priyaToken, priyaNoReceipts);
+        assert(prefSetRes.success);
+
+        auto aaravMsg = messagingService->sendMessage(aaravToken, conv->id, "Hello Priya, read receipt test");
+        assert(aaravMsg.success);
+
+        messagingService->markAsRead(priyaToken, conv->id);
+
+        auto aaravHistory = messagingService->getMessages(aaravToken, conv->id, 50, 0, 0);
+        assert(aaravHistory.success);
+        for (const auto& m : aaravHistory.messages) {
+            if (m.senderId == p4Aarav->id) {
+                assert(!m.readAt.has_value());
+            }
+        }
+        std::cout << "[PASS] Test 71: Read receipts: Privacy suppression verified when read receipts disabled" << std::endl;
+    }
+
+    // Test 72: Database migration from legacy schema with sample data
+    {
+        const std::string legacyDbPath = "test_legacy_migration.db";
+        if (fs::exists(legacyDbPath)) fs::remove(legacyDbPath);
+
+        sqlite3* rawDb = nullptr;
+        assert(sqlite3_open(legacyDbPath.c_str(), &rawDb) == SQLITE_OK);
+
+        const char* legacySchema = R"(
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL COLLATE NOCASE,
+                email TEXT UNIQUE NOT NULL COLLATE NOCASE,
+                full_name TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE sessions (
+                token TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                expires_at TEXT NOT NULL
+            );
+            CREATE TABLE conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_low_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                user_high_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(user_low_id, user_high_id),
+                CHECK(user_low_id < user_high_id)
+            );
+            CREATE TABLE messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+                sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                body TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                read_at TEXT DEFAULT NULL
+            );
+            INSERT INTO users (id, username, email, full_name, password_hash, salt)
+            VALUES (1, 'legacy_user', 'legacy@test.com', 'Legacy User', 'fakehash', 'fakesalt');
+            INSERT INTO users (id, username, email, full_name, password_hash, salt)
+            VALUES (2, 'peer_user', 'peer@test.com', 'Peer User', 'fakehash2', 'fakesalt2');
+            INSERT INTO conversations (id, user_low_id, user_high_id) VALUES (1, 1, 2);
+            INSERT INTO messages (id, conversation_id, sender_id, body) VALUES (1, 1, 1, 'Legacy hello message');
+        )";
+        char* err = nullptr;
+        assert(sqlite3_exec(rawDb, legacySchema, nullptr, nullptr, &err) == SQLITE_OK);
+        sqlite3_close(rawDb);
+
+        connectx::Database migratedDb(legacyDbPath);
+        migratedDb.migrateSchema();
+
+        assert(migratedDb.hasColumn("conversations", "type"));
+        assert(migratedDb.hasColumn("messages", "reply_to_id"));
+        assert(migratedDb.hasColumn("users", "bio"));
+        assert(migratedDb.hasColumn("conversation_members", "role"));
+        assert(migratedDb.hasColumn("attachments", "file_name"));
+        assert(migratedDb.hasColumn("user_preferences", "theme"));
+
+        auto legacyUserRepo = std::make_shared<connectx::SqliteUserRepository>(migratedDb);
+        auto u1 = legacyUserRepo->findById(1);
+        assert(u1.has_value());
+        assert(u1->username == "legacy_user");
+
+        auto legacyConvRepo = std::make_shared<connectx::SqliteConversationRepository>(migratedDb);
+        auto c1 = legacyConvRepo->findById(1);
+        assert(c1.has_value());
+        assert(c1->type == "direct");
+        assert(c1->userLowId == 1 && c1->userHighId == 2);
+
+        auto legacyMsgRepo = std::make_shared<connectx::SqliteMessageRepository>(migratedDb);
+        auto m1 = legacyMsgRepo->getMessageById(1, 1);
+        assert(m1.has_value());
+        assert(m1->body == "Legacy hello message");
+
+        sqlite3_stmt* fkStmt = nullptr;
+        assert(sqlite3_prepare_v2(migratedDb.getHandle(), "PRAGMA foreign_key_check;", -1, &fkStmt, nullptr) == SQLITE_OK);
+        assert(sqlite3_step(fkStmt) == SQLITE_DONE);
+        sqlite3_finalize(fkStmt);
+
+        fs::remove(legacyDbPath);
+        if (fs::exists(legacyDbPath + "-wal")) fs::remove(legacyDbPath + "-wal");
+        if (fs::exists(legacyDbPath + "-shm")) fs::remove(legacyDbPath + "-shm");
+
+        std::cout << "[PASS] Test 72: Database migration: Legacy schema upgraded cleanly with data preserved" << std::endl;
     }
 
     // Clean up test DB
@@ -796,7 +983,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 61 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 72 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 
