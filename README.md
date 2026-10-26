@@ -20,11 +20,6 @@
 
 ---
 
-<img src="stitch_export/stitch_connectx_tricolour_chat_ui/desktop_chat_dashboard_active_conversation/screen.png" alt="Sampark Desktop Chat Dashboard" width="100%" style="border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);" />
-
-</div>
-
----
 
 ## 📖 Table of Contents
 
