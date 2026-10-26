@@ -7,13 +7,17 @@ const PreferencesContext = createContext(null);
 const DEFAULT_PREFERENCES = {
   theme: 'system',
   sound_enabled: true,
+  soundNotifications: true,
   desktop_notifications_enabled: false,
+  desktopNotifications: false,
   read_receipts_enabled: true,
+  readReceiptsEnabled: true,
 };
 
-function getStoredPreferences() {
+function getStoredPreferences(userId) {
   try {
-    const raw = localStorage.getItem('sampark_preferences');
+    const key = userId ? `sampark_preferences_${userId}` : 'sampark_preferences_guest';
+    const raw = localStorage.getItem(key);
     if (raw) {
       return JSON.parse(raw);
     }
@@ -24,7 +28,7 @@ function getStoredPreferences() {
 export function PreferencesProvider({ children }) {
   const { user } = useAuth();
   const [preferences, setPreferences] = useState(() => {
-    const stored = getStoredPreferences();
+    const stored = getStoredPreferences(user?.id);
     return stored ? { ...DEFAULT_PREFERENCES, ...stored } : DEFAULT_PREFERENCES;
   });
   const [loading, setLoading] = useState(false);
@@ -32,7 +36,7 @@ export function PreferencesProvider({ children }) {
     if (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')) {
       return true;
     }
-    const stored = getStoredPreferences();
+    const stored = getStoredPreferences(user?.id);
     if (stored?.theme === 'dark') return true;
     if (stored?.theme === 'light') return false;
     return (
@@ -90,9 +94,20 @@ export function PreferencesProvider({ children }) {
     }
   }, [preferences.theme, applyTheme]);
 
-  // Load preferences from backend when authenticated
+  // Load preferences from backend when authenticated, or reset when logged out
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setPreferences(DEFAULT_PREFERENCES);
+      applyTheme('system');
+      return;
+    }
+
+    // Apply any account-scoped cached preference immediately
+    const cached = getStoredPreferences(user.id);
+    if (cached) {
+      setPreferences({ ...DEFAULT_PREFERENCES, ...cached });
+      applyTheme(cached.theme || 'system');
+    }
 
     let ignore = false;
     async function load() {
@@ -100,22 +115,27 @@ export function PreferencesProvider({ children }) {
         setLoading(true);
         const data = await api.getPreferences();
         if (!ignore && data?.preferences) {
-          const stored = getStoredPreferences();
-          // Use stored local preference if explicitly set, else use backend preference
-          const chosenTheme = stored?.theme || data.preferences.theme || 'system';
+          // Account-scoped server preferences take authoritative priority
+          const serverTheme = data.preferences.theme || 'system';
           const merged = {
             ...DEFAULT_PREFERENCES,
             ...data.preferences,
-            theme: chosenTheme,
+            sound_enabled: data.preferences.soundNotifications ?? data.preferences.sound_enabled ?? true,
+            soundNotifications: data.preferences.soundNotifications ?? data.preferences.sound_enabled ?? true,
+            desktop_notifications_enabled: data.preferences.desktopNotifications ?? data.preferences.desktop_notifications_enabled ?? false,
+            desktopNotifications: data.preferences.desktopNotifications ?? data.preferences.desktop_notifications_enabled ?? false,
+            read_receipts_enabled: data.preferences.readReceiptsEnabled ?? data.preferences.read_receipts_enabled ?? true,
+            readReceiptsEnabled: data.preferences.readReceiptsEnabled ?? data.preferences.read_receipts_enabled ?? true,
+            theme: serverTheme,
           };
           setPreferences(merged);
-          applyTheme(chosenTheme);
+          applyTheme(serverTheme);
           try {
-            localStorage.setItem('sampark_preferences', JSON.stringify(merged));
+            localStorage.setItem(`sampark_preferences_${user.id}`, JSON.stringify(merged));
           } catch {}
         }
       } catch (err) {
-        // Fall back to stored preferences
+        // Fall back to account cached preferences
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -127,32 +147,50 @@ export function PreferencesProvider({ children }) {
     };
   }, [user, applyTheme]);
 
-  // Update preferences function
+  // Update preferences function with rollback on network failure
   const updatePreferences = useCallback(
     async (newPrefs) => {
-      let mergedState;
-      setPreferences((prev) => {
-        mergedState = { ...prev, ...newPrefs };
-        try {
-          localStorage.setItem('sampark_preferences', JSON.stringify(mergedState));
-        } catch {}
-        return mergedState;
-      });
+      const prevPreferences = preferences;
+      const prevTheme = preferences.theme;
+
+      const mergedState = {
+        ...prevPreferences,
+        ...newPrefs,
+        sound_enabled: newPrefs.soundNotifications ?? newPrefs.sound_enabled ?? prevPreferences.sound_enabled,
+        soundNotifications: newPrefs.soundNotifications ?? newPrefs.sound_enabled ?? prevPreferences.soundNotifications,
+        desktop_notifications_enabled: newPrefs.desktopNotifications ?? newPrefs.desktop_notifications_enabled ?? prevPreferences.desktop_notifications_enabled,
+        desktopNotifications: newPrefs.desktopNotifications ?? newPrefs.desktop_notifications_enabled ?? prevPreferences.desktopNotifications,
+        read_receipts_enabled: newPrefs.readReceiptsEnabled ?? newPrefs.read_receipts_enabled ?? prevPreferences.read_receipts_enabled,
+        readReceiptsEnabled: newPrefs.readReceiptsEnabled ?? newPrefs.read_receipts_enabled ?? prevPreferences.readReceiptsEnabled,
+      };
+
+      setPreferences(mergedState);
 
       // Synchronously apply theme immediately without waiting for state reconciliation
       if (newPrefs.theme) {
         applyTheme(newPrefs.theme);
       }
 
+      const storageKey = user?.id ? `sampark_preferences_${user.id}` : 'sampark_preferences_guest';
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(mergedState));
+      } catch {}
+
       if (user) {
         try {
           await api.updatePreferences(newPrefs);
         } catch (err) {
-          console.warn('Failed to sync preferences to backend:', err);
+          console.warn('Failed to sync preferences to backend, reverting to previous state:', err);
+          setPreferences(prevPreferences);
+          applyTheme(prevTheme);
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(prevPreferences));
+          } catch {}
+          throw err;
         }
       }
     },
-    [user, applyTheme]
+    [user, preferences, applyTheme]
   );
 
   // Quick 1-click theme toggle (Light <-> Dark)

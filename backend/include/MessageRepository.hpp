@@ -17,7 +17,7 @@ public:
     virtual std::vector<Message> getMessages(int64_t conversationId, int limit = 50, int64_t beforeId = 0, int64_t afterId = 0, int64_t currentUserId = 0) = 0;
     virtual std::optional<Message> getLastMessage(int64_t conversationId) = 0;
     virtual int getUnreadCount(int64_t conversationId, int64_t recipientUserId) = 0;
-    virtual int markAsRead(int64_t conversationId, int64_t recipientUserId) = 0;
+    virtual int markAsRead(int64_t conversationId, int64_t recipientUserId, bool suppressReceipt = false) = 0;
 
     // Phase 3 extensions
     virtual std::optional<Message> getMessageById(int64_t messageId, int64_t currentUserId = 0) = 0;
@@ -48,7 +48,7 @@ public:
     std::vector<Message> getMessages(int64_t conversationId, int limit = 50, int64_t beforeId = 0, int64_t afterId = 0, int64_t currentUserId = 0) override;
     std::optional<Message> getLastMessage(int64_t conversationId) override;
     int getUnreadCount(int64_t conversationId, int64_t recipientUserId) override;
-    int markAsRead(int64_t conversationId, int64_t recipientUserId) override;
+    int markAsRead(int64_t conversationId, int64_t recipientUserId, bool suppressReceipt = false) override;
 
     // Phase 3 extensions
     std::optional<Message> getMessageById(int64_t messageId, int64_t currentUserId = 0) override;

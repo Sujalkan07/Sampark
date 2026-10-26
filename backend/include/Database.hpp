@@ -20,7 +20,7 @@ public:
     void close();
 
     bool initSchema();
-    void migrateSchema();
+    bool migrateSchema();
     bool hasColumn(const std::string& tableName, const std::string& columnName);
 
     sqlite3* getHandle() const { return db_; }

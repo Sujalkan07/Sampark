@@ -144,7 +144,7 @@ bool Database::initSchema() {
             user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
             theme TEXT NOT NULL DEFAULT 'system',
             sound_notifications INTEGER NOT NULL DEFAULT 1,
-            desktop_notifications INTEGER NOT NULL DEFAULT 1,
+            desktop_notifications INTEGER NOT NULL DEFAULT 0,
             read_receipts_enabled INTEGER NOT NULL DEFAULT 1,
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
@@ -174,8 +174,7 @@ bool Database::initSchema() {
     bool ok = execute(schemaSql);
     if (!ok) return false;
 
-    migrateSchema();
-    return true;
+    return migrateSchema();
 }
 
 bool Database::hasColumn(const std::string& tableName, const std::string& columnName) {
@@ -197,65 +196,72 @@ bool Database::hasColumn(const std::string& tableName, const std::string& column
     return found;
 }
 
-void Database::migrateSchema() {
+bool Database::migrateSchema() {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!db_) return;
+    if (!db_) return false;
 
     // 1. Ensure migrations table exists
     char* errMsg = nullptr;
-    sqlite3_exec(db_,
+    int rc = sqlite3_exec(db_,
         "CREATE TABLE IF NOT EXISTS schema_migrations ("
         "version INTEGER PRIMARY KEY, "
         "name TEXT NOT NULL, "
         "applied_at TEXT NOT NULL DEFAULT (datetime('now')));",
         nullptr, nullptr, &errMsg);
-    if (errMsg) {
-        std::cerr << "[Database] Failed to create schema_migrations: " << errMsg << std::endl;
-        sqlite3_free(errMsg);
-        errMsg = nullptr;
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Failed to create schema_migrations: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
     }
 
     // 2. Migration 1 & 2 baseline
-    sqlite3_exec(db_,
+    rc = sqlite3_exec(db_,
         "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (1, 'phase1_foundation'), (2, 'phase2_messaging');",
         nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Failed baseline migration record: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
 
     // 3. Migration 3: Phase 3 columns & indexes
     if (!hasColumn("users", "bio")) {
-        int rc = sqlite3_exec(db_, "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT '';", nullptr, nullptr, &errMsg);
-        if (rc != SQLITE_OK && errMsg) {
-            std::cerr << "[Database] Migration warning (users.bio): " << errMsg << std::endl;
-            sqlite3_free(errMsg); errMsg = nullptr;
+        rc = sqlite3_exec(db_, "ALTER TABLE users ADD COLUMN bio TEXT DEFAULT '';", nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Migration 3 failed (users.bio): " << (errMsg ? errMsg : "unknown") << std::endl;
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
         }
     }
     if (!hasColumn("users", "last_active_at")) {
-        int rc = sqlite3_exec(db_, "ALTER TABLE users ADD COLUMN last_active_at TEXT DEFAULT '';", nullptr, nullptr, &errMsg);
-        if (rc != SQLITE_OK && errMsg) {
-            std::cerr << "[Database] Migration warning (users.last_active_at): " << errMsg << std::endl;
-            sqlite3_free(errMsg); errMsg = nullptr;
+        rc = sqlite3_exec(db_, "ALTER TABLE users ADD COLUMN last_active_at TEXT DEFAULT '';", nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Migration 3 failed (users.last_active_at): " << (errMsg ? errMsg : "unknown") << std::endl;
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
         }
     }
 
     if (!hasColumn("messages", "edited_at")) {
-        int rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN edited_at TEXT DEFAULT NULL;", nullptr, nullptr, &errMsg);
-        if (rc != SQLITE_OK && errMsg) {
-            std::cerr << "[Database] Migration warning (messages.edited_at): " << errMsg << std::endl;
-            sqlite3_free(errMsg); errMsg = nullptr;
+        rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN edited_at TEXT DEFAULT NULL;", nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Migration 3 failed (messages.edited_at): " << (errMsg ? errMsg : "unknown") << std::endl;
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
         }
     }
     if (!hasColumn("messages", "is_deleted")) {
-        int rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0;", nullptr, nullptr, &errMsg);
-        if (rc != SQLITE_OK && errMsg) {
-            std::cerr << "[Database] Migration warning (messages.is_deleted): " << errMsg << std::endl;
-            sqlite3_free(errMsg); errMsg = nullptr;
+        rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0;", nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Migration 3 failed (messages.is_deleted): " << (errMsg ? errMsg : "unknown") << std::endl;
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
         }
     }
 
     sqlite3_exec(db_,
         "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (3, 'phase3_profiles_and_search');",
-        nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+        nullptr, nullptr, nullptr);
 
     // 4. Migration 4: Phase 4 Group Chats, Replies, Reactions, Attachments, and Settings
     if (!hasColumn("conversations", "type")) {
@@ -286,17 +292,19 @@ void Database::migrateSchema() {
             CREATE INDEX IF NOT EXISTS idx_conv_updated_at ON conversations(updated_at DESC);
             COMMIT;
         )";
-        int rc = sqlite3_exec(db_, migrateConvSql, nullptr, nullptr, &errMsg);
-        if (rc != SQLITE_OK && errMsg) {
-            std::cerr << "[Database] Migration warning (conversations phase4): " << errMsg << std::endl;
+        rc = sqlite3_exec(db_, migrateConvSql, nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Migration 4 table swap failed: " << (errMsg ? errMsg : "unknown") << std::endl;
             sqlite3_exec(db_, "ROLLBACK;", nullptr, nullptr, nullptr);
-            sqlite3_free(errMsg); errMsg = nullptr;
+            sqlite3_exec(db_, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
         }
         sqlite3_exec(db_, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
     }
 
     // conversation_members
-    sqlite3_exec(db_, R"(
+    rc = sqlite3_exec(db_, R"(
         CREATE TABLE IF NOT EXISTS conversation_members (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -309,19 +317,24 @@ void Database::migrateSchema() {
         CREATE INDEX IF NOT EXISTS idx_cm_conv_user ON conversation_members(conversation_id, user_id);
         CREATE INDEX IF NOT EXISTS idx_cm_user ON conversation_members(user_id);
     )", nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Failed to create conversation_members: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
 
     // messages.reply_to_id
     if (!hasColumn("messages", "reply_to_id")) {
-        int rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN reply_to_id INTEGER DEFAULT NULL REFERENCES messages(id) ON DELETE SET NULL;", nullptr, nullptr, &errMsg);
-        if (rc != SQLITE_OK && errMsg) {
-            std::cerr << "[Database] Migration warning (messages.reply_to_id): " << errMsg << std::endl;
-            sqlite3_free(errMsg); errMsg = nullptr;
+        rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN reply_to_id INTEGER DEFAULT NULL REFERENCES messages(id) ON DELETE SET NULL;", nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Failed to add messages.reply_to_id: " << (errMsg ? errMsg : "unknown") << std::endl;
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
         }
     }
 
     // message_reactions
-    sqlite3_exec(db_, R"(
+    rc = sqlite3_exec(db_, R"(
         CREATE TABLE IF NOT EXISTS message_reactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message_id INTEGER NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
@@ -333,10 +346,14 @@ void Database::migrateSchema() {
         CREATE INDEX IF NOT EXISTS idx_mr_msg ON message_reactions(message_id);
         CREATE INDEX IF NOT EXISTS idx_mr_user ON message_reactions(user_id);
     )", nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Failed to create message_reactions: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
 
     // attachments
-    sqlite3_exec(db_, R"(
+    rc = sqlite3_exec(db_, R"(
         CREATE TABLE IF NOT EXISTS attachments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             message_id INTEGER REFERENCES messages(id) ON DELETE CASCADE,
@@ -351,25 +368,40 @@ void Database::migrateSchema() {
         CREATE INDEX IF NOT EXISTS idx_att_msg ON attachments(message_id);
         CREATE INDEX IF NOT EXISTS idx_att_conv ON attachments(conversation_id);
     )", nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Failed to create attachments: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
 
     // user_preferences
-    sqlite3_exec(db_, R"(
+    rc = sqlite3_exec(db_, R"(
         CREATE TABLE IF NOT EXISTS user_preferences (
             user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
             theme TEXT NOT NULL DEFAULT 'system',
             sound_notifications INTEGER NOT NULL DEFAULT 1,
-            desktop_notifications INTEGER NOT NULL DEFAULT 1,
+            desktop_notifications INTEGER NOT NULL DEFAULT 0,
             read_receipts_enabled INTEGER NOT NULL DEFAULT 1,
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
     )", nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Failed to create user_preferences: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
 
-    sqlite3_exec(db_,
+    rc = sqlite3_exec(db_,
         "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (4, 'phase4_groups_replies_reactions_attachments_settings');",
         nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    if (rc != SQLITE_OK) {
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+
+    // Always ensure foreign key enforcement is active after migrations
+    sqlite3_exec(db_, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
+    return true;
 }
 
 // Statement implementation

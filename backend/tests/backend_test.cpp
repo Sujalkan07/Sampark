@@ -884,6 +884,131 @@ void runTests() {
             }
         }
         std::cout << "[PASS] Test 71: Read receipts: Privacy suppression verified when read receipts disabled" << std::endl;
+
+        // Test 73: Read receipts — Disabling suppresses read_at permanently even after re-enabling
+        connectx::UserPreferences aaravPrefs;
+        aaravPrefs.readReceiptsEnabled = true;
+        messagingService->updateUserPreferences(aaravToken, aaravPrefs);
+
+        connectx::UserPreferences priyaPrefs;
+        priyaPrefs.readReceiptsEnabled = false;
+        messagingService->updateUserPreferences(priyaToken, priyaPrefs);
+
+        auto m1Send = messagingService->sendMessage(aaravToken, conv->id, "Message during disabled receipts");
+        assert(m1Send.success && m1Send.chatMessage.has_value());
+        int64_t m1Id = m1Send.chatMessage->id;
+
+        // Priya marks conversation as read while receipts are disabled
+        auto markRead1 = messagingService->markAsRead(priyaToken, conv->id);
+        assert(markRead1.success);
+
+        // Aarav checks message: readAt must be nullopt
+        auto historyWhileDisabled = messagingService->getMessages(aaravToken, conv->id, 50, 0, 0);
+        assert(historyWhileDisabled.success);
+        for (const auto& m : historyWhileDisabled.messages) {
+            if (m.id == m1Id) {
+                assert(!m.readAt.has_value());
+            }
+        }
+
+        // Priya re-enables read receipts
+        priyaPrefs.readReceiptsEnabled = true;
+        messagingService->updateUserPreferences(priyaToken, priyaPrefs);
+
+        // Aarav fetches history again: M1 readAt must STILL be nullopt (no retroactive leak!)
+        auto historyAfterReEnable = messagingService->getMessages(aaravToken, conv->id, 50, 0, 0);
+        assert(historyAfterReEnable.success);
+        for (const auto& m : historyAfterReEnable.messages) {
+            if (m.id == m1Id) {
+                assert(!m.readAt.has_value());
+            }
+        }
+
+        // Now Aarav sends message M2 while read receipts are enabled on both sides
+        auto m2Send = messagingService->sendMessage(aaravToken, conv->id, "Message during enabled receipts");
+        assert(m2Send.success && m2Send.chatMessage.has_value());
+        int64_t m2Id = m2Send.chatMessage->id;
+
+        // Priya marks as read while enabled
+        auto markRead2 = messagingService->markAsRead(priyaToken, conv->id);
+        assert(markRead2.success);
+
+        // Aarav checks history: M2 readAt MUST be populated, while M1 readAt remains nullopt
+        auto historyBothEnabled = messagingService->getMessages(aaravToken, conv->id, 50, 0, 0);
+        assert(historyBothEnabled.success);
+        bool foundM1 = false, foundM2 = false;
+        for (const auto& m : historyBothEnabled.messages) {
+            if (m.id == m1Id) {
+                assert(!m.readAt.has_value());
+                foundM1 = true;
+            } else if (m.id == m2Id) {
+                assert(m.readAt.has_value());
+                foundM2 = true;
+            }
+        }
+        assert(foundM1 && foundM2);
+        std::cout << "[PASS] Test 73: Read receipts: Permanent suppression verified across toggle lifecycle" << std::endl;
+
+        // Test 74: Group operations on direct conversation rejected with HTTP 400
+        int64_t directConvId = conv->id;
+        auto directMembers = messagingService->getGroupMembers(aaravToken, directConvId);
+        assert(!directMembers.success && directMembers.statusCode == 400);
+
+        auto directAdd = messagingService->addGroupMember(aaravToken, directConvId, p4Rohit->id);
+        assert(!directAdd.success && directAdd.statusCode == 400);
+
+        auto directRemove = messagingService->removeGroupMember(aaravToken, directConvId, p4Priya->id);
+        assert(!directRemove.success && directRemove.statusCode == 400);
+
+        auto directRole = messagingService->updateGroupMemberRole(aaravToken, directConvId, p4Priya->id, "admin");
+        assert(!directRole.success && directRole.statusCode == 400);
+
+        auto directUpdate = messagingService->updateGroup(aaravToken, directConvId, "Illegal Group", "Desc", "");
+        assert(!directUpdate.success && directUpdate.statusCode == 400);
+
+        auto directLeave = messagingService->leaveGroup(aaravToken, directConvId);
+        assert(!directLeave.success && directLeave.statusCode == 400);
+
+        auto directDelete = messagingService->deleteGroup(aaravToken, directConvId);
+        assert(!directDelete.success && directDelete.statusCode == 400);
+        std::cout << "[PASS] Test 74: Conversation type integrity: Group operations rejected on direct conversations with 400" << std::endl;
+
+        // Test 75: Group lifecycle integrity: Sole admin protection, atomic transferAdmin, and cleanup
+        std::vector<int64_t> testGroupMembers = { p4Priya->id };
+        auto lifecycleGroup = messagingService->createGroup(aaravToken, "Lifecycle Test Group", "Integrity check", "", testGroupMembers);
+        assert(lifecycleGroup.success && lifecycleGroup.conversation.has_value());
+        int64_t lGroupId = lifecycleGroup.conversation->id;
+
+        // Aarav is the sole admin. Demoting Aarav must fail with 400
+        auto demoteSoleAdmin = messagingService->updateGroupMemberRole(aaravToken, lGroupId, p4Aarav->id, "member");
+        assert(!demoteSoleAdmin.success && demoteSoleAdmin.statusCode == 400);
+
+        // Atomic repository transfer admin from Aarav to Priya
+        bool transferOk = convRepo->transferAdmin(lGroupId, p4Aarav->id, p4Priya->id);
+        assert(transferOk);
+
+        // Verify Priya is now admin and Aarav is member
+        auto pMemRole = convRepo->getMemberRole(lGroupId, p4Priya->id);
+        assert(pMemRole.has_value() && *pMemRole == "admin");
+        auto aMemRole = convRepo->getMemberRole(lGroupId, p4Aarav->id);
+        assert(aMemRole.has_value() && *aMemRole == "member");
+
+        // Now Priya is sole admin. Demoting Priya must fail with 400
+        auto demotePriya = messagingService->updateGroupMemberRole(priyaToken, lGroupId, p4Priya->id, "member");
+        assert(!demotePriya.success && demotePriya.statusCode == 400);
+
+        // Aarav (now a member) leaving succeeds; Priya remains sole admin
+        auto aaravLeave = messagingService->leaveGroup(aaravToken, lGroupId);
+        assert(aaravLeave.success);
+
+        // Priya (sole member and sole admin) leaving auto-disbands/deletes group
+        auto priyaLeave = messagingService->leaveGroup(priyaToken, lGroupId);
+        assert(priyaLeave.success);
+
+        // Group no longer accessible
+        auto checkDisbanded = messagingService->getGroupMembers(priyaToken, lGroupId);
+        assert(!checkDisbanded.success && checkDisbanded.statusCode == 404);
+        std::cout << "[PASS] Test 75: Group lifecycle: Sole admin demotion protection, atomic transfer, and auto-disband verified" << std::endl;
     }
 
     // Test 72: Database migration from legacy schema with sample data
@@ -983,7 +1108,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 72 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 75 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

@@ -327,7 +327,11 @@ MessagingResult MessagingService::markAsRead(const std::string& sessionToken, in
     if (conv->type == "group") {
         convRepo_->updateLastReadMessage(conversationId, *callerId);
     } else {
-        msgRepo_->markAsRead(conversationId, *callerId);
+        auto myPrefs = msgRepo_->getUserPreferences(*callerId);
+        int64_t otherId = (conv->userLowId == *callerId) ? conv->userHighId : conv->userLowId;
+        auto otherPrefs = msgRepo_->getUserPreferences(otherId);
+        bool suppress = (!myPrefs.readReceiptsEnabled || !otherPrefs.readReceiptsEnabled);
+        msgRepo_->markAsRead(conversationId, *callerId, suppress);
     }
 
     res.success = true;
@@ -555,6 +559,20 @@ MessagingResult MessagingService::getGroupMembers(const std::string& sessionToke
         return res;
     }
 
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
+        return res;
+    }
+
     if (!convRepo_->isParticipant(conversationId, *callerId)) {
         res.success = false;
         res.statusCode = 403;
@@ -575,6 +593,20 @@ MessagingResult MessagingService::addGroupMember(const std::string& sessionToken
         res.success = false;
         res.statusCode = 401;
         res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
         return res;
     }
 
@@ -626,6 +658,20 @@ MessagingResult MessagingService::removeGroupMember(const std::string& sessionTo
         return res;
     }
 
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
+        return res;
+    }
+
     if (!convRepo_->isParticipant(conversationId, targetUserId)) {
         res.success = false;
         res.statusCode = 404;
@@ -669,6 +715,20 @@ MessagingResult MessagingService::updateGroupMemberRole(const std::string& sessi
         return res;
     }
 
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
+        return res;
+    }
+
     auto myRole = convRepo_->getMemberRole(conversationId, *callerId);
     if (!myRole || *myRole != "admin") {
         res.success = false;
@@ -691,17 +751,20 @@ MessagingResult MessagingService::updateGroupMemberRole(const std::string& sessi
         return res;
     }
 
-    if (*callerId == targetUserId && role == "member") {
-        auto members = convRepo_->getGroupMembers(conversationId);
-        int adminCount = 0;
-        for (const auto& m : members) {
-            if (m.role == "admin") adminCount++;
-        }
-        if (adminCount <= 1) {
-            res.success = false;
-            res.statusCode = 400;
-            res.message = "Cannot demote the sole group administrator. Promote another admin first.";
-            return res;
+    if (role == "member") {
+        auto targetRole = convRepo_->getMemberRole(conversationId, targetUserId);
+        if (targetRole && *targetRole == "admin") {
+            auto members = convRepo_->getGroupMembers(conversationId);
+            int adminCount = 0;
+            for (const auto& m : members) {
+                if (m.role == "admin") adminCount++;
+            }
+            if (adminCount <= 1) {
+                res.success = false;
+                res.statusCode = 400;
+                res.message = "Cannot demote the sole group administrator. Promote another admin first.";
+                return res;
+            }
         }
     }
 
@@ -728,6 +791,20 @@ MessagingResult MessagingService::updateGroup(const std::string& sessionToken, i
         res.success = false;
         res.statusCode = 401;
         res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
         return res;
     }
 
@@ -758,11 +835,11 @@ MessagingResult MessagingService::updateGroup(const std::string& sessionToken, i
         return res;
     }
 
-    auto conv = convRepo_->findById(conversationId);
-    if (conv) enrichConversation(*conv, *callerId);
+    auto updatedConv = convRepo_->findById(conversationId);
+    if (updatedConv) enrichConversation(*updatedConv, *callerId);
     res.success = true;
     res.statusCode = 200;
-    res.conversation = conv;
+    res.conversation = updatedConv;
     return res;
 }
 
@@ -773,6 +850,20 @@ MessagingResult MessagingService::deleteGroup(const std::string& sessionToken, i
         res.success = false;
         res.statusCode = 401;
         res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
         return res;
     }
 
@@ -808,6 +899,20 @@ MessagingResult MessagingService::leaveGroup(const std::string& sessionToken, in
         return res;
     }
 
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+    if (conv->type != "group") {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "This operation is only valid for group conversations.";
+        return res;
+    }
+
     auto role = convRepo_->getMemberRole(conversationId, *callerId);
     if (!role) {
         res.success = false;
@@ -819,7 +924,13 @@ MessagingResult MessagingService::leaveGroup(const std::string& sessionToken, in
     auto members = convRepo_->getGroupMembers(conversationId);
     if (members.size() <= 1) {
         // Last member leaving - disband the group cleanly
-        convRepo_->deleteGroup(conversationId);
+        bool delOk = convRepo_->deleteGroup(conversationId);
+        if (!delOk) {
+            res.success = false;
+            res.statusCode = 500;
+            res.message = "Failed to disband group upon departure.";
+            return res;
+        }
         res.success = true;
         res.statusCode = 200;
         res.message = "You left and the group was disbanded.";
@@ -828,20 +939,34 @@ MessagingResult MessagingService::leaveGroup(const std::string& sessionToken, in
 
     if (*role == "admin") {
         // Count other admins
-        int adminCount = 0;
+        int otherAdmins = 0;
         int64_t nextMemberId = 0;
         for (const auto& m : members) {
-            if (m.role == "admin") adminCount++;
+            if (m.userId == *callerId) continue;
+            if (m.role == "admin") otherAdmins++;
             else if (nextMemberId == 0) nextMemberId = m.userId;
         }
 
-        if (adminCount <= 1 && nextMemberId > 0) {
+        if (otherAdmins == 0 && nextMemberId > 0) {
             // Transfer admin to the next member
-            convRepo_->transferAdmin(conversationId, *callerId, nextMemberId);
+            bool transOk = convRepo_->transferAdmin(conversationId, *callerId, nextMemberId);
+            if (!transOk) {
+                res.success = false;
+                res.statusCode = 500;
+                res.message = "Failed to transfer administration to a remaining member.";
+                return res;
+            }
         }
     }
 
-    convRepo_->removeMember(conversationId, *callerId);
+    bool remOk = convRepo_->removeMember(conversationId, *callerId);
+    if (!remOk) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to leave group.";
+        return res;
+    }
+
     res.success = true;
     res.statusCode = 200;
     res.message = "You left the group.";

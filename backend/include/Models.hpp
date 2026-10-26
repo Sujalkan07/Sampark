@@ -159,7 +159,7 @@ struct UserPreferences {
     int64_t userId = 0;
     std::string theme = "system"; // "light", "dark", "system"
     bool soundNotifications = true;
-    bool desktopNotifications = true;
+    bool desktopNotifications = false;
     bool readReceiptsEnabled = true;
     std::string updatedAt;
 

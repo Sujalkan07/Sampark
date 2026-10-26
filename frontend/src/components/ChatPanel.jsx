@@ -445,28 +445,37 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
         replyToId: stagedReply?.id || undefined,
       };
 
-      const res = await api.sendMessage(targetId, payload);
-      if (activeConvIdRef.current !== targetId) return;
+      try {
+        const res = await api.sendMessage(targetId, payload);
+        if (activeConvIdRef.current !== targetId) return;
 
-      if (res?.message) {
-        setMessages((prev) => [...prev, res.message]);
-        if (res.message.id > latestMessageIdRef.current) {
-          latestMessageIdRef.current = res.message.id;
+        if (res?.message) {
+          setMessages((prev) =>
+            prev.some((m) => m.id === res.message.id) ? prev : [...prev, res.message]
+          );
+          if (res.message.id > latestMessageIdRef.current) {
+            latestMessageIdRef.current = res.message.id;
+          }
+          setInputText('');
+          setStagedReply(null);
+          handleRemoveStagedFile();
+          setEmojiPickerOpen(false);
+
+          onConversationActivity?.({
+            conversationId: targetId,
+            lastMessage: res.message,
+            isSentByMe: true,
+          });
+
+          scrollToBottom(true);
+        } else {
+          throw new Error('Server did not confirm message delivery.');
         }
-        setInputText('');
-        setStagedReply(null);
-        handleRemoveStagedFile();
-        setEmojiPickerOpen(false);
-
-        onConversationActivity?.({
-          conversationId: targetId,
-          lastMessage: res.message,
-          isSentByMe: true,
-        });
-
-        scrollToBottom(true);
-      } else {
-        throw new Error('Server did not confirm message delivery.');
+      } catch (sendErr) {
+        if (attachmentId) {
+          api.deleteAttachment(attachmentId).catch(() => {});
+        }
+        throw sendErr;
       }
     } catch (err) {
       setSendError(err.message || 'Failed to send message. Please try again.');

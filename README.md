@@ -11,7 +11,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![OpenSSL](https://img.shields.io/badge/OpenSSL-Cryptography-721412?style=for-the-badge&logo=openssl&logoColor=white)](https://www.openssl.org/)
-[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-72%2F72%20Passing-138808?style=for-the-badge)](backend/tests/backend_test.cpp)
+[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-75%2F75%20Passing-138808?style=for-the-badge)](backend/tests/backend_test.cpp)
 [![E2E Tests](https://img.shields.io/badge/E2E%20Tests-26%2F26%20Passing-F58220?style=for-the-badge)](e2e_integration_test.ps1)
 
 <p align="center">
@@ -433,7 +433,7 @@ Open **`http://localhost:5173`** in your browser. All API requests made to `/api
 
 Sampark includes two comprehensive automated test suites covering unit logic, cryptographic guarantees, and end-to-end HTTP integration:
 
-### 1. Backend C++ Unit & Integration Test Suite (72 Tests)
+### 1. Backend C++ Unit & Integration Test Suite (75 Tests)
 
 The backend test suite verifies:
 - Database initialization, foreign key constraints, and idempotent migrations
@@ -449,6 +449,9 @@ The backend test suite verifies:
 - Emoji reactions: toggle, user aggregation, and tombstone isolation
 - File attachments: magic-byte sniffing (JPEG, PNG, GIF, WebP, PDF, DOCX, DOC, TXT), binary-in-text detection, 10MB limits, directory traversal sanitization, random storage names, access controls, unlinked deletion, and reuse prevention
 - User preferences: theme allowlist, notification flags, and read receipt privacy suppression
+- Read receipts toggle lifecycle: permanent suppression of `read_at` timestamps so subsequent re-enabling never leaks read intervals
+- Conversation type integrity: rejection of group operations on direct conversations with HTTP 400
+- Group lifecycle integrity: sole admin demotion protection for all admins, atomic admin transfer, and auto-disband upon last member departure
 - SQLite schema migration from legacy schemas with zero data loss and clean `PRAGMA foreign_key_check`
 
 **Run Backend Tests:**
@@ -462,7 +465,7 @@ wsl -d Ubuntu --cd backend make test
 **Output:**
 ```
 =============================================
- ALL 72 BACKEND TESTS PASSED SUCCESSFULLY!   
+ ALL 75 BACKEND TESTS PASSED SUCCESSFULLY!   
 =============================================
 ```
 
@@ -514,6 +517,9 @@ dist/assets/index.js            325.66 kB
 
 ```
 Sampark/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                       # Automated CI: C++ build, 75 unit tests & React build
 ├── backend/                             # C++20 Backend Engine
 │   ├── Makefile                         # Cross-platform GNU Makefile (Linux/Windows)
 │   ├── include/                         # Header files and interfaces
@@ -534,7 +540,7 @@ Sampark/
 │   │   └── nlohmann/json.hpp            # Modern JSON for C++
 │   ├── src/                             # Source implementations (.cpp)
 │   ├── tests/
-│   │   └── backend_test.cpp             # 72-case comprehensive C++ test suite
+│   │   └── backend_test.cpp             # 75-case comprehensive C++ test suite
 │   └── uploads/
 │       └── .gitkeep                     # Preserves upload storage directory
 │

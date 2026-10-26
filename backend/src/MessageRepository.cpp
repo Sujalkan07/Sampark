@@ -62,7 +62,7 @@ Message SqliteMessageRepository::extractMessage(Statement& stmt, int64_t current
     m.body = stmt.getColumnText(3);
     m.createdAt = stmt.getColumnText(4);
     std::string readAt = stmt.getColumnText(5);
-    if (!readAt.empty()) {
+    if (!readAt.empty() && readAt != "suppressed") {
         m.readAt = readAt;
     }
     std::string editedAt = stmt.getColumnText(6);
@@ -345,12 +345,18 @@ int SqliteMessageRepository::getUnreadCount(int64_t conversationId, int64_t reci
     }
 }
 
-int SqliteMessageRepository::markAsRead(int64_t conversationId, int64_t recipientUserId) {
+int SqliteMessageRepository::markAsRead(int64_t conversationId, int64_t recipientUserId, bool suppressReceipt) {
     if (conversationId <= 0 || recipientUserId <= 0) return 0;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "UPDATE messages SET read_at = datetime('now') "
-                            "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
+    std::string sql;
+    if (suppressReceipt) {
+        sql = "UPDATE messages SET read_at = 'suppressed' "
+              "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
+    } else {
+        sql = "UPDATE messages SET read_at = datetime('now') "
+              "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
+    }
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return 0;
 
@@ -654,11 +660,15 @@ std::optional<Attachment> SqliteMessageRepository::getMessageAttachment(int64_t 
 bool SqliteMessageRepository::deleteAttachment(int64_t attachmentId) {
     if (attachmentId <= 0) return false;
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "DELETE FROM attachments WHERE id = ?;";
+    // Only delete if the attachment is still unlinked
+    const std::string sql = "DELETE FROM attachments WHERE id = ? AND message_id IS NULL;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return false;
     stmt.bindInt64(1, attachmentId);
-    return stmt.step() == SQLITE_DONE;
+    if (stmt.step() == SQLITE_DONE) {
+        return sqlite3_changes(db_.getHandle()) > 0;
+    }
+    return false;
 }
 
 int SqliteMessageRepository::cleanupOrphanedAttachments(int maxAgeHours) {
@@ -678,13 +688,16 @@ int SqliteMessageRepository::cleanupOrphanedAttachments(int maxAgeHours) {
 
     int count = 0;
     for (const auto& [id, path] : toDelete) {
-        try {
-            if (fs::exists(path)) {
-                fs::remove(path);
-            }
-        } catch (...) {}
-        deleteAttachment(id);
-        count++;
+        // Atomic conditional deletion: delete the DB record FIRST only if still unlinked
+        bool dbDeleted = deleteAttachment(id);
+        if (dbDeleted) {
+            try {
+                if (fs::exists(path)) {
+                    fs::remove(path);
+                }
+            } catch (...) {}
+            count++;
+        }
     }
     return count;
 }

@@ -504,40 +504,54 @@ bool SqliteConversationRepository::transferAdmin(int64_t conversationId, int64_t
     sqlite3_exec(db_.getHandle(), "BEGIN IMMEDIATE TRANSACTION;", nullptr, nullptr, &errMsg);
 
     // Update current admin to member
+    int rc1 = SQLITE_OK;
     if (currentAdminId > 0) {
         const std::string demoteSql = "UPDATE conversation_members SET role = 'member' WHERE conversation_id = ? AND user_id = ?;";
         Statement stmt(db_.getHandle(), demoteSql);
         if (stmt.isValid()) {
             stmt.bindInt64(1, conversationId);
             stmt.bindInt64(2, currentAdminId);
-            stmt.step();
+            rc1 = stmt.step();
+        } else {
+            rc1 = SQLITE_ERROR;
         }
     }
 
     // Promote new admin
+    int rc2 = SQLITE_OK;
     const std::string promoteSql = "UPDATE conversation_members SET role = 'admin' WHERE conversation_id = ? AND user_id = ?;";
     {
         Statement stmt(db_.getHandle(), promoteSql);
         if (stmt.isValid()) {
             stmt.bindInt64(1, conversationId);
             stmt.bindInt64(2, newAdminId);
-            stmt.step();
+            rc2 = stmt.step();
+        } else {
+            rc2 = SQLITE_ERROR;
         }
     }
 
     // Update created_by in conversations table
+    int rc3 = SQLITE_OK;
     const std::string updateConvSql = "UPDATE conversations SET created_by = ?, updated_at = datetime('now') WHERE id = ?;";
     {
         Statement stmt(db_.getHandle(), updateConvSql);
         if (stmt.isValid()) {
             stmt.bindInt64(1, newAdminId);
             stmt.bindInt64(2, conversationId);
-            stmt.step();
+            rc3 = stmt.step();
+        } else {
+            rc3 = SQLITE_ERROR;
         }
     }
 
-    sqlite3_exec(db_.getHandle(), "COMMIT;", nullptr, nullptr, nullptr);
-    return true;
+    if ((rc1 == SQLITE_DONE || rc1 == SQLITE_OK) && rc2 == SQLITE_DONE && rc3 == SQLITE_DONE) {
+        sqlite3_exec(db_.getHandle(), "COMMIT;", nullptr, nullptr, nullptr);
+        return true;
+    } else {
+        sqlite3_exec(db_.getHandle(), "ROLLBACK;", nullptr, nullptr, nullptr);
+        return false;
+    }
 }
 
 bool SqliteConversationRepository::updateLastReadMessage(int64_t conversationId, int64_t userId) {

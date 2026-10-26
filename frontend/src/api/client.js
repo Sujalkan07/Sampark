@@ -276,6 +276,12 @@ export const api = {
     return await response.json();
   },
 
+  async deleteAttachment(attachmentId) {
+    return request(`/api/attachments/${attachmentId}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Phase 4: User Preferences APIs
   async getPreferences() {
     return request('/api/users/preferences', {

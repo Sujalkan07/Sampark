@@ -808,7 +808,11 @@ void MessagingController::handleGetAttachment(const httplib::Request& req, httpl
         res.status = 200;
         res.set_header("Content-Type", result.fileMimeType.empty() ? "application/octet-stream" : result.fileMimeType);
         res.set_header("X-Content-Type-Options", "nosniff");
-        res.set_header("Content-Disposition", "inline; filename=\"" + safeHeaderName + "\"");
+        bool isInline = (result.fileMimeType == "image/jpeg" || result.fileMimeType == "image/png" ||
+                         result.fileMimeType == "image/gif" || result.fileMimeType == "image/webp" ||
+                         result.fileMimeType == "application/pdf");
+        std::string disposition = (isInline ? "inline" : "attachment");
+        res.set_header("Content-Disposition", disposition + "; filename=\"" + safeHeaderName + "\"");
         res.set_content(result.fileContent, result.fileMimeType);
     } catch (...) {
         sendError(res, 400, "Invalid attachment ID.");
