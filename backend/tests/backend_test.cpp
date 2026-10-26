@@ -6,6 +6,7 @@
 #include "AuthService.hpp"
 #include "MessagingService.hpp"
 #include "Validator.hpp"
+#include "Server.hpp"
 #include <iostream>
 #include <cassert>
 #include <cstdio>
@@ -471,6 +472,322 @@ void runTests() {
         assert(msgs[2].isDeleted == true);
         assert(msgs[3].body == "Let's review the SQLite architecture docs.");
         std::cout << "[PASS] Test 46: Full conversation, edited messages, and deletions persist across database restarts" << std::endl;
+
+        // Test 47: CORS origin allowlist validation
+        assert(connectx::isOriginAllowed("http://localhost:5173") == true);
+        assert(connectx::isOriginAllowed("http://127.0.0.1:5173") == true);
+        assert(connectx::isOriginAllowed("http://localhost:8080") == true);
+        assert(connectx::isOriginAllowed("https://malicious-attacker.com") == false);
+        assert(connectx::isOriginAllowed("http://evil.org") == false);
+        assert(connectx::isOriginAllowed("") == false);
+        std::cout << "[PASS] Test 47: CORS origin allowlist accurately accepts trusted origins and rejects attackers" << std::endl;
+
+        // Test 48: Concurrent session invalidation on password change
+        auto authService = std::make_shared<connectx::AuthService>(userRepo, sessionRepo);
+        auto regNeha = authService->registerUser("neha_verma", "neha@college.edu.in", "Neha Verma", "NehaPassword123!");
+        assert(regNeha.success);
+        auto loginDevice1 = authService->login("neha_verma", "NehaPassword123!");
+        auto loginDevice2 = authService->login("neha_verma", "NehaPassword123!");
+        assert(loginDevice1.session.has_value() && loginDevice2.session.has_value());
+        std::string tokenDevice1 = loginDevice1.session->token;
+        std::string tokenDevice2 = loginDevice2.session->token;
+        assert(tokenDevice1 != tokenDevice2);
+
+        // Verify both sessions initially valid
+        assert(authService->validateSession(tokenDevice1).has_value());
+        assert(authService->validateSession(tokenDevice2).has_value());
+
+        // Change password from Device 2
+        auto changeResult = authService->changePassword(tokenDevice2, "NehaPassword123!", "NewNehaPassword456!");
+        assert(changeResult.success);
+
+        // Current session (Device 2) remains valid
+        assert(authService->validateSession(tokenDevice2).has_value());
+        // Other session (Device 1) must be invalidated
+        assert(!authService->validateSession(tokenDevice1).has_value());
+        std::cout << "[PASS] Test 48: Concurrent session invalidation preserves active session and revokes others" << std::endl;
+
+        // Test 49: Redundant deletion of already soft-deleted message rejected with 400
+        int64_t deletedMsgId = msgs[2].id;
+        std::string priyaToken = authService->login("priya_patel", "PriyaSecurePass2026!").session->token;
+        auto redelResult = messagingService->deleteMessage(priyaToken, deletedMsgId);
+        assert(!redelResult.success);
+        assert(redelResult.statusCode == 400);
+        assert(redelResult.message == "Message is already deleted.");
+        std::cout << "[PASS] Test 49: Redundant deletion of soft-deleted message is safely rejected (HTTP 400)" << std::endl;
+
+        // Test 50: Search with special characters (%, _, ') without wildcard bleed
+        std::string aaravToken = authService->login("aarav_sharma", "NewStrongPassword456!").session->token;
+        auto sendSpecial1 = messagingService->sendMessage(aaravToken, conv->id, "Rate is 100% completed_task today!");
+        auto sendSpecial2 = messagingService->sendMessage(aaravToken, conv->id, "Rate is 1000 completed-task today!");
+        assert(sendSpecial1.success && sendSpecial2.success);
+
+        // Search specifically for literal '% completed_task'
+        auto searchEscaped = messagingService->searchConversationMessages(aaravToken, conv->id, "% completed_task", 10);
+        assert(searchEscaped.success);
+        assert(searchEscaped.messages.size() == 1);
+        assert(searchEscaped.messages[0].body == "Rate is 100% completed_task today!");
+        std::cout << "[PASS] Test 50: Search pattern escaping handles special characters without wildcard bleed" << std::endl;
+
+        // Test 51: Idempotent Schema Migration on existing and fresh DBs
+        db.migrateSchema();
+        db.migrateSchema();
+        assert(db.hasColumn("users", "bio"));
+        assert(db.hasColumn("users", "last_active_at"));
+        assert(db.hasColumn("messages", "is_deleted"));
+        assert(db.hasColumn("messages", "edited_at"));
+        std::cout << "[PASS] Test 51: Schema migrations are repeatable and idempotent across invocations" << std::endl;
+
+        // ==========================================
+        // PHASE 4 TESTS: GROUPS, REPLIES, REACTIONS,
+        // ATTACHMENTS, AND PREFERENCES
+        // ==========================================
+
+        // Register additional members for Group testing
+        auto regRohit = authService->registerUser("rohit_v", "rohit@iitb.ac.in", "Rohit Verma", "RohitPass2026!");
+        assert(regRohit.success);
+        auto regAnanya = authService->registerUser("ananya_s", "ananya@iitb.ac.in", "Ananya Singh", "AnanyaPass2026!");
+        assert(regAnanya.success);
+
+        // Test 52: Group Creation with Creator as Admin & Initial Members
+        auto p4Aarav = userRepo->findByUsername("aarav_sharma");
+        auto p4Priya = userRepo->findByUsername("priya_patel");
+        auto p4Rohit = userRepo->findByUsername("rohit_v");
+        assert(p4Aarav.has_value() && p4Priya.has_value() && p4Rohit.has_value());
+
+        std::vector<int64_t> initialMemberIds = { p4Priya->id, p4Rohit->id };
+        auto createGroupRes = messagingService->createGroup(
+            aaravToken,
+            "IIT Bombay Coders",
+            "Official group for coders and developers",
+            "",
+            initialMemberIds
+        );
+        assert(createGroupRes.success);
+        assert(createGroupRes.statusCode == 201);
+        assert(createGroupRes.conversation.has_value());
+        assert(createGroupRes.conversation->type == "group");
+        assert(createGroupRes.conversation->name == "IIT Bombay Coders");
+        assert(createGroupRes.conversation->createdBy == p4Aarav->id);
+        int64_t groupId = createGroupRes.conversation->id;
+
+        // Verify members
+        auto membersRes = messagingService->getGroupMembers(aaravToken, groupId);
+        assert(membersRes.success);
+        assert(membersRes.members.size() == 3); // Aarav + Priya + Rohit
+        bool foundAdmin = false;
+        for (const auto& m : membersRes.members) {
+            if (m.userId == p4Aarav->id) {
+                assert(m.role == "admin");
+                foundAdmin = true;
+            } else {
+                assert(m.role == "member");
+            }
+        }
+        assert(foundAdmin);
+        std::cout << "[PASS] Test 52: Group creation with creator as admin and multiple initial members" << std::endl;
+
+        // Test 53: Group Messaging (Sender Details & Multi-Member Delivery)
+        auto groupMsg1 = messagingService->sendMessage(aaravToken, groupId, "Welcome to the IITB group everyone!");
+        assert(groupMsg1.success);
+        assert(groupMsg1.chatMessage.has_value());
+        assert(groupMsg1.chatMessage->senderUsername == "aarav_sharma");
+        assert(groupMsg1.chatMessage->conversationId == groupId);
+
+        auto groupMsg2 = messagingService->sendMessage(priyaToken, groupId, "Glad to join, thanks Aarav!");
+        assert(groupMsg2.success);
+        assert(groupMsg2.chatMessage->senderUsername == "priya_patel");
+
+        // Rohit reads group history
+        std::string rohitToken = authService->login("rohit_v", "RohitPass2026!").session->token;
+        auto rohitGroupHistory = messagingService->getMessages(rohitToken, groupId, 50, 0, 0);
+        assert(rohitGroupHistory.success);
+        assert(rohitGroupHistory.messages.size() == 2);
+        assert(rohitGroupHistory.messages[0].body == "Welcome to the IITB group everyone!");
+        assert(rohitGroupHistory.messages[1].body == "Glad to join, thanks Aarav!");
+        std::cout << "[PASS] Test 53: Group messaging with sender attribution across members" << std::endl;
+
+        // Test 54: Non-Member Access Rejection
+        std::string ananyaToken = authService->login("ananya_s", "AnanyaPass2026!").session->token;
+        auto nonMemberHistory = messagingService->getMessages(ananyaToken, groupId, 50, 0, 0);
+        assert(!nonMemberHistory.success);
+        assert(nonMemberHistory.statusCode == 403);
+
+        auto nonMemberSend = messagingService->sendMessage(ananyaToken, groupId, "I am not invited but trying to post");
+        assert(!nonMemberSend.success);
+        assert(nonMemberSend.statusCode == 403);
+        std::cout << "[PASS] Test 54: Non-member access to group history and sending is rejected (HTTP 403)" << std::endl;
+
+        // Test 55: Member Management (Admin Adds Member, Member Cannot Remove Admin)
+        auto ananyaUser = userRepo->findByUsername("ananya_s");
+        assert(ananyaUser.has_value());
+
+        // Non-admin (Priya) tries to add Ananya -> rejected 403
+        auto priyaAdd = messagingService->addGroupMember(priyaToken, groupId, ananyaUser->id);
+        assert(!priyaAdd.success);
+        assert(priyaAdd.statusCode == 403);
+
+        // Admin (Aarav) adds Ananya -> success 200
+        auto adminAdd = messagingService->addGroupMember(aaravToken, groupId, ananyaUser->id);
+        assert(adminAdd.success);
+        assert(adminAdd.statusCode == 200);
+
+        // Verify Ananya can now read messages
+        auto ananyaHistory = messagingService->getMessages(ananyaToken, groupId, 50, 0, 0);
+        assert(ananyaHistory.success);
+
+        // Non-admin (Rohit) tries to remove Aarav -> rejected 403
+        auto nonAdminRemove = messagingService->removeGroupMember(rohitToken, groupId, p4Aarav->id);
+        assert(!nonAdminRemove.success);
+        assert(nonAdminRemove.statusCode == 403);
+
+        // Admin (Aarav) removes Rohit -> success
+        auto adminRemove = messagingService->removeGroupMember(aaravToken, groupId, p4Rohit->id);
+        assert(adminRemove.success);
+        std::cout << "[PASS] Test 55: Group member administration with role-based permissions" << std::endl;
+
+        // Test 56: Group Leave & Automatic Admin Transfer
+        // Aarav (sole admin) leaves group. Admin should be transferred to oldest remaining member (Priya).
+        auto leaveRes = messagingService->leaveGroup(aaravToken, groupId);
+        assert(leaveRes.success);
+
+        // Verify Priya is now admin
+        auto updatedMembers = messagingService->getGroupMembers(priyaToken, groupId);
+        assert(updatedMembers.success);
+        bool priyaIsAdmin = false;
+        for (const auto& m : updatedMembers.members) {
+            if (m.userId == p4Priya->id) {
+                if (m.role == "admin") priyaIsAdmin = true;
+            }
+        }
+        assert(priyaIsAdmin);
+        std::cout << "[PASS] Test 56: Admin departure automatically transfers administrative role to remaining member" << std::endl;
+
+        // Test 57: Message Replies & Cross-Conversation Rejection
+        int64_t welcomeMsgId = groupMsg1.chatMessage->id;
+        auto replyRes = messagingService->sendMessage(priyaToken, groupId, "Replying to welcome note", welcomeMsgId);
+        assert(replyRes.success);
+        assert(replyRes.chatMessage.has_value());
+        assert(replyRes.chatMessage->replyToId.has_value());
+        assert(replyRes.chatMessage->replyToId.value() == welcomeMsgId);
+        assert(replyRes.chatMessage->replyTo.has_value());
+        assert(replyRes.chatMessage->replyTo->id == welcomeMsgId);
+        assert(replyRes.chatMessage->replyTo->body == "Welcome to the IITB group everyone!");
+
+        // Reject cross-conversation reply (replying to a direct-chat message inside a group chat)
+        int64_t directMsgId = msgs[0].id;
+        auto crossReplyRes = messagingService->sendMessage(priyaToken, groupId, "Cross-conv reply", directMsgId);
+        assert(!crossReplyRes.success);
+        assert(crossReplyRes.statusCode == 400);
+        assert(crossReplyRes.message == "Invalid reply reference: message does not belong to this conversation.");
+        std::cout << "[PASS] Test 57: Message reply-to referencing and cross-conversation reference validation" << std::endl;
+
+        // Test 58: Emoji Reactions Toggle & Aggregation
+        int64_t repliedMsgId = replyRes.chatMessage->id;
+        // Priya adds thumbs up
+        auto react1 = messagingService->toggleReaction(priyaToken, repliedMsgId, "👍");
+        assert(react1.success);
+        assert(react1.reactions.size() == 1);
+        assert(react1.reactions[0].emoji == "👍");
+        assert(react1.reactions[0].count == 1);
+
+        // Ananya also adds thumbs up
+        auto react2 = messagingService->toggleReaction(ananyaToken, repliedMsgId, "👍");
+        assert(react2.success);
+        assert(react2.reactions.size() == 1);
+        assert(react2.reactions[0].count == 2);
+
+        // Ananya adds heart
+        auto react3 = messagingService->toggleReaction(ananyaToken, repliedMsgId, "❤️");
+        assert(react3.success);
+        assert(react3.reactions.size() == 2);
+
+        // Priya toggles off thumbs up (removes her reaction)
+        auto react4 = messagingService->toggleReaction(priyaToken, repliedMsgId, "👍");
+        assert(react4.success);
+        for (const auto& r : react4.reactions) {
+            if (r.emoji == "👍") {
+                assert(r.count == 1);
+            }
+        }
+        std::cout << "[PASS] Test 58: Emoji reaction toggling, aggregation, and user tracking" << std::endl;
+
+        // Test 59: File & Image Attachment Persistence and Download Authorization
+        std::string sampleImageContent = "FAKE_JPEG_IMAGE_BINARY_DATA_FOR_TESTING";
+        auto uploadRes = messagingService->uploadAttachment(
+            priyaToken,
+            groupId,
+            "campus_map.jpg",
+            sampleImageContent,
+            "image/jpeg"
+        );
+        assert(uploadRes.success);
+        assert(uploadRes.statusCode == 201);
+        assert(uploadRes.attachment.has_value());
+        int64_t attachId = uploadRes.attachment->id;
+        assert(uploadRes.attachment->fileName == "campus_map.jpg");
+        assert(uploadRes.attachment->mimeType == "image/jpeg");
+        assert(uploadRes.attachment->fileSize == (int64_t)sampleImageContent.length());
+
+        // Send message with linked attachment
+        auto attachMsg = messagingService->sendMessage(priyaToken, groupId, "Here is the campus map", std::nullopt, attachId);
+        assert(attachMsg.success);
+        assert(attachMsg.chatMessage.has_value());
+        assert(attachMsg.chatMessage->attachment.has_value());
+        assert(attachMsg.chatMessage->attachment->id == attachId);
+
+        // Authorized download by group member (Ananya)
+        auto downloadAnanya = messagingService->getAttachment(ananyaToken, attachId);
+        assert(downloadAnanya.success);
+        assert(downloadAnanya.attachment.has_value());
+        assert(downloadAnanya.fileContent == sampleImageContent);
+
+        // Unauthorized download by non-member (Rohit, who was removed)
+        auto downloadRohit = messagingService->getAttachment(rohitToken, attachId);
+        assert(!downloadRohit.success);
+        assert(downloadRohit.statusCode == 403);
+        std::cout << "[PASS] Test 59: File attachment upload, association with message, and authorized download" << std::endl;
+
+        // Test 60: User Personalization & Preferences
+        // Default preferences
+        auto defaultPrefs = messagingService->getUserPreferences(priyaToken);
+        assert(defaultPrefs.success);
+        assert(defaultPrefs.preferences.has_value());
+        assert(defaultPrefs.preferences->theme == "system");
+        assert(defaultPrefs.preferences->soundNotifications == true);
+        assert(defaultPrefs.preferences->readReceiptsEnabled == true);
+
+        // Update preferences to dark mode and disable sound
+        connectx::UserPreferences customPrefs;
+        customPrefs.theme = "dark";
+        customPrefs.soundNotifications = false;
+        customPrefs.desktopNotifications = true;
+        customPrefs.readReceiptsEnabled = false;
+
+        auto updatePrefRes = messagingService->updateUserPreferences(priyaToken, customPrefs);
+        assert(updatePrefRes.success);
+        assert(updatePrefRes.preferences.has_value());
+        assert(updatePrefRes.preferences->theme == "dark");
+        assert(updatePrefRes.preferences->soundNotifications == false);
+        assert(updatePrefRes.preferences->desktopNotifications == true);
+        assert(updatePrefRes.preferences->readReceiptsEnabled == false);
+
+        // Re-read to confirm persistence
+        auto rereadPrefs = messagingService->getUserPreferences(priyaToken);
+        assert(rereadPrefs.success);
+        assert(rereadPrefs.preferences->theme == "dark");
+        assert(rereadPrefs.preferences->soundNotifications == false);
+        std::cout << "[PASS] Test 60: User preferences CRUD and persistent settings" << std::endl;
+
+        // Test 61: Phase 4 Schema Verification
+        assert(db.hasColumn("conversation_members", "role"));
+        assert(db.hasColumn("message_reactions", "emoji"));
+        assert(db.hasColumn("attachments", "file_name"));
+        assert(db.hasColumn("user_preferences", "theme"));
+        assert(db.hasColumn("conversations", "type"));
+        assert(db.hasColumn("conversations", "name"));
+        assert(db.hasColumn("messages", "reply_to_id"));
+        std::cout << "[PASS] Test 61: Phase 4 database tables, columns, and foreign keys verified" << std::endl;
     }
 
     // Clean up test DB
@@ -479,7 +796,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 46 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 61 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

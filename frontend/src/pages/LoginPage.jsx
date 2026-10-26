@@ -54,11 +54,13 @@ export function LoginPage() {
             {/* Top Brand Emblem */}
             <div className="flex items-center justify-between pb-6 border-b border-border-hairline mb-6">
               <div className="flex items-center gap-3">
-                <img
-                  src="/sampark-logo.png"
-                  alt="Sampark"
-                  className="h-9 w-auto object-contain"
-                />
+                <div className="bg-white px-2.5 py-1 rounded-xl border border-border-hairline shadow-xs flex items-center">
+                  <img
+                    src="/sampark-logo.png"
+                    alt="Sampark"
+                    className="h-8 w-auto object-contain"
+                  />
+                </div>
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low border border-border-hairline text-xs font-mono text-on-surface-variant">

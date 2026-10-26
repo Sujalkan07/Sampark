@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePreferences } from '../context/PreferencesContext';
 import { TricolourBadge } from './TricolourBadge';
 import { ProfileModal } from './ProfileModal';
+import { SettingsModal } from './SettingsModal';
 
 export function Sidebar() {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = usePreferences();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -27,7 +31,7 @@ export function Sidebar() {
         {/* Top brand */}
         <div className="flex flex-col items-center w-full gap-6">
           <NavLink to="/dashboard" className="flex flex-col items-center gap-1.5 group px-1" title="Sampark Dashboard">
-            <div className="w-11 h-11 rounded-xl bg-surface-container-lowest border border-border-hairline flex items-center justify-center p-1 shadow-xs transition-transform group-hover:scale-105 overflow-hidden">
+            <div className="w-11 h-11 rounded-xl bg-white border border-border-hairline flex items-center justify-center p-1 shadow-xs transition-transform group-hover:scale-105 overflow-hidden">
               <img
                 src="/sampark-logo.png"
                 alt="Sampark"
@@ -44,7 +48,7 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `relative w-11 h-11 flex items-center justify-center rounded-xl transition-all ${
                   isActive
-                    ? 'bg-surface-container-high text-primary font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-saffron shadow-xs'
+                    ? 'bg-surface-container-high text-on-surface font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-saffron shadow-xs'
                     : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
                 }`
               }
@@ -58,7 +62,7 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `relative w-11 h-11 flex items-center justify-center rounded-xl transition-all ${
                   isActive
-                    ? 'bg-surface-container-high text-primary font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-saffron shadow-xs'
+                    ? 'bg-surface-container-high text-on-surface font-semibold before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r-full before:bg-saffron shadow-xs'
                     : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
                 }`
               }
@@ -69,12 +73,39 @@ export function Sidebar() {
         </div>
 
         {/* Bottom actions & user profile */}
-        <div className="flex flex-col items-center gap-4 w-full px-2">
+        <div className="flex flex-col items-center gap-2.5 w-full px-2">
+          {/* Quick Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="w-11 h-11 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all cursor-pointer group active:scale-95"
+          >
+            <span
+              className={`material-symbols-outlined text-[21px] transition-transform duration-300 ${
+                isDarkMode ? 'text-amber-400 group-hover:rotate-45' : 'text-slate-600 group-hover:-rotate-45'
+              }`}
+            >
+              {isDarkMode ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
+
+          {/* Settings Button */}
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            title="Settings & Preferences"
+            className="w-11 h-11 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[21px]">settings</span>
+          </button>
+
           <button
             onClick={handleLogout}
             type="button"
             title="Sign Out"
-            className="w-11 h-11 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-red-50 hover:text-error transition-colors cursor-pointer"
+            className="w-11 h-11 flex items-center justify-center rounded-xl text-on-surface-variant hover:bg-red-500/10 hover:text-error transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">logout</span>
           </button>
@@ -101,6 +132,12 @@ export function Sidebar() {
         isOpen={profileOpen}
         onClose={() => setProfileOpen(false)}
         mode="edit"
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
       />
     </>
   );

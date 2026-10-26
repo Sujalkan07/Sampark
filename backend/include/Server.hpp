@@ -15,6 +15,8 @@
 
 namespace connectx {
 
+bool isOriginAllowed(const std::string& origin);
+
 class Server {
 public:
     Server(Database& db,

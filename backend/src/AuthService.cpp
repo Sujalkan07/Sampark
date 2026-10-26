@@ -336,6 +336,9 @@ AuthResult AuthService::changePassword(const std::string& token,
         return res;
     }
 
+    // Invalidate all other active sessions for this user on other devices/browsers
+    sessionRepo_->deleteOtherUserSessions(user->id, token);
+
     res.success = true;
     res.statusCode = 200;
     res.message = "Password changed successfully.";

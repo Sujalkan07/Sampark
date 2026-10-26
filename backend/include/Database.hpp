@@ -21,6 +21,7 @@ public:
 
     bool initSchema();
     void migrateSchema();
+    bool hasColumn(const std::string& tableName, const std::string& columnName);
 
     sqlite3* getHandle() const { return db_; }
     std::mutex& getMutex() { return mutex_; }

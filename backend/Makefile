@@ -1,6 +1,16 @@
 CXX = g++
 CXXFLAGS = -std=c++20 -O2 -Wall -Wextra -Iinclude
-LDFLAGS = -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
+
+UNAME_S := $(shell uname -s 2>/dev/null || echo Windows_NT)
+ifeq ($(findstring Linux,$(UNAME_S)),Linux)
+    LDFLAGS = -lsqlite3 -lssl -lcrypto -lpthread
+    TARGET_SERVER = server
+    TARGET_TEST = test_suite
+else
+    LDFLAGS = -lsqlite3 -lssl -lcrypto -lws2_32 -lcrypt32
+    TARGET_SERVER = server.exe
+    TARGET_TEST = test_suite.exe
+endif
 
 SRCS = src/Database.cpp \
        src/UserRepository.cpp \
@@ -17,9 +27,6 @@ SRCS = src/Database.cpp \
 
 SERVER_OBJS = $(SRCS:.cpp=.o) src/main.o
 TEST_OBJS = $(SRCS:.cpp=.o) tests/backend_test.o
-
-TARGET_SERVER = server.exe
-TARGET_TEST = test_suite.exe
 
 all: $(TARGET_SERVER) $(TARGET_TEST)
 

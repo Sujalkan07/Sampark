@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePreferences } from '../context/PreferencesContext';
 import { api } from '../api/client';
 import { Sidebar } from '../components/Sidebar';
 import { TricolourBadge } from '../components/TricolourBadge';
 import { AlertBanner } from '../components/AlertBanner';
 import { ChatPanel } from '../components/ChatPanel';
 import { ProfileModal } from '../components/ProfileModal';
+import { NewGroupModal } from '../components/NewGroupModal';
+import { formatPreviewTime, getPresenceStatus } from '../utils/date';
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { isDarkMode, toggleTheme } = usePreferences();
   const navigate = useNavigate();
   const { conversationId } = useParams();
 
@@ -17,9 +21,10 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'unread', 'direct', 'messages'
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'unread', 'direct', 'groups', 'messages'
 
   const [selfProfileOpen, setSelfProfileOpen] = useState(false);
+  const [newGroupOpen, setNewGroupOpen] = useState(false);
   const [globalResults, setGlobalResults] = useState([]);
   const [globalLoading, setGlobalLoading] = useState(false);
 
@@ -111,7 +116,7 @@ export function DashboardPage() {
 
   // Callback from ChatPanel whenever a message is sent or received
   const handleConversationActivity = useCallback(
-    ({ conversationId: activityId, lastMessage }) => {
+    ({ conversationId: activityId, lastMessage, isSentByMe, incomingCount = 1 }) => {
       setConversations((prev) => {
         const index = prev.findIndex((c) => String(c.id) === String(activityId));
         if (index === -1) {
@@ -124,11 +129,13 @@ export function DashboardPage() {
           activeConversationIdRef.current &&
           String(activeConversationIdRef.current) === String(activityId);
 
+        const deltaUnread = (isCurrentOpen || isSentByMe) ? 0 : incomingCount;
+
         const updated = {
           ...current,
           lastMessage,
           updatedAt: lastMessage.createdAt,
-          unreadCount: isCurrentOpen ? 0 : (current.unreadCount || 0) + 1,
+          unreadCount: isCurrentOpen ? 0 : (current.unreadCount || 0) + deltaUnread,
         };
 
         const remaining = prev.filter((_, i) => i !== index);
@@ -138,27 +145,13 @@ export function DashboardPage() {
     [fetchConversations]
   );
 
-  // Format preview timestamp
-  const formatPreviewTime = (isoString) => {
-    if (!isoString) return '';
-    try {
-      const d = new Date(isoString);
-      const today = new Date();
-      if (d.toDateString() === today.toDateString()) {
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    } catch {
-      return '';
-    }
-  };
-
   // Filter conversations
   const filteredConversations = useMemo(() => {
     return conversations.filter((c) => {
+      const isGroup = c.type === 'group';
       const other = c.participant;
-      const name = other?.fullName?.toLowerCase() || '';
-      const handle = other?.username?.toLowerCase() || '';
+      const name = isGroup ? (c.name || '').toLowerCase() : (other?.fullName?.toLowerCase() || '');
+      const handle = isGroup ? '' : (other?.username?.toLowerCase() || '');
       const q = searchQuery.toLowerCase().trim();
 
       const matchesSearch = !q || name.includes(q) || handle.includes(q);
@@ -166,6 +159,12 @@ export function DashboardPage() {
 
       if (activeTab === 'unread') {
         return c.unreadCount > 0;
+      }
+      if (activeTab === 'direct') {
+        return !isGroup;
+      }
+      if (activeTab === 'groups') {
+        return isGroup;
       }
       return true;
     });
@@ -183,19 +182,37 @@ export function DashboardPage() {
       {/* Main Content Area offset by 68px */}
       <div className="pl-[68px] flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header Bar */}
-        <header className="h-14 bg-surface-container-lowest border-b border-border-hairline z-40 flex items-center justify-between px-6 shrink-0">
+        <header className="h-14 bg-surface-container-lowest border-b border-border-hairline z-40 flex items-center justify-between px-6 shrink-0 transition-colors">
           <div className="flex items-center gap-3">
-            <img
-              src="/sampark-logo.png"
-              alt="Sampark"
-              className="h-7 w-auto object-contain cursor-pointer"
+            <div
+              className="h-8 px-2 py-0.5 rounded-lg bg-white border border-border-hairline flex items-center shadow-xs cursor-pointer"
               onClick={() => navigate('/dashboard')}
-            />
+              title="Sampark Dashboard"
+            >
+              <img
+                src="/sampark-logo.png"
+                alt="Sampark"
+                className="h-6 w-auto object-contain"
+              />
+            </div>
             <span className="text-outline/50">•</span>
             <span className="text-sm font-medium text-on-surface-variant">Messages</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Quick Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
+            >
+              <span className={`material-symbols-outlined text-[19px] ${isDarkMode ? 'text-amber-400' : 'text-slate-700'}`}>
+                {isDarkMode ? 'light_mode' : 'dark_mode'}
+              </span>
+            </button>
+
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface-container-low border border-border-hairline text-xs font-mono text-on-surface-variant">
               <span className="w-2 h-2 rounded-full bg-india-green"></span>
               <span>Logged in as @{user?.username}</span>
@@ -230,16 +247,27 @@ export function DashboardPage() {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => navigate('/find-people')}
-                  className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all active:scale-95 group shadow-xs cursor-pointer"
-                  title="Find People to message"
-                  type="button"
-                >
-                  <span className="material-symbols-outlined text-[19px] group-hover:rotate-90 transition-transform">
-                    add
-                  </span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setNewGroupOpen(true)}
+                    className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all active:scale-95 group shadow-xs cursor-pointer"
+                    title="Create New Group"
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-[19px]">group_add</span>
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/find-people')}
+                    className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-primary flex items-center justify-center transition-all active:scale-95 group shadow-xs cursor-pointer"
+                    title="Find People to message"
+                    type="button"
+                  >
+                    <span className="material-symbols-outlined text-[19px] group-hover:rotate-90 transition-transform">
+                      person_add
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {/* Search Bar */}
@@ -254,7 +282,7 @@ export function DashboardPage() {
                   placeholder={
                     activeTab === 'messages'
                       ? 'Search all message history...'
-                      : 'Search conversations...'
+                      : 'Search conversations & groups...'
                   }
                   className="w-full pl-9 pr-3 py-2 bg-surface-container-low hover:bg-surface-container focus:bg-surface-container-lowest text-xs text-on-surface placeholder:text-outline rounded-lg border border-border-hairline focus:border-secondary focus:outline-none transition-all"
                 />
@@ -299,6 +327,17 @@ export function DashboardPage() {
                   }`}
                 >
                   Direct
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('groups')}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
+                    activeTab === 'groups'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'text-on-surface-variant hover:bg-surface-container'
+                  }`}
+                >
+                  Groups
                 </button>
                 <button
                   type="button"
@@ -430,23 +469,38 @@ export function DashboardPage() {
             {activeTab !== 'messages' && !loading && filteredConversations.length > 0 && (
               <div className="flex-1 overflow-y-auto divide-y divide-border-hairline/60">
                 {filteredConversations.map((conv) => {
+                  const isGroup = conv.type === 'group';
                   const peer = conv.participant;
-                  const initials = (peer?.fullName || peer?.username || 'U')
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .substring(0, 2)
-                    .toUpperCase();
+                  const initials = isGroup
+                    ? (conv.name || 'G')
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .substring(0, 2)
+                        .toUpperCase()
+                    : (peer?.fullName || peer?.username || 'U')
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .substring(0, 2)
+                        .toUpperCase();
 
                   const lastMsg = conv.lastMessage;
-                  const snippet = lastMsg?.body || 'No messages yet';
+                  let snippet = 'No messages yet';
+                  if (lastMsg) {
+                    if (isGroup) {
+                      const sender = lastMsg.senderId === user?.id ? 'You' : (lastMsg.senderName || `@${lastMsg.senderUsername}`);
+                      snippet = `${sender}: ${lastMsg.attachment ? (lastMsg.body || '📎 Attachment') : lastMsg.body}`;
+                    } else {
+                      snippet = lastMsg.attachment ? (lastMsg.body || '📎 Attachment') : lastMsg.body;
+                    }
+                  }
+
                   const timestamp = formatPreviewTime(lastMsg?.createdAt || conv.updatedAt);
                   const hasUnread = conv.unreadCount > 0;
                   const isActive = String(conv.id) === String(conversationId);
 
-                  const isPeerOnline =
-                    peer?.lastActiveAt &&
-                    (Date.now() - new Date(peer.lastActiveAt).getTime()) / 1000 < 120;
+                  const isPeerOnline = !isGroup && getPresenceStatus(peer?.lastActiveAt).isOnline;
 
                   return (
                     <div
@@ -454,7 +508,7 @@ export function DashboardPage() {
                       onClick={() => navigate(`/dashboard/${conv.id}`)}
                       className={`relative p-3.5 flex items-center justify-between transition-colors cursor-pointer group ${
                         isActive
-                          ? 'bg-[#fff9f2]'
+                          ? 'bg-saffron/10'
                           : hasUnread
                           ? 'bg-surface-container-low/60 hover:bg-surface-container-low'
                           : 'hover:bg-surface-container-low'
@@ -467,9 +521,15 @@ export function DashboardPage() {
 
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="relative shrink-0">
-                          <div className="w-10 h-10 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none">
-                            {initials}
-                          </div>
+                          {isGroup ? (
+                            <div className="w-10 h-10 rounded-full bg-linear-to-tr from-[#1B365D] to-[#2E5B88] text-white flex items-center justify-center text-xs font-bold shadow-xs select-none">
+                              <span className="material-symbols-outlined text-[20px]">groups</span>
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-primary-container text-white font-bold flex items-center justify-center text-xs shadow-xs select-none">
+                              {initials}
+                            </div>
+                          )}
                           {isPeerOnline && (
                             <span
                               className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-india-green rounded-full ring-2 ring-surface-container-lowest"
@@ -480,13 +540,20 @@ export function DashboardPage() {
 
                         <div className="min-w-0 flex-1 pr-2">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span
-                              className={`text-xs truncate ${
-                                isActive || hasUnread ? 'text-primary font-bold' : 'text-on-surface'
-                              }`}
-                            >
-                              {peer?.fullName || `@${peer?.username}`}
-                            </span>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className={`text-xs truncate ${
+                                  isActive || hasUnread ? 'text-primary font-bold' : 'text-on-surface'
+                                }`}
+                              >
+                                {isGroup ? conv.name : (peer?.fullName || `@${peer?.username}`)}
+                              </span>
+                              {isGroup && (
+                                <span className="px-1.5 py-0.2 rounded bg-surface-container text-[9px] font-mono font-medium text-outline shrink-0">
+                                  Group
+                                </span>
+                              )}
+                            </div>
                             <span className="text-[10px] text-outline font-mono shrink-0 ml-1">
                               {timestamp}
                             </span>
@@ -542,7 +609,7 @@ export function DashboardPage() {
           <section
             className={`${
               conversationId ? 'flex' : 'hidden md:flex'
-            } flex-1 flex-col h-full bg-[#fafaf7] min-w-0 overflow-hidden relative`}
+            } flex-1 flex-col h-full bg-surface min-w-0 overflow-hidden relative`}
           >
             {conversationId ? (
               <ChatPanel
@@ -634,6 +701,18 @@ export function DashboardPage() {
         isOpen={selfProfileOpen}
         onClose={() => setSelfProfileOpen(false)}
         mode="edit"
+      />
+
+      {/* New Group Modal */}
+      <NewGroupModal
+        isOpen={newGroupOpen}
+        onClose={() => setNewGroupOpen(false)}
+        onGroupCreated={(newGroup) => {
+          fetchConversations(false);
+          if (newGroup?.id) {
+            navigate(`/dashboard/${newGroup.id}`);
+          }
+        }}
       />
     </div>
   );

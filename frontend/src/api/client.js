@@ -134,10 +134,18 @@ export const api = {
     });
   },
 
-  async sendMessage(conversationId, body) {
+  async sendMessage(conversationId, messageData) {
+    const payload = typeof messageData === 'string'
+      ? { body: messageData }
+      : {
+          body: messageData?.body || '',
+          ...(messageData?.replyToId ? { replyToId: messageData.replyToId } : {}),
+          ...(messageData?.attachmentId ? { attachmentId: messageData.attachmentId } : {}),
+        };
+
     return request(`/api/conversations/${conversationId}/messages`, {
       method: 'POST',
-      body: JSON.stringify({ body }),
+      body: JSON.stringify(payload),
     });
   },
 
@@ -194,6 +202,91 @@ export const api = {
     if (query) params.append('q', query);
     return request(`/api/messages/search?${params.toString()}`, {
       method: 'GET',
+    });
+  },
+
+  // Phase 4: Group Chat APIs
+  async createGroup({ name, description = '', avatarUrl = '', memberIds = [] }) {
+    return request('/api/groups', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, avatarUrl, memberIds }),
+    });
+  },
+
+  async getGroupMembers(conversationId) {
+    return request(`/api/conversations/${conversationId}/members`, {
+      method: 'GET',
+    });
+  },
+
+  async addGroupMember(conversationId, userId) {
+    return request(`/api/conversations/${conversationId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+  },
+
+  async removeGroupMember(conversationId, userId) {
+    return request(`/api/conversations/${conversationId}/members/${userId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async updateGroup(conversationId, { name, description = '', avatarUrl = '' }) {
+    return request(`/api/conversations/${conversationId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, description, avatarUrl }),
+    });
+  },
+
+  async deleteGroup(conversationId) {
+    return request(`/api/conversations/${conversationId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async leaveGroup(conversationId) {
+    return request(`/api/conversations/${conversationId}/leave`, {
+      method: 'POST',
+    });
+  },
+
+  // Phase 4: Reaction APIs
+  async toggleReaction(messageId, emoji) {
+    return request(`/api/messages/${messageId}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji }),
+    });
+  },
+
+  // Phase 4: Attachment APIs
+  async uploadAttachment(conversationId, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const url = `${API_BASE_URL}/api/conversations/${conversationId}/attachments`;
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new ApiError(data?.error || 'Failed to upload attachment.', response.status);
+    }
+    return await response.json();
+  },
+
+  // Phase 4: User Preferences APIs
+  async getPreferences() {
+    return request('/api/users/preferences', {
+      method: 'GET',
+    });
+  },
+
+  async updatePreferences(preferences) {
+    return request('/api/users/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(preferences),
     });
   },
 };

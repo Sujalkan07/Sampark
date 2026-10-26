@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Project Overview & Capabilities (Phases 1, 2, & 3)
+## 1. Project Overview & Capabilities (Phases 1, 2, 3, & 4)
 
 ### Phase 1: Foundation, Security & Authentication
 - **C++ Backend Engine:** HTTP routing, controllers, services, repositories, and RAII database handle management via `cpp-httplib` and modern C++20.
@@ -31,6 +31,15 @@
 - **In-Conversation Search:** Real-time keyword search (`GET /api/conversations/:id/messages/search?q=...`) with match highlights and hit navigation.
 - **Global Message Search:** Cross-conversation message history search (`GET /api/messages/search?q=...`) in the dashboard sidebar, jumping directly to the corresponding chat.
 - **Genuine Online Presence:** Activity-based online presence derived from database timestamps (`last_active_at` on `users`), showing "Active now" (within 120s) or "Active Xm ago", with visual presence indicators on avatars.
+
+### Phase 4: Group Chats, Replies, Reactions, Attachments & Dark Mode
+- **Group Chats:** Multi-user group creation with member picker (`POST /api/groups`), group member listings with roles (`admin` vs `member`), admin member additions, removals, and auto-admin transfer on creator leave (`POST /api/groups/:id/leave`), plus complete disbanding (`DELETE /api/conversations/:id`).
+- **Message Replies:** Quoted message referencing (`reply_to_id`) with cross-conversation authorization enforcement, reply banner in composer, clickable quotes inside message bubbles, and smooth jump-to-message with flash highlight.
+- **Emoji Reactions:** Interactive emoji reactions (`POST /api/messages/:id/reactions`) with toggling on/off, counts, user listing popovers, and quick reaction toolbar on message hover.
+- **File & Image Sharing:** File attachments (`POST /api/conversations/:id/attachments`) with 10MB size enforcement, extension allowlist, path traversal protection, image lightbox preview, document card downloads with authorization (`GET /api/attachments/:id`).
+- **Personalization & Settings:** Appearance (Light, Dark, System theme), custom audio notification chimes (`playNotificationChime` via Web Audio API), desktop browser notification permissions, read receipts toggle (`read_receipts_enabled`), and in-modal profile editing.
+- **Typing Bar Emoji Picker:** Custom categorized emoji picker popover with search, keyboard shortcuts (`Esc` to close), and instant insertion into composer.
+- **Complete Ergonomic Dark Mode:** CSS custom property system (`:root` / `.dark`) with RGB channels for dynamic opacity, high-contrast typography, dark scrollbars, anti-FOUC pre-hydration script, and 1-click Sun/Moon toggle buttons across Sidebar, Dashboard Header, and Public Navbar.
 
 ---
 
@@ -148,12 +157,12 @@ CREATE TABLE IF NOT EXISTS messages (
     sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    is_read INTEGER NOT NULL DEFAULT 0,
+    read_at TEXT DEFAULT NULL,
     edited_at TEXT DEFAULT NULL,
     is_deleted INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_messages_conv_created ON messages(conversation_id, created_at ASC);
-CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, is_read, sender_id);
+CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, read_at, sender_id);
 ```
 
 ---
@@ -244,21 +253,21 @@ CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages(conversation_id, is_r
 
 ## 7. Automated Testing
 
-### 1. Backend Unit & Integration Tests (46 Tests)
-The C++ test suite verifies schema creation, input validation, salted PBKDF2 hashing, duplicate rejections, authentication, multi-user isolation, SQL injection prevention, session invalidation, conversation normalization, messaging permissions, chronological pagination, delta cursor polling, unread count tracking, profile editing, bio length validation, password updates, message editing, soft deletion, in-conversation search, global message search, and complete persistence across server restarts.
+### 1. Backend Unit & Integration Tests (61 Tests)
+The C++ test suite verifies schema creation, input validation, salted PBKDF2 hashing, duplicate rejections, authentication, multi-user isolation, SQL injection prevention, session invalidation, conversation normalization, messaging permissions, chronological pagination, delta cursor polling, unread count tracking, profile editing, bio length validation, password updates, message editing, soft deletion, in-conversation search, global message search, CORS allowlist verification, concurrent session revocation, redundant soft-delete rejection, search wildcard escaping, schema migration idempotency, and complete persistence across server restarts, as well as Phase 4 group management, message replies, emoji reactions, attachment limits & validation, and user preference synchronization.
 
 Run the C++ unit test suite:
 ```bash
 cd backend
-mingw32-make test
-# or manually:
-# .\test_suite.exe
+make test
+# or manually in WSL / Linux:
+# ./test_suite
 ```
-**Result:** 46/46 tests passing (100%).
+**Result:** 61/61 tests passing (100%).
 
-### 2. End-to-End HTTP API Integration Tests (38 Tests)
-Spawns the compiled C++ server on a live TCP port, executes real HTTP network calls (health, registration, multi-user session isolation, 1-on-1 messaging, read receipts, privacy boundaries, profile updates, password change, message editing, soft deletion, search queries, server restart, and database persistence), and verifies response integrity:
+### 2. End-to-End HTTP API Integration Tests (26 Multi-Step Tests)
+Spawns the compiled C++ server on a live TCP port, executes real HTTP network calls across the entire feature surface (health check, CORS preflight allowlist and untrusted origin rejection, user registration, session token security, multi-user session isolation, 1-on-1 messaging, read receipts, privacy boundaries, profile updates, group creation, member management, group message delivery, message replies, emoji reactions, file attachment uploads and downloads, user preferences & Dark Mode updates, group admin actions, group disbanding, and database persistence), and verifies response integrity:
 ```bash
 powershell -ExecutionPolicy Bypass -File .\e2e_integration_test.ps1
 ```
-**Result:** 38/38 tests passing (100%).
+**Result:** 26/26 tests passing (100%).

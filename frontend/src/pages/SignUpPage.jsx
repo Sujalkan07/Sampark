@@ -95,7 +95,9 @@ export function SignUpPage() {
           {/* Header */}
           <div className="flex flex-col items-center text-center mb-6">
             <div className="inline-flex items-center gap-2.5 mb-2">
-              <img src="/sampark-logo.png" alt="Sampark" className="h-10 w-auto object-contain" />
+              <div className="bg-white px-3 py-1 rounded-xl border border-border-hairline shadow-xs flex items-center">
+                <img src="/sampark-logo.png" alt="Sampark" className="h-8 w-auto object-contain" />
+              </div>
             </div>
             <h1 className="text-xl font-bold text-on-surface tracking-tight">Create your account</h1>
             <p className="text-xs text-on-surface-variant mt-1">

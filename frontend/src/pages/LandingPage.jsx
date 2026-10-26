@@ -100,7 +100,7 @@ export function LandingPage() {
               {/* Tricolour Accent Strip */}
               <div className="w-full flex h-[3px]">
                 <span className="flex-1 bg-saffron"></span>
-                <span className="flex-1 bg-surface-container-lowest"></span>
+                <span className="flex-1 bg-white"></span>
                 <span className="flex-1 bg-india-green"></span>
               </div>
 
@@ -279,7 +279,9 @@ export function LandingPage() {
       <footer className="w-full py-6 border-t border-border-hairline bg-surface-container-low text-xs text-on-surface-variant">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <img src="/sampark-logo.png" alt="Sampark" className="h-6 w-auto object-contain" />
+            <div className="bg-white px-2 py-0.5 rounded-lg border border-border-hairline shadow-xs flex items-center">
+              <img src="/sampark-logo.png" alt="Sampark" className="h-5 w-auto object-contain" />
+            </div>
             <span className="text-outline">·</span>
             <span>Minimalist network chat</span>
           </div>

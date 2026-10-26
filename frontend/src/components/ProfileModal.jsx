@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import { TricolourBadge } from './TricolourBadge';
 import { AlertBanner } from './AlertBanner';
+import { getPresenceStatus, formatJoinedDate, parseUtcDate } from '../utils/date';
 
 export function ProfileModal({ isOpen, onClose, mode = 'view', targetUser = null, onProfileUpdated }) {
   const { user: currentUser, updateUser } = useAuth();
@@ -44,35 +45,8 @@ export function ProfileModal({ isOpen, onClose, mode = 'view', targetUser = null
 
   if (!isOpen || !displayUser) return null;
 
-  // Presence calculation
-  const getPresence = (lastActiveAt) => {
-    if (!lastActiveAt) return { isOnline: false, label: 'Offline' };
-    try {
-      const activeTime = new Date(lastActiveAt).getTime();
-      const now = Date.now();
-      const diffSecs = Math.floor((now - activeTime) / 1000);
-
-      if (diffSecs < 120) {
-        return { isOnline: true, label: 'Active now' };
-      }
-      if (diffSecs < 3600) {
-        const mins = Math.max(1, Math.floor(diffSecs / 60));
-        return { isOnline: false, label: `Active ${mins}m ago` };
-      }
-      if (diffSecs < 86400) {
-        const hours = Math.floor(diffSecs / 3600);
-        return { isOnline: false, label: `Active ${hours}h ago` };
-      }
-      return {
-        isOnline: false,
-        label: `Last seen ${new Date(lastActiveAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`,
-      };
-    } catch {
-      return { isOnline: false, label: 'Offline' };
-    }
-  };
-
-  const presence = getPresence(displayUser.lastActiveAt);
+  // Presence calculation via normalized UTC parser
+  const presence = getPresenceStatus(displayUser.lastActiveAt);
 
   const initials = (displayUser.fullName || displayUser.username || 'U')
     .split(' ')
@@ -255,8 +229,8 @@ export function ProfileModal({ isOpen, onClose, mode = 'view', targetUser = null
                   Member Since
                 </label>
                 <div className="text-xs font-mono text-on-surface-variant">
-                  {displayUser.createdAt
-                    ? new Date(displayUser.createdAt).toLocaleDateString(undefined, {
+                  {displayUser.createdAt && parseUtcDate(displayUser.createdAt)
+                    ? parseUtcDate(displayUser.createdAt).toLocaleDateString(undefined, {
                         month: 'long',
                         day: 'numeric',
                         year: 'numeric',

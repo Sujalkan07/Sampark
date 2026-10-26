@@ -59,6 +59,18 @@ bool SqliteSessionRepository::deleteUserSessions(int64_t userId) {
     return stmt.step() == SQLITE_DONE;
 }
 
+bool SqliteSessionRepository::deleteOtherUserSessions(int64_t userId, const std::string& currentToken) {
+    if (userId <= 0) return false;
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "DELETE FROM sessions WHERE user_id = ? AND token != ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, userId);
+    stmt.bindText(2, currentToken);
+    return stmt.step() == SQLITE_DONE;
+}
+
 void SqliteSessionRepository::cleanExpiredSessions() {
     std::lock_guard<std::mutex> lock(db_.getMutex());
     const std::string sql = "DELETE FROM sessions WHERE datetime(expires_at) <= datetime('now');";

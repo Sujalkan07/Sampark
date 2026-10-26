@@ -15,6 +15,7 @@ public:
     virtual std::optional<Session> findSession(const std::string& token) = 0;
     virtual bool deleteSession(const std::string& token) = 0;
     virtual bool deleteUserSessions(int64_t userId) = 0;
+    virtual bool deleteOtherUserSessions(int64_t userId, const std::string& currentToken) = 0;
     virtual void cleanExpiredSessions() = 0;
 };
 
@@ -27,6 +28,7 @@ public:
     std::optional<Session> findSession(const std::string& token) override;
     bool deleteSession(const std::string& token) override;
     bool deleteUserSessions(int64_t userId) override;
+    bool deleteOtherUserSessions(int64_t userId, const std::string& currentToken) override;
     void cleanExpiredSessions() override;
 
 private:

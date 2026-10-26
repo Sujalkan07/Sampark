@@ -11,9 +11,9 @@ export function AlertBanner({ type = 'error', message, onClose }) {
       role="alert"
       className={`p-3 rounded-lg border text-sm flex items-start gap-2.5 transition-all ${
         isError
-          ? 'bg-red-50 border-red-200 text-error'
+          ? 'bg-red-500/10 border-red-500/25 text-red-600 dark:text-red-400'
           : isSuccess
-          ? 'bg-green-50 border-green-200 text-india-green'
+          ? 'bg-emerald-500/10 border-emerald-500/25 text-india-green dark:text-emerald-400'
           : 'bg-surface-container-high border-border-hairline text-on-surface'
       }`}
     >

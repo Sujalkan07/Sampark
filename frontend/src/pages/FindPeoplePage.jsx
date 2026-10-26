@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePreferences } from '../context/PreferencesContext';
 import { api } from '../api/client';
 import { Sidebar } from '../components/Sidebar';
 import { TricolourBadge } from '../components/TricolourBadge';
 import { AlertBanner } from '../components/AlertBanner';
 import { ProfileModal } from '../components/ProfileModal';
+import { formatJoinedDate } from '../utils/date';
 
 export function FindPeoplePage() {
   const { user } = useAuth();
+  const { isDarkMode, toggleTheme } = usePreferences();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,19 +77,37 @@ export function FindPeoplePage() {
 
       <div className="pl-[68px] flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header */}
-        <header className="h-14 bg-surface-container-lowest border-b border-border-hairline z-40 flex items-center justify-between px-6 shrink-0">
+        <header className="h-14 bg-surface-container-lowest border-b border-border-hairline z-40 flex items-center justify-between px-6 shrink-0 transition-colors">
           <div className="flex items-center gap-3">
-            <img
-              src="/sampark-logo.png"
-              alt="Sampark"
-              className="h-7 w-auto object-contain cursor-pointer"
+            <div
+              className="h-8 px-2 py-0.5 rounded-lg bg-white border border-border-hairline flex items-center shadow-xs cursor-pointer"
               onClick={() => navigate('/dashboard')}
-            />
+              title="Sampark Dashboard"
+            >
+              <img
+                src="/sampark-logo.png"
+                alt="Sampark"
+                className="h-6 w-auto object-contain"
+              />
+            </div>
             <span className="text-outline/50">•</span>
             <span className="text-sm font-medium text-on-surface-variant">Find People</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Quick Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="w-8 h-8 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center cursor-pointer shadow-xs active:scale-95"
+            >
+              <span className={`material-symbols-outlined text-[19px] ${isDarkMode ? 'text-amber-400' : 'text-slate-700'}`}>
+                {isDarkMode ? 'light_mode' : 'dark_mode'}
+              </span>
+            </button>
+
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold shadow-xs">
               {(user?.fullName || user?.username || 'U')[0].toUpperCase()}
             </div>
@@ -316,12 +337,7 @@ export function FindPeoplePage() {
                     .substring(0, 2)
                     .toUpperCase();
 
-                  const joinedDate = peer.createdAt
-                    ? new Date(peer.createdAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        year: 'numeric',
-                      })
-                    : 'Active Member';
+                  const joinedDate = formatJoinedDate(peer.createdAt);
 
                   return (
                     <div
