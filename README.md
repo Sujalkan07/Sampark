@@ -17,6 +17,7 @@
 <p align="center">
   <b>Fast. Secure. Self-Contained.</b> Engineered with a bare-metal Object-Oriented C++ HTTP backend, atomic SQLite3 persistence, robust OpenSSL cryptography, and a responsive React frontend inspired by the Google Stitch Indian Tricolour design system.
 </p>
+</div>
 
 ---
 
@@ -537,48 +538,73 @@ Sampark/
 │   │   ├── UserRepository.hpp           # User CRUD & activity presence
 │   │   ├── Validator.hpp                # Input & magic-byte attachment validation
 │   │   ├── httplib.h                    # Embedded cpp-httplib header
-│   │   └── nlohmann/json.hpp            # Modern JSON for C++
+│   │   └── nlohmann/                    # Third-party JSON library directory
+│   │       └── json.hpp                 # Modern JSON for C++
 │   ├── src/                             # Source implementations (.cpp)
-│   ├── tests/
+│   │   ├── AuthController.cpp           # Route handlers for auth & profile
+│   │   ├── AuthService.cpp              # Cryptographic hashing & auth logic
+│   │   ├── ConversationRepository.cpp   # Chat channel queries & membership
+│   │   ├── Database.cpp                 # SQLite connection management & migrations
+│   │   ├── HealthController.cpp         # Health check endpoint implementation
+│   │   ├── main.cpp                     # Server bootstrap, CLI args & schema init
+│   │   ├── MessageRepository.cpp        # Message persistence, reactions & attachments
+│   │   ├── MessagingController.cpp      # Chat, group, reaction & upload routing
+│   │   ├── MessagingService.cpp         # Messaging business logic & validation
+│   │   ├── Server.cpp                   # HTTP server lifecycle & CORS middleware
+│   │   ├── SessionRepository.cpp        # Session token store & cookie validation
+│   │   ├── UserRepository.cpp           # User profile & presence queries
+│   │   └── Validator.cpp                # Input validation & magic-byte detection
+│   ├── tests/                           # Unit and integration test suites
 │   │   └── backend_test.cpp             # 75-case comprehensive C++ test suite
-│   └── uploads/
+│   └── uploads/                         # Runtime attachment storage directory
 │       └── .gitkeep                     # Preserves upload storage directory
-│
 ├── frontend/                            # React 18 + Vite + Tailwind CSS SPA
+│   ├── public/                          # Static public assets
+│   │   └── sampark-logo.png             # Application logo / favicon
+│   ├── src/                             # Application source code
+│   │   ├── App.jsx                      # App shell, routing & modal providers
+│   │   ├── index.css                    # Tailwind CSS directives & custom styles
+│   │   ├── main.jsx                     # React 18 DOM root mount
+│   │   ├── api/                         # Backend API communication
+│   │   │   └── client.js                # Authenticated fetch wrapper
+│   │   ├── assets/                      # Bundled UI assets & icons
+│   │   │   └── sampark-logo.png         # Brand logo asset
+│   │   ├── components/                  # Reusable UI widgets
+│   │   │   ├── AlertBanner.jsx          # Error, warning & info toast notification
+│   │   │   ├── ChatPanel.jsx            # Active conversation, composer & quotes
+│   │   │   ├── EmojiPicker.jsx          # Caret-accurate emoji popover
+│   │   │   ├── GroupDetailsModal.jsx    # Member role administration & leave group
+│   │   │   ├── Navbar.jsx               # Top navigation & user status bar
+│   │   │   ├── NewGroupModal.jsx        # Group creation & member picker
+│   │   │   ├── ProfileModal.jsx         # Peer profile & presence view
+│   │   │   ├── ProtectedRoute.jsx       # Auth guard redirecting unauthenticated users
+│   │   │   ├── SettingsModal.jsx        # Theme, sound & privacy preferences
+│   │   │   ├── Sidebar.jsx              # Conversations list, search & presence
+│   │   │   └── TricolourBadge.jsx       # Indian Tricolour decorative badge
+│   │   ├── context/                     # React Context providers
+│   │   │   ├── AuthContext.jsx          # Session state & authentication provider
+│   │   │   └── PreferencesContext.jsx   # Theme, audio chime & receipt preferences
+│   │   ├── pages/                       # Route pages
+│   │   │   ├── ConversationPage.jsx     # Deep-linked chat view
+│   │   │   ├── DashboardPage.jsx        # Main WhatsApp-style split dashboard
+│   │   │   ├── FindPeoplePage.jsx       # Member discovery & search
+│   │   │   ├── LandingPage.jsx          # Public product landing page
+│   │   │   ├── LoginPage.jsx            # Sign in interface
+│   │   │   └── SignUpPage.jsx           # Registration interface
+│   │   └── utils/                       # Frontend helpers
+│   │       ├── date.js                  # Relative timestamps & presence formatters
+│   │       └── sound.js                 # Web Audio API notification chime generator
+│   ├── .env.example                     # Frontend environment template
 │   ├── index.html                       # Entry HTML with anti-FOUC theme script
 │   ├── package.json                     # NPM dependencies & build scripts
-│   ├── vite.config.js                   # Vite configuration & backend /api proxy
+│   ├── postcss.config.js                # PostCSS plugins for Tailwind CSS
 │   ├── tailwind.config.js               # Google Stitch Tricolour color system
-│   └── src/
-│       ├── api/
-│       │   └── client.js                # Authenticated fetch wrapper
-│       ├── components/                  # Reusable UI widgets
-│       │   ├── ChatPanel.jsx            # Active conversation, composer & quotes
-│       │   ├── EmojiPicker.jsx          # Caret-accurate emoji popover
-│       │   ├── GroupDetailsModal.jsx    # Member role administration & leave group
-│       │   ├── NewGroupModal.jsx        # Group creation & member picker
-│       │   ├── ProfileModal.jsx         # Peer profile & presence view
-│       │   ├── SettingsModal.jsx        # Theme, sound & privacy preferences
-│       │   ├── Sidebar.jsx              # Conversations list, search & presence
-│       │   └── TricolourBadge.jsx       # Indian Tricolour decorative badge
-│       ├── context/
-│       │   ├── AuthContext.jsx          # Session state & authentication provider
-│       │   └── PreferencesContext.jsx   # Theme, audio chime & receipt preferences
-│       ├── pages/                       # Route pages
-│       │   ├── ConversationPage.jsx     # Deep-linked chat view
-│       │   ├── DashboardPage.jsx        # Main WhatsApp-style split dashboard
-│       │   ├── FindPeoplePage.jsx       # Member discovery & search
-│       │   ├── LandingPage.jsx          # Public product landing page
-│       │   ├── LoginPage.jsx            # Sign in interface
-│       │   └── SignUpPage.jsx           # Registration interface
-│       └── utils/
-│           ├── date.js                  # Relative timestamps & presence formatters
-│           └── sound.js                 # Web Audio API notification chime generator
-│
+│   └── vite.config.js                   # Vite configuration & backend /api proxy
 ├── stitch_export/                       # Design assets & UI screenshot gallery
+├── .env.example                         # Backend / global environment template
+├── .gitignore                           # Excludes binaries, object files & journals
 ├── e2e_integration_test.ps1             # 26-flow live HTTP API test suite
 ├── start.ps1                            # One-click Windows development launcher
-├── .gitignore                           # Excludes binaries, object files & journals
 └── README.md                            # Project documentation (this file)
 ```
 
