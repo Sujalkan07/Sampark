@@ -20,6 +20,7 @@ export function FindPeoplePage() {
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [connectingUserId, setConnectingUserId] = useState(null);
+  const [contacts, setContacts] = useState([]);
 
   const [selfProfileOpen, setSelfProfileOpen] = useState(false);
   const [viewingPeerId, setViewingPeerId] = useState(null);
@@ -39,6 +40,15 @@ export function FindPeoplePage() {
   }, []);
 
   // Debounced search effect
+  // Fetch contacts on mount
+  useEffect(() => {
+    api.getContacts()
+      .then((res) => {
+        if (res?.contacts) setContacts(res.contacts);
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     let ignore = false;
     const timer = setTimeout(() => {
@@ -375,6 +385,42 @@ export function FindPeoplePage() {
                       </div>
 
                       <div className="shrink-0 ml-4 flex items-center gap-2">
+                        {contacts.some((c) => String(c.id) === String(peer.id)) ? (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await api.removeContact(peer.id);
+                                setContacts((prev) => prev.filter((c) => String(c.id) !== String(peer.id)));
+                              } catch (err) {
+                                setError(err.message || 'Failed to remove contact.');
+                              }
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-error/10 hover:text-error text-on-surface-variant text-xs font-semibold flex items-center gap-1 border border-border-hairline transition-all cursor-pointer"
+                            title="Remove from Contacts"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-india-green">check_circle</span>
+                            <span className="hidden sm:inline">Contact</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await api.addContact(peer.id);
+                                setContacts((prev) => [...prev, peer]);
+                              } catch (err) {
+                                setError(err.message || 'Failed to add contact.');
+                              }
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant text-xs font-semibold flex items-center gap-1 border border-border-hairline transition-all cursor-pointer"
+                            title="Add to Contacts"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">person_add</span>
+                            <span className="hidden sm:inline">Add</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => setViewingPeerId(peer.id)}

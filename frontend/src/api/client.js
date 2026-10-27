@@ -251,6 +251,32 @@ export const api = {
     });
   },
 
+  // Phase 5: Conversation Removal & Contacts APIs
+  async removeConversation(conversationId) {
+    return request(`/api/conversations/${conversationId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getContacts() {
+    return request('/api/contacts', {
+      method: 'GET',
+    });
+  },
+
+  async addContact(contactUserId) {
+    return request('/api/contacts', {
+      method: 'POST',
+      body: JSON.stringify({ contactUserId }),
+    });
+  },
+
+  async removeContact(contactUserId) {
+    return request(`/api/contacts/${contactUserId}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Phase 4: Reaction APIs
   async toggleReaction(messageId, emoji) {
     return request(`/api/messages/${messageId}/reactions`, {

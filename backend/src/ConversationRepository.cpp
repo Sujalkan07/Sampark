@@ -156,17 +156,20 @@ std::vector<Conversation> SqliteConversationRepository::getUserConversations(int
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
     // Direct conversations where user is low/high OR group conversations where user is in conversation_members
-    const std::string sql = "SELECT id, type, name, description, avatar_url, created_by, user_low_id, user_high_id, created_at, updated_at "
-                            "FROM conversations "
-                            "WHERE (type = 'direct' AND (user_low_id = ? OR user_high_id = ?)) "
-                            "   OR (type = 'group' AND id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?)) "
-                            "ORDER BY updated_at DESC, id DESC;";
+    const std::string sql = "SELECT c.id, c.type, c.name, c.description, c.avatar_url, c.created_by, c.user_low_id, c.user_high_id, c.created_at, c.updated_at "
+                            "FROM conversations c "
+                            "LEFT JOIN conversation_user_state cus ON (cus.conversation_id = c.id AND cus.user_id = ?) "
+                            "WHERE ((c.type = 'direct' AND (c.user_low_id = ? OR c.user_high_id = ?)) "
+                            "   OR (c.type = 'group' AND c.id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?))) "
+                            "  AND (cus.is_hidden IS NULL OR cus.is_hidden = 0) "
+                            "ORDER BY c.updated_at DESC, c.id DESC;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return list;
 
     stmt.bindInt64(1, userId);
     stmt.bindInt64(2, userId);
     stmt.bindInt64(3, userId);
+    stmt.bindInt64(4, userId);
 
     while (stmt.step() == SQLITE_ROW) {
         Conversation conv = extractConversation(stmt);
@@ -579,6 +582,58 @@ bool SqliteConversationRepository::updateMemberRole(int64_t conversationId, int6
     stmt.bindInt64(2, conversationId);
     stmt.bindInt64(3, userId);
     return stmt.step() == SQLITE_DONE;
+}
+
+// Phase 5: Conversation Visibility
+bool SqliteConversationRepository::hideConversation(int64_t conversationId, int64_t userId) {
+    if (conversationId <= 0 || userId <= 0) return false;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "INSERT INTO conversation_user_state (conversation_id, user_id, is_hidden, hidden_at, updated_at) "
+                            "VALUES (?, ?, 1, datetime('now'), datetime('now')) "
+                            "ON CONFLICT(conversation_id, user_id) DO UPDATE SET "
+                            "is_hidden = 1, hidden_at = datetime('now'), updated_at = datetime('now');";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, conversationId);
+    stmt.bindInt64(2, userId);
+
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteConversationRepository::unhideConversation(int64_t conversationId, int64_t userId) {
+    if (conversationId <= 0 || userId <= 0) return false;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "INSERT INTO conversation_user_state (conversation_id, user_id, is_hidden, updated_at) "
+                            "VALUES (?, ?, 0, datetime('now')) "
+                            "ON CONFLICT(conversation_id, user_id) DO UPDATE SET "
+                            "is_hidden = 0, updated_at = datetime('now');";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, conversationId);
+    stmt.bindInt64(2, userId);
+
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteConversationRepository::isConversationHidden(int64_t conversationId, int64_t userId) {
+    if (conversationId <= 0 || userId <= 0) return false;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT is_hidden FROM conversation_user_state WHERE conversation_id = ? AND user_id = ? LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, conversationId);
+    stmt.bindInt64(2, userId);
+
+    if (stmt.step() == SQLITE_ROW) {
+        return stmt.getColumnInt64(0) == 1;
+    }
+    return false;
 }
 
 } // namespace connectx

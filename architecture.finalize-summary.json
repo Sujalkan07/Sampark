@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
+    "sha256": "13955b8643104f40241617edf91a0e723fec37fe851a6985a98cf2632628ab14",
+    "bytes": 10788
+  },
+  "artifact": {
+    "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
+    "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
+    "bytes": 870895
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.finalize.json",
+    "summaryReceipt": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-27T04:19:27.257Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6476,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

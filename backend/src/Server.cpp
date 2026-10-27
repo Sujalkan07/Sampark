@@ -249,7 +249,24 @@ void Server::setupRoutes() {
     });
 
     svr_.Delete(R"(/api/conversations/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
-        messagingController_->handleDeleteGroup(req, res);
+        messagingController_->handleDeleteConversation(req, res);
+    });
+
+    svr_.Post(R"(/api/conversations/(\d+)/remove)", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleRemoveConversation(req, res);
+    });
+
+    // Phase 5: Contacts Routes
+    svr_.Get("/api/contacts", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleGetContacts(req, res);
+    });
+
+    svr_.Post("/api/contacts", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleAddContact(req, res);
+    });
+
+    svr_.Delete(R"(/api/contacts/(\d+))", [this](const httplib::Request& req, httplib::Response& res) {
+        messagingController_->handleRemoveContact(req, res);
     });
 
     svr_.Post(R"(/api/conversations/(\d+)/leave)", [this](const httplib::Request& req, httplib::Response& res) {

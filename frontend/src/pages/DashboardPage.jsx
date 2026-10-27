@@ -28,6 +28,14 @@ export function DashboardPage() {
   const [globalResults, setGlobalResults] = useState([]);
   const [globalLoading, setGlobalLoading] = useState(false);
 
+  // Phase 5: Conversation Removal & Contacts State
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null); // { type: 'remove_chat'|'remove_contact', conv, user }
+  const [actionLoading, setActionLoading] = useState(false);
+  const [modalError, setModalError] = useState(null);
+  const [contacts, setContacts] = useState([]);
+  const dropdownRef = useRef(null);
+
   const pollIntervalRef = useRef(null);
   const activeConversationIdRef = useRef(conversationId);
   activeConversationIdRef.current = conversationId;
@@ -57,6 +65,85 @@ export function DashboardPage() {
       if (isInitial) setLoading(false);
     }
   }, []);
+
+  // Fetch contacts on mount
+  useEffect(() => {
+    api.getContacts()
+      .then((res) => {
+        if (res?.contacts) setContacts(res.contacts);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setActiveDropdownId(null);
+      }
+    };
+    if (activeDropdownId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDropdownId]);
+
+  // Phase 5 Action Handlers
+  const handleConfirmRemoveChat = async (targetConv) => {
+    if (!targetConv?.id || actionLoading) return;
+    try {
+      setActionLoading(true);
+      setModalError(null);
+      await api.removeConversation(targetConv.id);
+
+      // If active conversation is the removed one, navigate to dashboard root
+      if (activeConversationIdRef.current && String(activeConversationIdRef.current) === String(targetConv.id)) {
+        navigate('/dashboard');
+      }
+
+      // Immediately filter from local conversation list
+      setConversations((prev) => prev.filter((c) => String(c.id) !== String(targetConv.id)));
+      setConfirmModal(null);
+
+      // Refresh from server to ensure complete sync
+      fetchConversations(false);
+    } catch (err) {
+      setModalError(err.message || 'Failed to remove conversation from your chat list.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmRemoveContact = async (targetUser) => {
+    if (!targetUser?.id || actionLoading) return;
+    try {
+      setActionLoading(true);
+      setModalError(null);
+      await api.removeContact(targetUser.id);
+      setContacts((prev) => prev.filter((c) => String(c.id) !== String(targetUser.id)));
+      setConfirmModal(null);
+    } catch (err) {
+      setModalError(err.message || 'Failed to remove contact.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAddContact = async (targetUser) => {
+    if (!targetUser?.id) return;
+    try {
+      const res = await api.addContact(targetUser.id);
+      if (res?.contacts) {
+        setContacts(res.contacts);
+      } else {
+        setContacts((prev) => [...prev, targetUser]);
+      }
+    } catch (err) {
+      console.error('Failed to add contact:', err);
+    }
+  };
 
   useEffect(() => {
     fetchConversations(true);
@@ -577,6 +664,82 @@ export function DashboardPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Contextual Action Menu (Three-dot options) */}
+                      <div className="relative shrink-0 ml-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdownId(activeDropdownId === conv.id ? null : conv.id);
+                          }}
+                          className="w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-all cursor-pointer"
+                          title="Options"
+                          aria-label="Options"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                        </button>
+
+                        {activeDropdownId === conv.id && (
+                          <div
+                            ref={dropdownRef}
+                            className="absolute right-0 top-8 w-44 bg-surface-container-lowest border border-border-hairline rounded-xl shadow-xl py-1 z-30 animate-fade-in text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveDropdownId(null);
+                                setModalError(null);
+                                setConfirmModal({ type: 'remove_chat', conv });
+                              }}
+                              className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-error/10 text-error transition-colors cursor-pointer font-medium"
+                            >
+                              <span className="material-symbols-outlined text-[17px]">delete_outline</span>
+                              <span>Remove chat</span>
+                            </button>
+
+                            {!isGroup && peer && (
+                              contacts.some((c) => String(c.id) === String(peer.id)) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDropdownId(null);
+                                    setModalError(null);
+                                    setConfirmModal({ type: 'remove_contact', user: peer, conv });
+                                  }}
+                                  className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-surface-container text-on-surface transition-colors cursor-pointer"
+                                >
+                                  <span className="material-symbols-outlined text-[17px]">person_remove</span>
+                                  <span>Remove contact</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveDropdownId(null);
+                                    handleAddContact(peer);
+                                  }}
+                                  className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-surface-container text-on-surface transition-colors cursor-pointer"
+                                >
+                                  <span className="material-symbols-outlined text-[17px]">person_add</span>
+                                  <span>Add contact</span>
+                                </button>
+                              )
+                            )}
+
+                            <div className="border-t border-border-hairline/60 my-1"></div>
+
+                            <button
+                              type="button"
+                              onClick={() => setActiveDropdownId(null)}
+                              className="w-full px-3 py-1.5 text-left text-outline hover:text-on-surface transition-colors cursor-pointer text-[11px]"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -702,6 +865,77 @@ export function DashboardPage() {
         onClose={() => setSelfProfileOpen(false)}
         mode="edit"
       />
+
+      {/* Safe Deletion & Contact Removal Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div
+            className="w-full max-w-sm bg-surface-container-lowest border border-border-hairline rounded-2xl shadow-2xl p-5 text-on-surface animate-scale-in"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-start gap-3.5 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[22px]">
+                  {confirmModal.type === 'remove_chat' ? 'delete_sweep' : 'person_remove'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-primary">
+                  {confirmModal.type === 'remove_chat' ? 'Remove this chat?' : 'Remove from contacts?'}
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
+                  {confirmModal.type === 'remove_chat'
+                    ? "This will remove the conversation from your chat list. The other participant's chat history will not be deleted."
+                    : `Are you sure you want to remove ${confirmModal.user?.fullName || confirmModal.user?.username || 'this user'} from your contacts? Your conversation history will remain intact, and you can still find them in the Member Directory.`}
+                </p>
+              </div>
+            </div>
+
+            {modalError && (
+              <div className="mb-3">
+                <AlertBanner type="error" message={modalError} onClose={() => setModalError(null)} />
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border-hairline/60">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!actionLoading) {
+                    setConfirmModal(null);
+                    setModalError(null);
+                  }
+                }}
+                disabled={actionLoading}
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmModal.type === 'remove_chat') {
+                    handleConfirmRemoveChat(confirmModal.conv);
+                  } else {
+                    handleConfirmRemoveContact(confirmModal.user);
+                  }
+                }}
+                disabled={actionLoading}
+                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-error hover:bg-error/90 text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {actionLoading && (
+                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                )}
+                <span>
+                  {confirmModal.type === 'remove_chat' ? 'Remove chat' : 'Remove contact'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New Group Modal */}
       <NewGroupModal

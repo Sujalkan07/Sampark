@@ -453,8 +453,10 @@ std::vector<Message> SqliteMessageRepository::searchAllUserMessages(int64_t user
                             "FROM messages m "
                             "JOIN conversations c ON m.conversation_id = c.id "
                             "LEFT JOIN users u ON m.sender_id = u.id "
+                            "LEFT JOIN conversation_user_state cus ON (cus.conversation_id = c.id AND cus.user_id = ?) "
                             "WHERE ((c.type = 'direct' AND (c.user_low_id = ? OR c.user_high_id = ?)) "
                             "    OR (c.type = 'group' AND c.id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?))) "
+                            "  AND (cus.is_hidden IS NULL OR cus.is_hidden = 0) "
                             "  AND m.body LIKE ? ESCAPE '\\' AND m.is_deleted = 0 "
                             "ORDER BY m.id DESC LIMIT ?;";
     Statement stmt(db_.getHandle(), sql);
@@ -463,8 +465,9 @@ std::vector<Message> SqliteMessageRepository::searchAllUserMessages(int64_t user
     stmt.bindInt64(1, userId);
     stmt.bindInt64(2, userId);
     stmt.bindInt64(3, userId);
-    stmt.bindText(4, "%" + escapeLikePattern(query) + "%");
-    stmt.bindInt64(5, limit);
+    stmt.bindInt64(4, userId);
+    stmt.bindText(5, "%" + escapeLikePattern(query) + "%");
+    stmt.bindInt64(6, limit);
 
     while (stmt.step() == SQLITE_ROW) {
         msgs.push_back(extractMessage(stmt, userId));

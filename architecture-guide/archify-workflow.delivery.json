@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "c1429218-f621-4456-ac30-2da6c4d69cbd",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture-guide\\workflow.json",
+  "output": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture-guide\\archify-workflow.html",
+  "specification": {
+    "sha256": "a7bba77d50bcf2e6572b79d33c7afa0d5bd7d0ec10a6f7c6434d239731ef370a",
+    "bytes": 10817
+  },
+  "artifact": {
+    "sha256": "5dccb07f9e73667d5903d7fa2f175ee28350e64dc675caff2365e4dbc728da6c",
+    "bytes": 870907
+  }
+}

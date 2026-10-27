@@ -28,6 +28,7 @@ struct MessagingResult {
     std::string fileContent;
     std::string fileMimeType;
     std::string fileName;
+    std::vector<User> contacts;
 };
 
 class IMessagingService {
@@ -77,6 +78,12 @@ public:
     // Phase 4: Preferences
     virtual MessagingResult getUserPreferences(const std::string& sessionToken) = 0;
     virtual MessagingResult updateUserPreferences(const std::string& sessionToken, const UserPreferences& prefs) = 0;
+
+    // Phase 5: Conversation Removal & Contacts
+    virtual MessagingResult removeConversation(const std::string& sessionToken, int64_t conversationId) = 0;
+    virtual MessagingResult getContacts(const std::string& sessionToken) = 0;
+    virtual MessagingResult addContact(const std::string& sessionToken, int64_t contactUserId) = 0;
+    virtual MessagingResult removeContact(const std::string& sessionToken, int64_t contactUserId) = 0;
 };
 
 class MessagingService : public IMessagingService {
@@ -129,6 +136,12 @@ public:
     // Phase 4: Preferences
     MessagingResult getUserPreferences(const std::string& sessionToken) override;
     MessagingResult updateUserPreferences(const std::string& sessionToken, const UserPreferences& prefs) override;
+
+    // Phase 5: Conversation Removal & Contacts
+    MessagingResult removeConversation(const std::string& sessionToken, int64_t conversationId) override;
+    MessagingResult getContacts(const std::string& sessionToken) override;
+    MessagingResult addContact(const std::string& sessionToken, int64_t contactUserId) override;
+    MessagingResult removeContact(const std::string& sessionToken, int64_t contactUserId) override;
 
 private:
     std::shared_ptr<IConversationRepository> convRepo_;

@@ -221,4 +221,69 @@ bool SqliteUserRepository::updateLastActive(int64_t userId) {
     return stmt.step() == SQLITE_DONE;
 }
 
+// Phase 5: Contacts
+bool SqliteUserRepository::addContact(int64_t userId, int64_t contactUserId) {
+    if (userId <= 0 || contactUserId <= 0 || userId == contactUserId) return false;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "INSERT OR IGNORE INTO user_contacts (user_id, contact_user_id, created_at) "
+                            "VALUES (?, ?, datetime('now'));";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, userId);
+    stmt.bindInt64(2, contactUserId);
+
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteUserRepository::removeContact(int64_t userId, int64_t contactUserId) {
+    if (userId <= 0 || contactUserId <= 0) return false;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "DELETE FROM user_contacts WHERE user_id = ? AND contact_user_id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, userId);
+    stmt.bindInt64(2, contactUserId);
+
+    return stmt.step() == SQLITE_DONE;
+}
+
+bool SqliteUserRepository::isContact(int64_t userId, int64_t contactUserId) {
+    if (userId <= 0 || contactUserId <= 0) return false;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT id FROM user_contacts WHERE user_id = ? AND contact_user_id = ? LIMIT 1;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+
+    stmt.bindInt64(1, userId);
+    stmt.bindInt64(2, contactUserId);
+
+    return stmt.step() == SQLITE_ROW;
+}
+
+std::vector<User> SqliteUserRepository::getContacts(int64_t userId) {
+    std::vector<User> contacts;
+    if (userId <= 0) return contacts;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT u.id, u.username, u.email, u.full_name, u.password_hash, u.salt, u.created_at, u.updated_at, u.bio, u.last_active_at "
+                            "FROM users u "
+                            "JOIN user_contacts uc ON u.id = uc.contact_user_id "
+                            "WHERE uc.user_id = ? "
+                            "ORDER BY u.full_name COLLATE NOCASE ASC;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return contacts;
+
+    stmt.bindInt64(1, userId);
+
+    while (stmt.step() == SQLITE_ROW) {
+        contacts.push_back(extractUser(stmt));
+    }
+    return contacts;
+}
+
 } // namespace connectx

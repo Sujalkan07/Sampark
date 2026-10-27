@@ -44,6 +44,12 @@ public:
     void handleGetPreferences(const httplib::Request& req, httplib::Response& res);
     void handleUpdatePreferences(const httplib::Request& req, httplib::Response& res);
 
+    // Phase 5: Conversation Removal & Contacts
+    void handleDeleteConversation(const httplib::Request& req, httplib::Response& res);
+    void handleRemoveConversation(const httplib::Request& req, httplib::Response& res);
+    void handleGetContacts(const httplib::Request& req, httplib::Response& res);
+    void handleAddContact(const httplib::Request& req, httplib::Response& res);
+    void handleRemoveContact(const httplib::Request& req, httplib::Response& res);
     static std::string extractSessionToken(const httplib::Request& req);
 
 private:

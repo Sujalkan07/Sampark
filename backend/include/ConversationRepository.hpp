@@ -35,6 +35,11 @@ public:
     virtual bool transferAdmin(int64_t conversationId, int64_t currentAdminId, int64_t newAdminId) = 0;
     virtual bool updateLastReadMessage(int64_t conversationId, int64_t userId) = 0;
     virtual bool updateMemberRole(int64_t conversationId, int64_t userId, const std::string& newRole) = 0;
+
+    // Phase 5: Conversation Visibility
+    virtual bool hideConversation(int64_t conversationId, int64_t userId) = 0;
+    virtual bool unhideConversation(int64_t conversationId, int64_t userId) = 0;
+    virtual bool isConversationHidden(int64_t conversationId, int64_t userId) = 0;
 };
 
 class SqliteConversationRepository : public IConversationRepository {
@@ -64,6 +69,11 @@ public:
     bool transferAdmin(int64_t conversationId, int64_t currentAdminId, int64_t newAdminId) override;
     bool updateLastReadMessage(int64_t conversationId, int64_t userId) override;
     bool updateMemberRole(int64_t conversationId, int64_t userId, const std::string& newRole) override;
+
+    // Phase 5: Conversation Visibility
+    bool hideConversation(int64_t conversationId, int64_t userId) override;
+    bool unhideConversation(int64_t conversationId, int64_t userId) override;
+    bool isConversationHidden(int64_t conversationId, int64_t userId) override;
 
 private:
     Database& db_;

@@ -30,6 +30,12 @@ public:
     virtual bool updateProfile(int64_t userId, const std::string& fullName, const std::string& bio) = 0;
     virtual bool updatePassword(int64_t userId, const std::string& newHash, const std::string& newSalt) = 0;
     virtual bool updateLastActive(int64_t userId) = 0;
+
+    // Phase 5: Contacts
+    virtual bool addContact(int64_t userId, int64_t contactUserId) = 0;
+    virtual bool removeContact(int64_t userId, int64_t contactUserId) = 0;
+    virtual bool isContact(int64_t userId, int64_t contactUserId) = 0;
+    virtual std::vector<User> getContacts(int64_t userId) = 0;
 };
 
 class SqliteUserRepository : public IUserRepository {
@@ -54,6 +60,12 @@ public:
     bool updateProfile(int64_t userId, const std::string& fullName, const std::string& bio) override;
     bool updatePassword(int64_t userId, const std::string& newHash, const std::string& newSalt) override;
     bool updateLastActive(int64_t userId) override;
+
+    // Phase 5: Contacts
+    bool addContact(int64_t userId, int64_t contactUserId) override;
+    bool removeContact(int64_t userId, int64_t contactUserId) override;
+    bool isContact(int64_t userId, int64_t contactUserId) override;
+    std::vector<User> getContacts(int64_t userId) override;
 
 private:
     Database& db_;

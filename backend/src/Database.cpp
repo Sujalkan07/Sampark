@@ -149,6 +149,26 @@ bool Database::initSchema() {
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS conversation_user_state (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            is_hidden INTEGER NOT NULL DEFAULT 0,
+            hidden_at TEXT DEFAULT NULL,
+            cleared_at TEXT DEFAULT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(conversation_id, user_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS user_contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            contact_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(user_id, contact_user_id)
+        );
+
         CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
         CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
         CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
@@ -169,6 +189,10 @@ bool Database::initSchema() {
         CREATE INDEX IF NOT EXISTS idx_mr_user ON message_reactions(user_id);
         CREATE INDEX IF NOT EXISTS idx_att_msg ON attachments(message_id);
         CREATE INDEX IF NOT EXISTS idx_att_conv ON attachments(conversation_id);
+        CREATE INDEX IF NOT EXISTS idx_cus_conv_user ON conversation_user_state(conversation_id, user_id);
+        CREATE INDEX IF NOT EXISTS idx_cus_user_hidden ON conversation_user_state(user_id, is_hidden);
+        CREATE INDEX IF NOT EXISTS idx_uc_user ON user_contacts(user_id);
+        CREATE INDEX IF NOT EXISTS idx_uc_contact ON user_contacts(contact_user_id);
     )";
 
     bool ok = execute(schemaSql);
@@ -393,6 +417,46 @@ bool Database::migrateSchema() {
 
     rc = sqlite3_exec(db_,
         "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (4, 'phase4_groups_replies_reactions_attachments_settings');",
+        nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+
+    // 5. Migration 5: Phase 5 Conversation Visibility & User Contacts
+    rc = sqlite3_exec(db_, R"(
+        CREATE TABLE IF NOT EXISTS conversation_user_state (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conversation_id INTEGER NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            is_hidden INTEGER NOT NULL DEFAULT 0,
+            hidden_at TEXT DEFAULT NULL,
+            cleared_at TEXT DEFAULT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(conversation_id, user_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_cus_conv_user ON conversation_user_state(conversation_id, user_id);
+        CREATE INDEX IF NOT EXISTS idx_cus_user_hidden ON conversation_user_state(user_id, is_hidden);
+
+        CREATE TABLE IF NOT EXISTS user_contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            contact_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(user_id, contact_user_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_uc_user ON user_contacts(user_id);
+        CREATE INDEX IF NOT EXISTS idx_uc_contact ON user_contacts(contact_user_id);
+    )", nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Migration 5 failed: " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+
+    rc = sqlite3_exec(db_,
+        "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (5, 'phase5_conversation_visibility_and_contacts');",
         nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         if (errMsg) sqlite3_free(errMsg);

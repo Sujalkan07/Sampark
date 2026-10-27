@@ -82,6 +82,8 @@ MessagingResult MessagingService::createOrGetConversation(const std::string& ses
         return res;
     }
 
+    convRepo_->unhideConversation(conv->id, *callerId);
+    userRepo_->addContact(*callerId, targetUserId);
     enrichConversation(*conv, *callerId);
 
     res.success = true;
@@ -298,6 +300,16 @@ MessagingResult MessagingService::sendMessage(const std::string& sessionToken, i
             att->messageId = createdMsg->id;
             createdMsg->attachment = att;
         }
+    }
+
+    // Reappearance policy: unhide conversation upon new message
+    if (conv->type == "direct") {
+        convRepo_->unhideConversation(conversationId, conv->userLowId);
+        convRepo_->unhideConversation(conversationId, conv->userHighId);
+        int64_t otherId = (*callerId == conv->userLowId) ? conv->userHighId : conv->userLowId;
+        userRepo_->addContact(*callerId, otherId);
+    } else {
+        convRepo_->unhideConversation(conversationId, *callerId);
     }
 
     res.success = true;
@@ -1254,6 +1266,142 @@ MessagingResult MessagingService::updateUserPreferences(const std::string& sessi
     res.preferences = msgRepo_->getUserPreferences(*callerId);
     res.success = true;
     res.statusCode = 200;
+    return res;
+}
+
+// Phase 5: Conversation Removal & Contacts
+MessagingResult MessagingService::removeConversation(const std::string& sessionToken, int64_t conversationId) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    if (conversationId <= 0) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Invalid conversation ID.";
+        return res;
+    }
+
+    auto conv = convRepo_->findById(conversationId);
+    if (!conv) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "Conversation not found.";
+        return res;
+    }
+
+    // Verify participant authorization
+    if (!convRepo_->isParticipant(conversationId, *callerId)) {
+        res.success = false;
+        res.statusCode = 403;
+        res.message = "You are not a participant in this conversation.";
+        return res;
+    }
+
+    bool ok = convRepo_->hideConversation(conversationId, *callerId);
+    if (!ok) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to remove conversation from your chat list.";
+        return res;
+    }
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Conversation removed from your chat list.";
+    return res;
+}
+
+MessagingResult MessagingService::getContacts(const std::string& sessionToken) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    res.contacts = userRepo_->getContacts(*callerId);
+    res.success = true;
+    res.statusCode = 200;
+    return res;
+}
+
+MessagingResult MessagingService::addContact(const std::string& sessionToken, int64_t contactUserId) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    if (contactUserId <= 0 || contactUserId == *callerId) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Invalid contact user ID.";
+        return res;
+    }
+
+    auto target = userRepo_->findById(contactUserId);
+    if (!target) {
+        res.success = false;
+        res.statusCode = 404;
+        res.message = "User does not exist.";
+        return res;
+    }
+
+    bool ok = userRepo_->addContact(*callerId, contactUserId);
+    if (!ok) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to add contact.";
+        return res;
+    }
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Contact added successfully.";
+    res.contacts = userRepo_->getContacts(*callerId);
+    return res;
+}
+
+MessagingResult MessagingService::removeContact(const std::string& sessionToken, int64_t contactUserId) {
+    MessagingResult res;
+    auto callerId = authenticate(sessionToken);
+    if (!callerId) {
+        res.success = false;
+        res.statusCode = 401;
+        res.message = "Authentication required. Please log in.";
+        return res;
+    }
+
+    if (contactUserId <= 0) {
+        res.success = false;
+        res.statusCode = 400;
+        res.message = "Invalid contact user ID.";
+        return res;
+    }
+
+    bool ok = userRepo_->removeContact(*callerId, contactUserId);
+    if (!ok) {
+        res.success = false;
+        res.statusCode = 500;
+        res.message = "Failed to remove contact.";
+        return res;
+    }
+
+    res.success = true;
+    res.statusCode = 200;
+    res.message = "Contact removed successfully.";
+    res.contacts = userRepo_->getContacts(*callerId);
     return res;
 }
 

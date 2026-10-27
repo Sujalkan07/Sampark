@@ -952,4 +952,191 @@ void MessagingController::handleUpdatePreferences(const httplib::Request& req, h
     }
 }
 
+// Phase 5: Conversation Removal & Contacts Handlers
+void MessagingController::handleDeleteConversation(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t convId = std::stoll(req.matches[1]);
+        auto convRes = messagingService_->getConversation(token, convId);
+        if (!convRes.success || !convRes.conversation.has_value()) {
+            sendError(res, convRes.statusCode, convRes.message);
+            return;
+        }
+
+        if (convRes.conversation->type == "direct") {
+            auto result = messagingService_->removeConversation(token, convId);
+            if (!result.success) {
+                sendError(res, result.statusCode, result.message);
+                return;
+            }
+            json responseBody = {
+                {"success", true},
+                {"message", result.message}
+            };
+            res.status = 200;
+            res.set_content(responseBody.dump(), "application/json");
+            return;
+        } else {
+            // Group conversation: check if user requested to remove/hide for themselves
+            if (req.has_param("scope") && req.get_param_value("scope") == "me") {
+                auto result = messagingService_->removeConversation(token, convId);
+                if (!result.success) {
+                    sendError(res, result.statusCode, result.message);
+                    return;
+                }
+                json responseBody = {
+                    {"success", true},
+                    {"message", result.message}
+                };
+                res.status = 200;
+                res.set_content(responseBody.dump(), "application/json");
+                return;
+            }
+
+            // Otherwise, group deletion (requires admin)
+            auto result = messagingService_->deleteGroup(token, convId);
+            if (!result.success) {
+                sendError(res, result.statusCode, result.message);
+                return;
+            }
+            json responseBody = {
+                {"success", true},
+                {"message", result.message}
+            };
+            res.status = 200;
+            res.set_content(responseBody.dump(), "application/json");
+        }
+    } catch (...) {
+        sendError(res, 400, "Invalid conversation ID.");
+    }
+}
+
+void MessagingController::handleRemoveConversation(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t convId = std::stoll(req.matches[1]);
+        auto result = messagingService_->removeConversation(token, convId);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (...) {
+        sendError(res, 400, "Invalid conversation ID.");
+    }
+}
+
+void MessagingController::handleGetContacts(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    auto result = messagingService_->getContacts(token);
+    if (!result.success) {
+        sendError(res, result.statusCode, result.message);
+        return;
+    }
+
+    json contactsArr = json::array();
+    for (const auto& u : result.contacts) {
+        contactsArr.push_back(u.toPublicJson());
+    }
+
+    json responseBody = {
+        {"contacts", contactsArr}
+    };
+    res.status = 200;
+    res.set_content(responseBody.dump(), "application/json");
+}
+
+void MessagingController::handleAddContact(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        json payload = json::parse(req.body);
+        if (!payload.contains("contactUserId") || !payload["contactUserId"].is_number()) {
+            sendError(res, 400, "Field 'contactUserId' is required and must be an integer.");
+            return;
+        }
+
+        int64_t contactUserId = payload["contactUserId"].get<int64_t>();
+        auto result = messagingService_->addContact(token, contactUserId);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json contactsArr = json::array();
+        for (const auto& u : result.contacts) {
+            contactsArr.push_back(u.toPublicJson());
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message},
+            {"contacts", contactsArr}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (const json::parse_error&) {
+        sendError(res, 400, "Malformed JSON in request body.");
+    } catch (...) {
+        sendError(res, 500, "An internal server error occurred.");
+    }
+}
+
+void MessagingController::handleRemoveContact(const httplib::Request& req, httplib::Response& res) {
+    std::string token = extractSessionToken(req);
+    if (token.empty()) {
+        sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    try {
+        int64_t contactUserId = std::stoll(req.matches[1]);
+        auto result = messagingService_->removeContact(token, contactUserId);
+        if (!result.success) {
+            sendError(res, result.statusCode, result.message);
+            return;
+        }
+
+        json contactsArr = json::array();
+        for (const auto& u : result.contacts) {
+            contactsArr.push_back(u.toPublicJson());
+        }
+
+        json responseBody = {
+            {"success", true},
+            {"message", result.message},
+            {"contacts", contactsArr}
+        };
+        res.status = 200;
+        res.set_content(responseBody.dump(), "application/json");
+    } catch (...) {
+        sendError(res, 400, "Invalid contact user ID.");
+    }
+}
+
 } // namespace connectx

@@ -60,6 +60,14 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
   const [highlightedMsgId, setHighlightedMsgId] = useState(null);
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
+  // Phase 5: Conversation Removal & Contacts State
+  const [chatMenuOpen, setChatMenuOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null); // { type: 'remove_chat'|'remove_contact' }
+  const [actionLoading, setActionLoading] = useState(false);
+  const [modalError, setModalError] = useState(null);
+  const [isPeerContact, setIsPeerContact] = useState(false);
+  const chatMenuRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const textInputRef = useRef(null);
@@ -75,6 +83,7 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
   activeConvIdRef.current = conversationId;
 
   const isGroup = conversation?.type === 'group';
+  const otherUser = conversation?.participant;
 
   const scrollToBottom = (smooth = true) => {
     if (messagesEndRef.current) {
@@ -95,6 +104,77 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
   };
 
   const getPresence = (lastActiveAt) => getPresenceStatus(lastActiveAt);
+
+  // Check if peer is contact
+  useEffect(() => {
+    if (!isGroup && otherUser?.id) {
+      api.getContacts()
+        .then((res) => {
+          const isCt = res?.contacts?.some((c) => String(c.id) === String(otherUser.id));
+          setIsPeerContact(Boolean(isCt));
+        })
+        .catch(() => {});
+    }
+  }, [isGroup, otherUser?.id]);
+
+  // Click outside chat menu to close
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (chatMenuRef.current && !chatMenuRef.current.contains(e.target)) {
+        setChatMenuOpen(false);
+      }
+    };
+    if (chatMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [chatMenuOpen]);
+
+  const handleConfirmRemoveChat = async () => {
+    if (!conversationId || actionLoading) return;
+    try {
+      setActionLoading(true);
+      setModalError(null);
+      await api.removeConversation(conversationId);
+      setConfirmModal(null);
+      if (onBack) {
+        onBack();
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setModalError(err.message || 'Failed to remove conversation.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmRemoveContact = async () => {
+    if (!otherUser?.id || actionLoading) return;
+    try {
+      setActionLoading(true);
+      setModalError(null);
+      await api.removeContact(otherUser.id);
+      setIsPeerContact(false);
+      setConfirmModal(null);
+    } catch (err) {
+      setModalError(err.message || 'Failed to remove contact.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAddContact = async () => {
+    if (!otherUser?.id) return;
+    try {
+      await api.addContact(otherUser.id);
+      setIsPeerContact(true);
+    } catch (err) {
+      console.error('Failed to add contact:', err);
+    }
+  };
 
   // Load conversation details
   const refreshConversationMetadata = useCallback(async () => {
@@ -564,7 +644,6 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
     setSearchOpen(false);
   };
 
-  const otherUser = conversation?.participant;
   const presence = getPresence(otherUser?.lastActiveAt);
 
   const directInitials = (otherUser?.fullName || otherUser?.username || 'U')
@@ -688,6 +767,93 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
               {isGroup ? 'group' : 'info'}
             </span>
           </button>
+
+          {/* More Options Menu */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setChatMenuOpen((prev) => !prev)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-surface-container hover:text-on-surface transition-colors cursor-pointer"
+              title="More options"
+              aria-label="More options"
+            >
+              <span className="material-symbols-outlined text-[20px]">more_vert</span>
+            </button>
+
+            {chatMenuOpen && (
+              <div
+                ref={chatMenuRef}
+                className="absolute right-0 top-11 w-48 bg-surface-container-lowest border border-border-hairline rounded-xl shadow-xl py-1 z-30 animate-fade-in text-xs"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChatMenuOpen(false);
+                    setModalError(null);
+                    setConfirmModal({ type: 'remove_chat' });
+                  }}
+                  className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-error/10 text-error transition-colors cursor-pointer font-medium"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete_outline</span>
+                  <span>Remove chat</span>
+                </button>
+
+                {!isGroup && otherUser && (
+                  isPeerContact ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChatMenuOpen(false);
+                        setModalError(null);
+                        setConfirmModal({ type: 'remove_contact' });
+                      }}
+                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-surface-container text-on-surface transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">person_remove</span>
+                      <span>Remove contact</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChatMenuOpen(false);
+                        handleAddContact();
+                      }}
+                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-surface-container text-on-surface transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">person_add</span>
+                      <span>Add contact</span>
+                    </button>
+                  )
+                )}
+
+                {isGroup && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChatMenuOpen(false);
+                      setGroupModalOpen(true);
+                    }}
+                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-surface-container text-on-surface transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">groups</span>
+                    <span>Group details</span>
+                  </button>
+                )}
+
+                <div className="border-t border-border-hairline/60 my-1"></div>
+
+                <button
+                  type="button"
+                  onClick={() => setChatMenuOpen(false)}
+                  className="w-full px-3 py-1.5 text-left text-outline hover:text-on-surface transition-colors cursor-pointer text-[11px]"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1308,6 +1474,77 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
             >
               <span className="material-symbols-outlined text-[20px]">close</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Safe Deletion & Contact Removal Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div
+            className="w-full max-w-sm bg-surface-container-lowest border border-border-hairline rounded-2xl shadow-2xl p-5 text-on-surface animate-scale-in"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-start gap-3.5 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[22px]">
+                  {confirmModal.type === 'remove_chat' ? 'delete_sweep' : 'person_remove'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-primary">
+                  {confirmModal.type === 'remove_chat' ? 'Remove this chat?' : 'Remove from contacts?'}
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
+                  {confirmModal.type === 'remove_chat'
+                    ? "This will remove the conversation from your chat list. The other participant's chat history will not be deleted."
+                    : `Are you sure you want to remove ${otherUser?.fullName || otherUser?.username || 'this user'} from your contacts? Your conversation history will remain intact, and you can still find them in the Member Directory.`}
+                </p>
+              </div>
+            </div>
+
+            {modalError && (
+              <div className="mb-3">
+                <AlertBanner type="error" message={modalError} onClose={() => setModalError(null)} />
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border-hairline/60">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!actionLoading) {
+                    setConfirmModal(null);
+                    setModalError(null);
+                  }
+                }}
+                disabled={actionLoading}
+                className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmModal.type === 'remove_chat') {
+                    handleConfirmRemoveChat();
+                  } else {
+                    handleConfirmRemoveContact();
+                  }
+                }}
+                disabled={actionLoading}
+                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-error hover:bg-error/90 text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {actionLoading && (
+                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                )}
+                <span>
+                  {confirmModal.type === 'remove_chat' ? 'Remove chat' : 'Remove contact'}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       )}

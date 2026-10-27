@@ -1,3 +1,4 @@
+#include <regex>
 #include "Database.hpp"
 #include "UserRepository.hpp"
 #include "SessionRepository.hpp"
@@ -1009,6 +1010,219 @@ void runTests() {
         auto checkDisbanded = messagingService->getGroupMembers(priyaToken, lGroupId);
         assert(!checkDisbanded.success && checkDisbanded.statusCode == 404);
         std::cout << "[PASS] Test 75: Group lifecycle: Sole admin demotion protection, atomic transfer, and auto-disband verified" << std::endl;
+
+        // =========================================================================
+        // Phase 5 Tests: Safe Chat Deletion, Contact Removal & Conversation Management
+        // =========================================================================
+
+        // Test 76: User A removes direct chat from their list
+        auto aaravListBefore = messagingService->listConversations(aaravToken);
+        bool foundInAaravList = false;
+        for (const auto& c : aaravListBefore.conversations) {
+            if (c.id == directConvId) foundInAaravList = true;
+        }
+        assert(foundInAaravList);
+
+        auto removeRes = messagingService->removeConversation(aaravToken, directConvId);
+        assert(removeRes.success);
+        assert(removeRes.statusCode == 200);
+
+        auto aaravListAfter = messagingService->listConversations(aaravToken);
+        for (const auto& c : aaravListAfter.conversations) {
+            assert(c.id != directConvId);
+        }
+        std::cout << "[PASS] Test 76: Direct chat removal: Conversation filtered from acting user's conversation list" << std::endl;
+
+        // Test 77: Direct-chat removal isolation: User B's conversation and history remain intact
+        auto priyaList = messagingService->listConversations(priyaToken);
+        bool foundInPriyaList = false;
+        for (const auto& c : priyaList.conversations) {
+            if (c.id == directConvId) foundInPriyaList = true;
+        }
+        assert(foundInPriyaList);
+
+        auto priyaMsgs = messagingService->getMessages(priyaToken, directConvId, 50, 0, 0);
+        assert(priyaMsgs.success);
+        assert(!priyaMsgs.messages.empty());
+        std::cout << "[PASS] Test 77: Direct chat removal isolation: Other participant's conversation and messages intact" << std::endl;
+
+        // Test 78: Persistence across restart: State survives reopening database
+        {
+            connectx::Database reopenDb(testDbPath);
+            auto reopenConvRepo = std::make_shared<connectx::SqliteConversationRepository>(reopenDb);
+            auto reopenUserConvsA = reopenConvRepo->getUserConversations(p4Aarav->id);
+            for (const auto& c : reopenUserConvsA) {
+                assert(c.id != directConvId);
+            }
+            auto reopenUserConvsP = reopenConvRepo->getUserConversations(p4Priya->id);
+            bool priyaStillHas = false;
+            for (const auto& c : reopenUserConvsP) {
+                if (c.id == directConvId) priyaStillHas = true;
+            }
+            assert(priyaStillHas);
+        }
+        std::cout << "[PASS] Test 78: User-specific removal persistence: Hidden state persists across database restart" << std::endl;
+
+        // Test 79: Idempotent removal: Repeated removal calls succeed safely
+        auto repeatRemove = messagingService->removeConversation(aaravToken, directConvId);
+        assert(repeatRemove.success);
+        assert(repeatRemove.statusCode == 200);
+        std::cout << "[PASS] Test 79: Idempotent removal: Repeated removal succeeds safely" << std::endl;
+
+        // Test 80: Security & IDOR: Third party cannot remove conversation they do not participate in
+        rohitToken = authService->login("rohit_v", "RohitPass2026!").session->token;
+        auto unauthRemove = messagingService->removeConversation(rohitToken, directConvId);
+        assert(!unauthRemove.success);
+        assert(unauthRemove.statusCode == 403);
+        std::cout << "[PASS] Test 80: Security & IDOR: Unauthorized third party denied removal (HTTP 403)" << std::endl;
+
+        // Test 81: Invalid conversation ID handled safely
+        auto invalidRemove = messagingService->removeConversation(aaravToken, 999999);
+        assert(!invalidRemove.success);
+        assert(invalidRemove.statusCode == 404);
+
+        auto negRemove = messagingService->removeConversation(aaravToken, -5);
+        assert(!negRemove.success);
+        assert(negRemove.statusCode == 400);
+        std::cout << "[PASS] Test 81: Input validation: Invalid conversation IDs safely rejected (400/404)" << std::endl;
+
+        // Test 82: Reappearance policy on new incoming message
+        auto priyaNewMsg = messagingService->sendMessage(priyaToken, directConvId, "Hey Aarav, are you there?");
+        assert(priyaNewMsg.success);
+        assert(priyaNewMsg.statusCode == 201);
+
+        auto aaravListReappeared = messagingService->listConversations(aaravToken);
+        bool foundReappeared = false;
+        for (const auto& c : aaravListReappeared.conversations) {
+            if (c.id == directConvId) {
+                foundReappeared = true;
+                assert(c.lastMessage.has_value());
+                assert(c.lastMessage->body == "Hey Aarav, are you there?");
+            }
+        }
+        assert(foundReappeared);
+        std::cout << "[PASS] Test 82: Reappearance policy: New incoming message restores conversation with latest message" << std::endl;
+
+        // Test 83: Explicit re-initiation unhides conversation
+        assert(messagingService->removeConversation(aaravToken, directConvId).success);
+        auto reinitConv = messagingService->createOrGetConversation(aaravToken, p4Priya->id);
+        assert(reinitConv.success && reinitConv.conversation.has_value());
+        assert(reinitConv.conversation->id == directConvId);
+        auto aaravListAfterReinit = messagingService->listConversations(aaravToken);
+        bool foundAfterReinit = false;
+        for (const auto& c : aaravListAfterReinit.conversations) {
+            if (c.id == directConvId) foundAfterReinit = true;
+        }
+        assert(foundAfterReinit);
+        std::cout << "[PASS] Test 83: Explicit re-initiation: createOrGetConversation unhides existing conversation" << std::endl;
+
+        // Test 84: User Contacts management: Add, List, Remove with multi-user isolation
+        auto addContactRes = messagingService->addContact(aaravToken, p4Rohit->id);
+        assert(addContactRes.success);
+
+        auto aaravContacts = messagingService->getContacts(aaravToken);
+        assert(aaravContacts.success);
+        bool foundRohitInAarav = false;
+        for (const auto& u : aaravContacts.contacts) {
+            if (u.id == p4Rohit->id) foundRohitInAarav = true;
+        }
+        assert(foundRohitInAarav);
+
+        auto priyaContacts = messagingService->getContacts(priyaToken);
+        assert(priyaContacts.success);
+        for (const auto& u : priyaContacts.contacts) {
+            assert(u.id != p4Rohit->id);
+        }
+
+        auto removeContactRes = messagingService->removeContact(aaravToken, p4Rohit->id);
+        assert(removeContactRes.success);
+
+        auto aaravContactsAfter = messagingService->getContacts(aaravToken);
+        for (const auto& u : aaravContactsAfter.contacts) {
+            assert(u.id != p4Rohit->id);
+        }
+
+        // Verify Rohit's user account is intact in database
+        auto rohitUserCheck = userRepo->findById(p4Rohit->id);
+        assert(rohitUserCheck.has_value());
+        assert(rohitUserCheck->username == "rohit_v");
+
+        auto searchPeerAgain = userRepo->searchUsers("rohit", p4Aarav->id);
+        bool foundInSearch = false;
+        for (const auto& u : searchPeerAgain) {
+            if (u.id == p4Rohit->id) foundInSearch = true;
+        }
+        assert(foundInSearch);
+        std::cout << "[PASS] Test 84: User contacts: Add/List/Remove isolated without modifying other user accounts" << std::endl;
+
+        // Test 85: Global message search excludes messages from hidden conversations
+        assert(messagingService->removeConversation(aaravToken, directConvId).success);
+        auto globalSearchAarav = messagingService->searchGlobalMessages(aaravToken, "Hey Aarav", 10);
+        assert(globalSearchAarav.success);
+        assert(globalSearchAarav.messages.empty());
+
+        auto globalSearchPriya = messagingService->searchGlobalMessages(priyaToken, "Hey Aarav", 10);
+        assert(globalSearchPriya.success);
+        assert(!globalSearchPriya.messages.empty());
+        std::cout << "[PASS] Test 85: Global search consistency: Hidden conversation messages excluded for user" << std::endl;
+
+        // Test 86: MessagingController HTTP route handlers:
+        // handleDeleteConversation on direct conversation returns 200 and removes conversation
+        connectx::MessagingController controller(messagingService);
+        httplib::Request directDelReq;
+        directDelReq.headers.emplace("Cookie", "connectx_session=" + aaravToken);
+        std::string delPath = "/api/conversations/" + std::to_string(directConvId);
+        std::regex convRegex(R"(/api/conversations/(\d+))");
+        assert(std::regex_match(delPath, directDelReq.matches, convRegex));
+        httplib::Response httpDirectDelRes;
+        controller.handleDeleteConversation(directDelReq, httpDirectDelRes);
+        assert(httpDirectDelRes.status == 200);
+
+        auto aaravAfterHttp = messagingService->listConversations(aaravToken);
+        for (const auto& c : aaravAfterHttp.conversations) {
+            assert(c.id != directConvId);
+        }
+        std::cout << "[PASS] Test 86: MessagingController handleDeleteConversation: Scoped direct chat removal over HTTP verified" << std::endl;
+
+        // Test 87: MessagingController handleAddContact and handleGetContacts over HTTP
+        httplib::Request addContactReq;
+        addContactReq.headers.emplace("Authorization", "Bearer " + aaravToken);
+        addContactReq.body = nlohmann::json({ {"contactUserId", p4Rohit->id} }).dump();
+        httplib::Response httpAddContactRes;
+        controller.handleAddContact(addContactReq, httpAddContactRes);
+        assert(httpAddContactRes.status == 200);
+
+        httplib::Request getContactsReq;
+        getContactsReq.headers.emplace("Cookie", "sampark_session=" + aaravToken);
+        httplib::Response getContactsRes;
+        controller.handleGetContacts(getContactsReq, getContactsRes);
+        assert(getContactsRes.status == 200);
+        nlohmann::json contactsJson = nlohmann::json::parse(getContactsRes.body);
+        assert(contactsJson.contains("contacts"));
+        bool rohitInContacts = false;
+        for (const auto& c : contactsJson["contacts"]) {
+            if (c["id"] == p4Rohit->id) rohitInContacts = true;
+        }
+        assert(rohitInContacts);
+        std::cout << "[PASS] Test 87: MessagingController Contacts HTTP API: Cookie & Bearer token extraction and JSON responses verified" << std::endl;
+
+        // Test 88: MessagingController handleRemoveContact over HTTP
+        httplib::Request remContactReq;
+        remContactReq.headers.emplace("Cookie", "connectx_session=" + aaravToken);
+        std::string contactPath = "/api/contacts/" + std::to_string(p4Rohit->id);
+        std::regex contactRegex(R"(/api/contacts/(\d+))");
+        assert(std::regex_match(contactPath, remContactReq.matches, contactRegex));
+        httplib::Response httpRemContactRes;
+        controller.handleRemoveContact(remContactReq, httpRemContactRes);
+        assert(httpRemContactRes.status == 200);
+
+        httplib::Response getContactsAfterRes;
+        controller.handleGetContacts(getContactsReq, getContactsAfterRes);
+        nlohmann::json contactsAfterJson = nlohmann::json::parse(getContactsAfterRes.body);
+        for (const auto& c : contactsAfterJson["contacts"]) {
+            assert(c["id"] != p4Rohit->id);
+        }
+        std::cout << "[PASS] Test 88: MessagingController handleRemoveContact: Removal over HTTP verified" << std::endl;
     }
 
     // Test 72: Database migration from legacy schema with sample data
@@ -1073,6 +1287,8 @@ void runTests() {
         assert(migratedDb.hasColumn("conversation_members", "role"));
         assert(migratedDb.hasColumn("attachments", "file_name"));
         assert(migratedDb.hasColumn("user_preferences", "theme"));
+        assert(migratedDb.hasColumn("conversation_user_state", "is_hidden"));
+        assert(migratedDb.hasColumn("user_contacts", "contact_user_id"));
 
         auto legacyUserRepo = std::make_shared<connectx::SqliteUserRepository>(migratedDb);
         auto u1 = legacyUserRepo->findById(1);
@@ -1108,7 +1324,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 75 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 88 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

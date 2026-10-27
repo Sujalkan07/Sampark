@@ -1,0 +1,455 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Sampark C++ Architecture & Message Lifecycle Flow",
+    "subtitle": "End-to-End Execution Trace from React Composer to C++ SQLite WAL and 2.5s Polling Delivery",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "output": "architecture-guide/archify-workflow.html",
+    "views": [
+      {
+        "id": "high-level",
+        "label": "High-Level Architecture",
+        "focus": [
+          "user_a",
+          "chat_composer",
+          "client_fetch",
+          "network_proxy",
+          "server_router",
+          "auth_service",
+          "messaging_svc",
+          "message_repo",
+          "sqlite_wal",
+          "ack_dispatch",
+          "delta_poll",
+          "chat_receiver",
+          "user_b"
+        ],
+        "note": "Essential 6-tier pipeline: Sender UI -> Network Proxy -> C++ Server -> SQLite WAL -> Recipient Sync"
+      },
+      {
+        "id": "detailed",
+        "label": "Detailed C++ Architecture",
+        "focus": [
+          "user_a",
+          "chat_composer",
+          "client_fetch",
+          "network_proxy",
+          "server_router",
+          "auth_gate",
+          "auth_service",
+          "messaging_svc",
+          "validation_err",
+          "validator",
+          "message_repo",
+          "sqlite_wal",
+          "ack_dispatch",
+          "delta_poll",
+          "chat_receiver",
+          "user_b",
+          "read_sync"
+        ],
+        "note": "Full architectural graph including RAII mutex guards, 401/400 reject branches, magic-byte validator, and mark-as-read sync"
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "ui_sender",
+      "label": "User A (Sender Client)"
+    },
+    {
+      "id": "network",
+      "label": "Network & Gateway"
+    },
+    {
+      "id": "backend",
+      "label": "C++ Backend Core"
+    },
+    {
+      "id": "security",
+      "label": "Security & Validation"
+    },
+    {
+      "id": "storage",
+      "label": "SQLite Persistence"
+    },
+    {
+      "id": "ui_receiver",
+      "label": "User B (Recipient Client)"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p_input",
+      "label": "Phase 1: Input & Client Transport",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "p_routing",
+      "label": "Phase 2: Auth & Server Business Logic",
+      "fromCol": 2,
+      "toCol": 3
+    },
+    {
+      "id": "p_delivery",
+      "label": "Phase 3: Persistence & Recipient Sync",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "user_a",
+    "chat_composer",
+    "client_fetch",
+    "network_proxy",
+    "server_router",
+    "auth_service",
+    "messaging_svc",
+    "validator",
+    "message_repo",
+    "sqlite_wal",
+    "delta_poll",
+    "chat_receiver",
+    "user_b",
+    "read_sync"
+  ],
+  "nodes": [
+    {
+      "id": "user_a",
+      "lane": "ui_sender",
+      "col": 0,
+      "type": "external",
+      "label": "User A (Sender)",
+      "sublabel": "Types text & files",
+      "tag": "Operator",
+      "width": 124
+    },
+    {
+      "id": "chat_composer",
+      "lane": "ui_sender",
+      "col": 1,
+      "type": "frontend",
+      "label": "ChatPanel Composer",
+      "sublabel": "React state & UI",
+      "tag": "ChatPanel",
+      "width": 124
+    },
+    {
+      "id": "client_fetch",
+      "lane": "network",
+      "col": 1,
+      "type": "frontend",
+      "label": "Fetch API Client",
+      "sublabel": "POST /api/messages",
+      "tag": "Transport",
+      "width": 124
+    },
+    {
+      "id": "network_proxy",
+      "lane": "network",
+      "col": 2,
+      "type": "cloud",
+      "label": "Vite Proxy & TCP",
+      "sublabel": "Forward 5173->8080",
+      "tag": "HTTP Socket",
+      "width": 124
+    },
+    {
+      "id": "server_router",
+      "lane": "backend",
+      "col": 2,
+      "type": "backend",
+      "label": "Server Router",
+      "sublabel": "CORS check & routes",
+      "tag": "cpp-httplib",
+      "width": 124
+    },
+    {
+      "id": "auth_gate",
+      "lane": "security",
+      "col": 2,
+      "type": "security",
+      "label": "401 Unauthorized",
+      "sublabel": "Invalid session",
+      "tag": "Reject",
+      "width": 124
+    },
+    {
+      "id": "auth_service",
+      "lane": "security",
+      "col": 3,
+      "type": "security",
+      "label": "AuthService",
+      "sublabel": "Session & PBKDF2",
+      "tag": "OpenSSL",
+      "width": 124
+    },
+    {
+      "id": "messaging_svc",
+      "lane": "backend",
+      "col": 3,
+      "type": "backend",
+      "label": "MessagingService",
+      "sublabel": "Pair & group roles",
+      "tag": "C++20 OOP",
+      "width": 124
+    },
+    {
+      "id": "validation_err",
+      "lane": "security",
+      "col": 3,
+      "type": "security",
+      "label": "400 Bad Request",
+      "sublabel": "Oversized / invalid",
+      "tag": "Error",
+      "width": 124,
+      "yOffset": 95
+    },
+    {
+      "id": "validator",
+      "lane": "security",
+      "col": 4,
+      "type": "security",
+      "label": "Validator Utility",
+      "sublabel": "Magic-bytes & limit",
+      "tag": "Validator",
+      "width": 124
+    },
+    {
+      "id": "message_repo",
+      "lane": "backend",
+      "col": 4,
+      "type": "backend",
+      "label": "MessageRepository",
+      "sublabel": "RAII stmt & mutex",
+      "tag": "lock_guard",
+      "width": 124
+    },
+    {
+      "id": "ack_dispatch",
+      "lane": "network",
+      "col": 4,
+      "type": "backend",
+      "label": "HTTP 201 Created",
+      "sublabel": "Returns JSON ACK",
+      "tag": "Sender ACK",
+      "width": 124
+    },
+    {
+      "id": "sqlite_wal",
+      "lane": "storage",
+      "col": 4,
+      "type": "database",
+      "label": "SQLite3 WAL",
+      "sublabel": "Atomic INSERT stmt",
+      "tag": "connectx.db",
+      "width": 124
+    },
+    {
+      "id": "delta_poll",
+      "lane": "ui_receiver",
+      "col": 4,
+      "type": "messagebus",
+      "label": "2.5s Polling Loop",
+      "sublabel": "GET ?after={id}",
+      "tag": "Cursor Poll",
+      "width": 124
+    },
+    {
+      "id": "chat_receiver",
+      "lane": "ui_receiver",
+      "col": 5,
+      "type": "frontend",
+      "label": "Receiver ChatPanel",
+      "sublabel": "Appends to DOM",
+      "tag": "Audio Chime",
+      "width": 124
+    },
+    {
+      "id": "user_b",
+      "lane": "ui_receiver",
+      "col": 5,
+      "type": "external",
+      "label": "User B (Recipient)",
+      "sublabel": "Reads & sends ack",
+      "tag": "Delivered",
+      "width": 124,
+      "yOffset": 95
+    },
+    {
+      "id": "read_sync",
+      "lane": "storage",
+      "col": 5,
+      "type": "database",
+      "label": "Mark As Read Sync",
+      "sublabel": "POST /read receipt",
+      "tag": "Read Sync",
+      "width": 124
+    }
+  ],
+  "edges": [
+    {
+      "id": "user-to-composer",
+      "from": "user_a",
+      "to": "chat_composer",
+      "label": "types message",
+      "variant": "default"
+    },
+    {
+      "id": "composer-to-fetch",
+      "from": "chat_composer",
+      "to": "client_fetch",
+      "label": "handleSend()",
+      "variant": "default"
+    },
+    {
+      "id": "fetch-to-proxy",
+      "from": "client_fetch",
+      "to": "network_proxy",
+      "label": "POST /messages",
+      "variant": "emphasis"
+    },
+    {
+      "id": "proxy-to-router",
+      "from": "network_proxy",
+      "to": "server_router",
+      "label": "routes :8080",
+      "variant": "default"
+    },
+    {
+      "id": "router-to-auth",
+      "from": "server_router",
+      "to": "auth_service",
+      "label": "cookie token",
+      "variant": "security"
+    },
+    {
+      "id": "auth-denied",
+      "from": "auth_service",
+      "to": "auth_gate",
+      "label": "invalid token",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "auth-to-messaging",
+      "from": "auth_service",
+      "to": "messaging_svc",
+      "label": "session valid",
+      "variant": "emphasis"
+    },
+    {
+      "id": "messaging-to-validator",
+      "from": "messaging_svc",
+      "to": "validator",
+      "label": "validate body",
+      "variant": "default"
+    },
+    {
+      "id": "validation-failed",
+      "from": "validator",
+      "to": "validation_err",
+      "label": "invalid / traversal",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "validator-to-repo",
+      "from": "validator",
+      "to": "message_repo",
+      "label": "sanitized OK",
+      "variant": "emphasis"
+    },
+    {
+      "id": "repo-to-sqlite",
+      "from": "message_repo",
+      "to": "sqlite_wal",
+      "label": "std::mutex INSERT",
+      "variant": "emphasis"
+    },
+    {
+      "id": "repo-to-ack",
+      "from": "message_repo",
+      "to": "ack_dispatch",
+      "label": "dispatches ACK",
+      "variant": "default"
+    },
+    {
+      "id": "ack-to-composer",
+      "from": "ack_dispatch",
+      "to": "chat_composer",
+      "label": "HTTP 201 ACK",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "sqlite-to-poll",
+      "from": "sqlite_wal",
+      "to": "delta_poll",
+      "label": "SELECT ?after=",
+      "variant": "default"
+    },
+    {
+      "id": "poll-to-receiver",
+      "from": "delta_poll",
+      "to": "chat_receiver",
+      "label": "delivers delta",
+      "variant": "emphasis"
+    },
+    {
+      "id": "receiver-to-user",
+      "from": "chat_receiver",
+      "to": "user_b",
+      "label": "renders in DOM",
+      "variant": "emphasis"
+    },
+    {
+      "id": "user-to-read",
+      "from": "user_b",
+      "to": "read_sync",
+      "label": "marks viewed",
+      "variant": "default"
+    },
+    {
+      "id": "read-to-sqlite",
+      "from": "read_sync",
+      "to": "sqlite_wal",
+      "label": "UPDATE read_at",
+      "variant": "dashed",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Client Dispatch & Network Transport",
+      "items": [
+        "User A interacts with React DOM composer in ChatPanel.jsx",
+        "Client fetch() sends multipart/json POST through Vite dev proxy",
+        "Vite forwards /api traffic to C++ backend listening on port 8080"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Authentication, RBAC & Payload Validation",
+      "items": [
+        "AuthService validates session cookie token against SQLite sessions table",
+        "MessagingService verifies conversation membership and group permissions",
+        "Validator inspects MIME magic bytes, filename traversal, and size limits"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "SQLite WAL Storage & Polling Delivery",
+      "items": [
+        "MessageRepository acquires std::lock_guard and executes prepared INSERT",
+        "Server returns HTTP 201 Created acknowledgment to sender client",
+        "User B 2.5s polling loop fetches incremental messages and triggers UI chime"
+      ]
+    }
+  ]
+}
