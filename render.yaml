@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: sampark-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SAMPARK_COOKIE_SECURE
+        value: "true"
+      - key: SAMPARK_COOKIE_SAMESITE
+        value: "None"
+      - key: SAMPARK_ALLOWED_ORIGINS
+        sync: false

@@ -43,17 +43,29 @@ std::string AuthController::extractSessionToken(const httplib::Request& req) {
 
 void AuthController::setSessionCookie(httplib::Response& res, const std::string& token) {
     // 7 days expiration = 604800 seconds
+    std::string sameSite = "Lax";
+    if (const char* envSameSite = std::getenv("SAMPARK_COOKIE_SAMESITE")) {
+        sameSite = envSameSite;
+    }
     std::string cookieVal = "connectx_session=" + token +
-                            "; Path=/; Max-Age=604800; HttpOnly; SameSite=Lax";
+                            "; Path=/; Max-Age=604800; HttpOnly; SameSite=" + sameSite;
     const char* secureEnv = std::getenv("SAMPARK_COOKIE_SECURE");
-    if (secureEnv && (std::string(secureEnv) == "1" || std::string(secureEnv) == "true")) {
+    if ((secureEnv && (std::string(secureEnv) == "1" || std::string(secureEnv) == "true")) || sameSite == "None") {
         cookieVal += "; Secure";
     }
     res.set_header("Set-Cookie", cookieVal);
 }
 
 void AuthController::clearSessionCookie(httplib::Response& res) {
-    std::string cookieVal = "connectx_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax";
+    std::string sameSite = "Lax";
+    if (const char* envSameSite = std::getenv("SAMPARK_COOKIE_SAMESITE")) {
+        sameSite = envSameSite;
+    }
+    std::string cookieVal = "connectx_session=; Path=/; Max-Age=0; HttpOnly; SameSite=" + sameSite;
+    const char* secureEnv = std::getenv("SAMPARK_COOKIE_SECURE");
+    if ((secureEnv && (std::string(secureEnv) == "1" || std::string(secureEnv) == "true")) || sameSite == "None") {
+        cookieVal += "; Secure";
+    }
     res.set_header("Set-Cookie", cookieVal);
 }
 
@@ -88,7 +100,8 @@ void AuthController::handleRegister(const httplib::Request& req, httplib::Respon
 
         json responseBody = {
             {"message", result.message},
-            {"user", result.user->toJson()}
+            {"user", result.user->toJson()},
+            {"token", result.session ? result.session->token : ""}
         };
 
         res.status = result.statusCode;
@@ -121,7 +134,8 @@ void AuthController::handleLogin(const httplib::Request& req, httplib::Response&
 
         json responseBody = {
             {"message", result.message},
-            {"user", result.user->toJson()}
+            {"user", result.user->toJson()},
+            {"token", result.session ? result.session->token : ""}
         };
 
         res.status = result.statusCode;

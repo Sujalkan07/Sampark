@@ -11,12 +11,14 @@ class ApiError extends Error {
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('sampark_token') : null;
   const config = {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   };
@@ -64,23 +66,37 @@ export const api = {
   },
 
   async register({ username, email, fullName, password }) {
-    return request('/api/auth/register', {
+    const data = await request('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify({ username, email, fullName, password }),
     });
+    if (data?.token && typeof window !== 'undefined') {
+      localStorage.setItem('sampark_token', data.token);
+    }
+    return data;
   },
 
   async login({ identifier, password }) {
-    return request('/api/auth/login', {
+    const data = await request('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ identifier, password }),
     });
+    if (data?.token && typeof window !== 'undefined') {
+      localStorage.setItem('sampark_token', data.token);
+    }
+    return data;
   },
 
   async logout() {
-    return request('/api/auth/logout', {
-      method: 'POST',
-    });
+    try {
+      return await request('/api/auth/logout', {
+        method: 'POST',
+      });
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('sampark_token');
+      }
+    }
   },
 
   async getMe() {
@@ -290,9 +306,15 @@ export const api = {
     const formData = new FormData();
     formData.append('file', file);
     const url = `${API_BASE_URL}/api/conversations/${conversationId}/attachments`;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('sampark_token') : null;
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
+      headers,
       body: formData,
     });
     if (!response.ok) {
@@ -300,6 +322,10 @@ export const api = {
       throw new ApiError(data?.error || 'Failed to upload attachment.', response.status);
     }
     return await response.json();
+  },
+
+  getAttachmentUrl(attachmentId) {
+    return `${API_BASE_URL}/api/attachments/${attachmentId}`;
   },
 
   async deleteAttachment(attachmentId) {

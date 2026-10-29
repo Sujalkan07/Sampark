@@ -1201,15 +1201,15 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
                             {msg.attachment.contentType?.startsWith('image/') ? (
                               <div className="rounded-xl overflow-hidden max-w-xs max-h-64 border border-border-hairline/50">
                                 <img
-                                  src={`/api/attachments/${msg.attachment.id}`}
+                                  src={api.getAttachmentUrl(msg.attachment.id)}
                                   alt={msg.attachment.fileName}
                                   className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                                  onClick={() => setLightboxUrl(`/api/attachments/${msg.attachment.id}`)}
+                                  onClick={() => setLightboxUrl(api.getAttachmentUrl(msg.attachment.id))}
                                 />
                               </div>
                             ) : (
                               <a
-                                href={`/api/attachments/${msg.attachment.id}`}
+                                href={api.getAttachmentUrl(msg.attachment.id)}
                                 download={msg.attachment.fileName}
                                 target="_blank"
                                 rel="noopener noreferrer"
