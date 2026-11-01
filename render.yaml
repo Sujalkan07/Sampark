@@ -3,12 +3,20 @@ services:
     name: sampark-backend
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: free
+    plan: starter
     region: singapore
     healthCheckPath: /api/health
+    disk:
+      name: sampark-data
+      mountPath: /var/data
+      sizeGB: 1
     envVars:
       - key: PORT
         value: 8080
+      - key: DATABASE_PATH
+        value: /var/data/connectx.db
+      - key: UPLOAD_DIRECTORY
+        value: /var/data/uploads
       - key: SAMPARK_COOKIE_SECURE
         value: "true"
       - key: SAMPARK_COOKIE_SAMESITE

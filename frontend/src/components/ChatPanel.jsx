@@ -361,12 +361,44 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
       }
     };
 
-    pollingTimerRef.current = setInterval(poll, 2500);
+    let failureCount = 0;
+    let isCancelled = false;
+
+    const schedulePoll = (delay) => {
+      if (isCancelled) return;
+      if (pollingTimerRef.current) clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = setTimeout(async () => {
+        if (isCancelled) return;
+        const hidden = typeof document !== 'undefined' && document.hidden;
+        const baseInterval = hidden ? 10000 : 2500;
+        try {
+          await poll();
+          failureCount = 0;
+          schedulePoll(baseInterval);
+        } catch {
+          failureCount++;
+          const backoff = Math.min(30000, baseInterval * Math.pow(1.5, failureCount));
+          schedulePoll(backoff);
+        }
+      }, delay);
+    };
+
+    schedulePoll(2500);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !isCancelled) {
+        failureCount = 0;
+        schedulePoll(400); // Trigger prompt refresh when tab returns to focus
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      isCancelled = true;
       if (pollingTimerRef.current) {
-        clearInterval(pollingTimerRef.current);
+        clearTimeout(pollingTimerRef.current);
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [conversationId, user?.id, onConversationActivity, searchOpen, preferences, refreshConversationMetadata]);
 
@@ -433,8 +465,24 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size <= 0) {
+      setSendError('Empty files cannot be uploaded.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     if (file.size > 10 * 1024 * 1024) {
       setSendError('File exceeds the 10MB limit.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.doc', '.docx', '.csv', '.zip'];
+    const nameLower = file.name.toLowerCase();
+    const hasValidExt = allowedExts.some((ext) => nameLower.endsWith(ext));
+    if (!hasValidExt) {
+      setSendError('File format not supported. Allowed: images (JPG, PNG, GIF, WebP), PDF, TXT, DOC, DOCX, CSV, ZIP.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -512,11 +560,16 @@ export function ChatPanel({ conversationId, onConversationActivity, onBack }) {
 
       let attachmentId = null;
       if (stagedFile) {
-        const uploadRes = await api.uploadAttachment(targetId, stagedFile);
-        if (!uploadRes?.attachment?.id) {
-          throw new Error('Failed to upload file attachment.');
+        try {
+          const uploadRes = await api.uploadAttachment(targetId, stagedFile);
+          if (!uploadRes?.attachment?.id) {
+            throw new Error('Failed to upload file attachment.');
+          }
+          attachmentId = uploadRes.attachment.id;
+        } catch (uploadErr) {
+          setSendError(uploadErr.message || 'File upload failed. Please verify format/size and retry.');
+          return;
         }
-        attachmentId = uploadRes.attachment.id;
       }
 
       const payload = {

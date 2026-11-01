@@ -5,8 +5,15 @@ node_modules/
 stitch_export/
 architecture-guide/
 architecture.*
+docs/
 *.png
 *.ps1
+*.log
+uploads/
+backend/uploads/
+*.db
+*.db-wal
+*.db-shm
 backend/*.db
 backend/*.db-wal
 backend/*.db-shm

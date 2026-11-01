@@ -1,4 +1,5 @@
 #include "AuthController.hpp"
+#include "RateLimiter.hpp"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <sstream>
@@ -11,13 +12,12 @@ AuthController::AuthController(std::shared_ptr<IAuthService> authService)
     : authService_(std::move(authService)) {}
 
 std::string AuthController::extractSessionToken(const httplib::Request& req) {
-    // 1. Check Cookie header
+    // 1. Check Cookie header (support connectx_session and sampark_session)
     std::string cookieHeader = req.get_header_value("Cookie");
     if (!cookieHeader.empty()) {
         std::istringstream stream(cookieHeader);
         std::string part;
         while (std::getline(stream, part, ';')) {
-            // Trim leading spaces
             size_t start = part.find_first_not_of(" \t");
             if (start != std::string::npos) {
                 part = part.substr(start);
@@ -25,6 +25,10 @@ std::string AuthController::extractSessionToken(const httplib::Request& req) {
             const std::string cookiePrefix = "connectx_session=";
             if (part.rfind(cookiePrefix, 0) == 0) {
                 return part.substr(cookiePrefix.length());
+            }
+            const std::string samparkPrefix = "sampark_session=";
+            if (part.rfind(samparkPrefix, 0) == 0) {
+                return part.substr(samparkPrefix.length());
             }
         }
     }
@@ -79,13 +83,41 @@ void AuthController::sendError(httplib::Response& res, int statusCode, const std
 }
 
 void AuthController::handleRegister(const httplib::Request& req, httplib::Response& res) {
+    if (req.body.size() > 64 * 1024) {
+        sendError(res, 400, "Request payload exceeds maximum allowed size.");
+        return;
+    }
+
+    std::string clientIp = getClientIp(req);
+    int rateLimit = 30;
+    if (const char* envLimit = std::getenv("SAMPARK_RATE_LIMIT_REGISTER")) {
+        try { rateLimit = std::stoi(envLimit); } catch (...) {}
+    }
+    if (!RateLimiter::getInstance().allowRequest("register:" + clientIp, rateLimit, 60)) {
+        res.set_header("Retry-After", "60");
+        sendError(res, 429, "Too many registration attempts. Please try again later.");
+        return;
+    }
+
     try {
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request body must be a valid JSON object.");
+            return;
+        }
 
-        std::string username = payload.value("username", "");
-        std::string email = payload.value("email", "");
-        std::string fullName = payload.value("fullName", "");
-        std::string password = payload.value("password", "");
+        if (!payload.contains("username") || !payload["username"].is_string() ||
+            !payload.contains("email") || !payload["email"].is_string() ||
+            !payload.contains("fullName") || !payload["fullName"].is_string() ||
+            !payload.contains("password") || !payload["password"].is_string()) {
+            sendError(res, 400, "Fields 'username', 'email', 'fullName', and 'password' are required and must be strings.");
+            return;
+        }
+
+        std::string username = payload["username"].get<std::string>();
+        std::string email = payload["email"].get<std::string>();
+        std::string fullName = payload["fullName"].get<std::string>();
+        std::string password = payload["password"].get<std::string>();
 
         AuthResult result = authService_->registerUser(username, email, fullName, password);
 
@@ -100,14 +132,21 @@ void AuthController::handleRegister(const httplib::Request& req, httplib::Respon
 
         json responseBody = {
             {"message", result.message},
-            {"user", result.user->toJson()},
-            {"token", result.session ? result.session->token : ""}
+            {"user", result.user->toJson()}
         };
+
+        bool includeToken = (req.get_header_value("X-Request-Token") == "true") ||
+                            (req.get_header_value("X-Client-Type") == "api");
+        if (includeToken && result.session) {
+            responseBody["token"] = result.session->token;
+        }
 
         res.status = result.statusCode;
         res.set_content(responseBody.dump(), "application/json");
     } catch (const json::parse_error&) {
         sendError(res, 400, "Malformed JSON in request body.");
+    } catch (const json::type_error&) {
+        sendError(res, 400, "Invalid data types in request payload.");
     } catch (const std::exception& e) {
         std::cerr << "[AuthController] Exception in handleRegister: " << e.what() << std::endl;
         sendError(res, 500, "An internal server error occurred.");
@@ -115,11 +154,37 @@ void AuthController::handleRegister(const httplib::Request& req, httplib::Respon
 }
 
 void AuthController::handleLogin(const httplib::Request& req, httplib::Response& res) {
+    if (req.body.size() > 64 * 1024) {
+        sendError(res, 400, "Request payload exceeds maximum allowed size.");
+        return;
+    }
+
+    std::string clientIp = getClientIp(req);
+    int rateLimit = 30;
+    if (const char* envLimit = std::getenv("SAMPARK_RATE_LIMIT_LOGIN")) {
+        try { rateLimit = std::stoi(envLimit); } catch (...) {}
+    }
+    if (!RateLimiter::getInstance().allowRequest("login:" + clientIp, rateLimit, 60)) {
+        res.set_header("Retry-After", "60");
+        sendError(res, 429, "Too many login attempts. Please try again later.");
+        return;
+    }
+
     try {
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request body must be a valid JSON object.");
+            return;
+        }
 
-        std::string identifier = payload.value("identifier", "");
-        std::string password = payload.value("password", "");
+        if (!payload.contains("identifier") || !payload["identifier"].is_string() ||
+            !payload.contains("password") || !payload["password"].is_string()) {
+            sendError(res, 400, "Fields 'identifier' and 'password' are required and must be strings.");
+            return;
+        }
+
+        std::string identifier = payload["identifier"].get<std::string>();
+        std::string password = payload["password"].get<std::string>();
 
         AuthResult result = authService_->login(identifier, password);
 
@@ -134,14 +199,21 @@ void AuthController::handleLogin(const httplib::Request& req, httplib::Response&
 
         json responseBody = {
             {"message", result.message},
-            {"user", result.user->toJson()},
-            {"token", result.session ? result.session->token : ""}
+            {"user", result.user->toJson()}
         };
+
+        bool includeToken = (req.get_header_value("X-Request-Token") == "true") ||
+                            (req.get_header_value("X-Client-Type") == "api");
+        if (includeToken && result.session) {
+            responseBody["token"] = result.session->token;
+        }
 
         res.status = result.statusCode;
         res.set_content(responseBody.dump(), "application/json");
     } catch (const json::parse_error&) {
         sendError(res, 400, "Malformed JSON in request body.");
+    } catch (const json::type_error&) {
+        sendError(res, 400, "Invalid data types in request payload.");
     } catch (const std::exception& e) {
         std::cerr << "[AuthController] Exception in handleLogin: " << e.what() << std::endl;
         sendError(res, 500, "An internal server error occurred.");
@@ -262,6 +334,13 @@ void AuthController::handleChangePassword(const httplib::Request& req, httplib::
     std::string token = extractSessionToken(req);
     if (token.empty()) {
         sendError(res, 401, "Authentication required. Please log in.");
+        return;
+    }
+
+    std::string clientIp = getClientIp(req);
+    if (!RateLimiter::getInstance().allowRequest("pw:" + clientIp + ":" + token, 15, 60)) {
+        res.set_header("Retry-After", "60");
+        sendError(res, 429, "Too many password change attempts. Please try again later.");
         return;
     }
 

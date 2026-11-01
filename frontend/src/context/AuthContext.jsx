@@ -18,12 +18,18 @@ export function AuthProvider({ children }) {
       const data = await api.getMe();
       if (data && data.user) {
         setUser(data.user);
+        setError(null);
       } else {
         setUser(null);
       }
-    } catch {
-      // 401 or network failure: user is unauthenticated
-      setUser(null);
+    } catch (err) {
+      if (err && err.status === 401) {
+        setUser(null);
+        setError(null);
+      } else {
+        console.warn('Session check encountered transient error:', err?.message);
+        setError('Server temporarily unreachable. Please check connection.');
+      }
     } finally {
       setLoading(false);
     }

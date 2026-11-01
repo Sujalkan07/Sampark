@@ -1,5 +1,6 @@
 #include "Database.hpp"
 #include <iostream>
+#include <filesystem>
 
 namespace connectx {
 
@@ -19,6 +20,13 @@ bool Database::open(const std::string& dbPath) {
     }
 
     dbPath_ = dbPath;
+    try {
+        std::filesystem::path p(dbPath_);
+        if (p.has_parent_path()) {
+            std::filesystem::create_directories(p.parent_path());
+        }
+    } catch (...) {}
+
     int rc = sqlite3_open(dbPath_.c_str(), &db_);
     if (rc != SQLITE_OK) {
         std::cerr << "[Database] Failed to open database " << dbPath_ << ": "
@@ -30,13 +38,15 @@ bool Database::open(const std::string& dbPath) {
         return false;
     }
 
-    // Enable WAL mode and foreign key constraints
+    // Configure busy timeout (5000ms), WAL mode, and foreign key constraints
+    sqlite3_busy_timeout(db_, 5000);
+
     char* errMsg = nullptr;
     sqlite3_exec(db_, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errMsg);
-    if (errMsg) sqlite3_free(errMsg);
+    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
 
     sqlite3_exec(db_, "PRAGMA journal_mode = WAL;", nullptr, nullptr, &errMsg);
-    if (errMsg) sqlite3_free(errMsg);
+    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
 
     return true;
 }
@@ -60,6 +70,38 @@ bool Database::execute(const std::string& sql) {
         return false;
     }
     return true;
+}
+
+bool Database::beginTransaction(bool immediate) {
+    if (!db_) return false;
+    char* errMsg = nullptr;
+    const char* sql = immediate ? "BEGIN IMMEDIATE TRANSACTION;" : "BEGIN TRANSACTION;";
+    int rc = sqlite3_exec(db_, sql, nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Begin transaction failed: " << (errMsg ? errMsg : "Unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+    return true;
+}
+
+bool Database::commitTransaction() {
+    if (!db_) return false;
+    char* errMsg = nullptr;
+    int rc = sqlite3_exec(db_, "COMMIT;", nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Commit failed: " << (errMsg ? errMsg : "Unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+    return true;
+}
+
+void Database::rollbackTransaction() {
+    if (!db_) return;
+    char* errMsg = nullptr;
+    sqlite3_exec(db_, "ROLLBACK;", nullptr, nullptr, &errMsg);
+    if (errMsg) sqlite3_free(errMsg);
 }
 
 bool Database::initSchema() {
@@ -114,6 +156,7 @@ bool Database::initSchema() {
             body TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             read_at TEXT DEFAULT NULL,
+            read_receipt_suppressed INTEGER NOT NULL DEFAULT 0,
             edited_at TEXT DEFAULT NULL,
             is_deleted INTEGER NOT NULL DEFAULT 0,
             reply_to_id INTEGER DEFAULT NULL REFERENCES messages(id) ON DELETE SET NULL
@@ -175,6 +218,7 @@ bool Database::initSchema() {
         CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
         CREATE INDEX IF NOT EXISTS idx_conv_user_low ON conversations(user_low_id);
         CREATE INDEX IF NOT EXISTS idx_conv_user_high ON conversations(user_high_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_conv_direct_unique ON conversations(user_low_id, user_high_id) WHERE type = 'direct';
         CREATE INDEX IF NOT EXISTS idx_conv_type ON conversations(type);
         CREATE INDEX IF NOT EXISTS idx_conv_updated_at ON conversations(updated_at DESC);
         CREATE INDEX IF NOT EXISTS idx_cm_conv_user ON conversation_members(conversation_id, user_id);
@@ -457,6 +501,48 @@ bool Database::migrateSchema() {
 
     rc = sqlite3_exec(db_,
         "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (5, 'phase5_conversation_visibility_and_contacts');",
+        nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+
+    // 6. Migration 6: Database Integrity, Read Receipt Separation & Unique Direct Conversations
+    if (!hasColumn("messages", "read_receipt_suppressed")) {
+        rc = sqlite3_exec(db_, "ALTER TABLE messages ADD COLUMN read_receipt_suppressed INTEGER NOT NULL DEFAULT 0;", nullptr, nullptr, &errMsg);
+        if (rc != SQLITE_OK) {
+            std::cerr << "[Database] Migration 6 failed (messages.read_receipt_suppressed): " << (errMsg ? errMsg : "unknown") << std::endl;
+            if (errMsg) sqlite3_free(errMsg);
+            return false;
+        }
+        // Safely migrate any historical 'suppressed' records without losing timestamps
+        sqlite3_exec(db_, "UPDATE messages SET read_receipt_suppressed = 1, read_at = datetime('now') WHERE read_at = 'suppressed';", nullptr, nullptr, nullptr);
+    }
+
+    // Deduplicate any existing duplicate direct conversations before creating unique index
+    const char* dedupSql = R"(
+        BEGIN IMMEDIATE TRANSACTION;
+        DELETE FROM conversations
+        WHERE id NOT IN (
+            SELECT MIN(id)
+            FROM conversations
+            WHERE type = 'direct' AND user_low_id IS NOT NULL AND user_high_id IS NOT NULL
+            GROUP BY user_low_id, user_high_id
+        )
+        AND type = 'direct' AND user_low_id IS NOT NULL AND user_high_id IS NOT NULL;
+        COMMIT;
+    )";
+    sqlite3_exec(db_, dedupSql, nullptr, nullptr, nullptr);
+
+    rc = sqlite3_exec(db_, "CREATE UNIQUE INDEX IF NOT EXISTS idx_conv_direct_unique ON conversations(user_low_id, user_high_id) WHERE type = 'direct';", nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "[Database] Migration 6 failed (idx_conv_direct_unique): " << (errMsg ? errMsg : "unknown") << std::endl;
+        if (errMsg) sqlite3_free(errMsg);
+        return false;
+    }
+
+    rc = sqlite3_exec(db_,
+        "INSERT OR IGNORE INTO schema_migrations (version, name) VALUES (6, 'phase6_database_integrity_and_indexes');",
         nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         if (errMsg) sqlite3_free(errMsg);

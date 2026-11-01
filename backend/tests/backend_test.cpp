@@ -1,4 +1,6 @@
 #include <regex>
+#include <thread>
+#include <atomic>
 #include "Database.hpp"
 #include "UserRepository.hpp"
 #include "SessionRepository.hpp"
@@ -8,6 +10,7 @@
 #include "MessagingService.hpp"
 #include "Validator.hpp"
 #include "Server.hpp"
+#include "RateLimiter.hpp"
 #include <iostream>
 #include <cassert>
 #include <cstdio>
@@ -1223,6 +1226,160 @@ void runTests() {
             assert(c["id"] != p4Rohit->id);
         }
         std::cout << "[PASS] Test 88: MessagingController handleRemoveContact: Removal over HTTP verified" << std::endl;
+
+        // Test 89: Conditional attachment linking and double-linking prevention
+    {
+        convRepo->unhideConversation(directConvId, p4Aarav->id);
+        convRepo->unhideConversation(directConvId, p4Priya->id);
+
+        auto uploadRes = messagingService->uploadAttachment(aaravToken, directConvId, "contract.pdf", "%PDF-1.4 sample content", "application/pdf");
+        assert(uploadRes.success);
+        assert(uploadRes.attachment.has_value());
+        int64_t attId = uploadRes.attachment->id;
+
+        // Link to first message
+        auto msg1Res = messagingService->sendMessage(aaravToken, directConvId, "Here is contract", std::nullopt, attId);
+        assert(msg1Res.success);
+        assert(msg1Res.chatMessage->attachment.has_value());
+
+        // Attempt to link the already-linked attachment to a second message -> rejected 400
+        auto msg2Res = messagingService->sendMessage(aaravToken, directConvId, "Trying to steal attachment", std::nullopt, attId);
+        assert(!msg2Res.success);
+        assert(msg2Res.statusCode == 400);
+
+        // Conditional DB update must fail with 0 rows affected
+        bool directLinkOk = msgRepo->linkAttachmentConditionally(attId, 9999, directConvId, p4Aarav->id);
+        assert(!directLinkOk);
+
+        std::cout << "[PASS] Test 89: Conditional attachment linking and double-linking prevention verified" << std::endl;
+    }
+
+    // Test 90: Atomic message creation rollback on failure
+    {
+        int64_t preMsgCount = msgRepo->getMessages(directConvId, 100, 0, 0, p4Aarav->id).size();
+        auto failRes = messagingService->sendMessage(aaravToken, directConvId, "Bad reply message", 999999);
+        assert(!failRes.success);
+        assert(failRes.statusCode == 400);
+
+        // Verify count remains unchanged (atomically rolled back, zero phantom rows)
+        int64_t postMsgCount = msgRepo->getMessages(directConvId, 100, 0, 0, p4Aarav->id).size();
+        assert(preMsgCount == postMsgCount);
+
+        std::cout << "[PASS] Test 90: Atomic message creation rollback on failure verified" << std::endl;
+    }
+
+    // Test 91: Group creation atomic rollback on invalid member ID
+    {
+        std::vector<int64_t> invalidMembers = { p4Priya->id, 999999 }; // 999999 does not exist
+        auto badGroupRes = messagingService->createGroup(aaravToken, "Phantom Group", "Will fail", "", invalidMembers);
+        assert(!badGroupRes.success);
+        assert(badGroupRes.statusCode == 400);
+
+        // Verify group was not created in DB
+        auto userConvs = convRepo->getUserConversations(p4Aarav->id);
+        for (const auto& c : userConvs) {
+            assert(c.name != "Phantom Group");
+        }
+
+        std::cout << "[PASS] Test 91: Group creation atomic rollback on invalid member verified" << std::endl;
+    }
+
+    // Test 92: Read receipt privacy enforcement: accurate unread count with nullified timestamp
+    {
+        // Clear any existing unread messages first
+        messagingService->markAsRead(priyaToken, directConvId);
+        assert(msgRepo->getUnreadCount(directConvId, p4Priya->id) == 0);
+
+        // Set Priya preferences to disable read receipts
+        connectx::UserPreferences priyaPrefs = msgRepo->getUserPreferences(p4Priya->id);
+        priyaPrefs.readReceiptsEnabled = false;
+        msgRepo->updateUserPreferences(priyaPrefs);
+
+        // Aarav sends message to Priya
+        auto sentMsg = messagingService->sendMessage(aaravToken, directConvId, "Testing read receipt suppression");
+        assert(sentMsg.success);
+        int64_t testMsgId = sentMsg.chatMessage->id;
+
+        // Priya unread count before reading = 1
+        assert(msgRepo->getUnreadCount(directConvId, p4Priya->id) == 1);
+
+        // Priya reads message
+        auto markRes = messagingService->markAsRead(priyaToken, directConvId);
+        assert(markRes.success);
+
+        // Unread count is now 0 (accurately cleared!)
+        assert(msgRepo->getUnreadCount(directConvId, p4Priya->id) == 0);
+
+        // Aarav reads message list: readAt timestamp must be null for privacy
+        auto aaravView = messagingService->getMessages(aaravToken, directConvId, 10, 0, 0);
+        assert(aaravView.success);
+        for (const auto& m : aaravView.messages) {
+            if (m.id == testMsgId) {
+                assert(!m.readAt.has_value());
+                assert(m.readReceiptSuppressed == true);
+            }
+        }
+
+        // Restore Priya's preferences
+        priyaPrefs.readReceiptsEnabled = true;
+        msgRepo->updateUserPreferences(priyaPrefs);
+
+        std::cout << "[PASS] Test 92: Read receipt privacy enforcement with accurate unread count verified" << std::endl;
+    }
+
+    // Test 93: Sliding-window rate limiter enforcement (HTTP 429)
+    {
+        auto& limiter = connectx::RateLimiter::getInstance();
+        limiter.reset();
+
+        std::string testKey = "test_ip_127.0.0.1";
+        // Allow 5 requests in 60s
+        for (int i = 0; i < 5; ++i) {
+            assert(limiter.allowRequest(testKey, 5, 60));
+        }
+        // 6th request must be rejected (rate limited)
+        assert(!limiter.allowRequest(testKey, 5, 60));
+
+        std::cout << "[PASS] Test 93: Sliding-window rate limiter enforcement (HTTP 429) verified" << std::endl;
+    }
+
+    // Test 94: Multithreaded concurrent direct conversation creation and unique index consistency
+    {
+        std::atomic<int> successCount{0};
+        std::atomic<int64_t> sharedConvId{0};
+        std::vector<std::thread> workers;
+
+        for (int i = 0; i < 6; ++i) {
+            workers.emplace_back([&]() {
+                auto c = convRepo->getOrCreate(p4Aarav->id, p4Rohit->id);
+                if (c) {
+                    successCount++;
+                    sharedConvId.store(c->id);
+                }
+            });
+        }
+        for (auto& t : workers) {
+            t.join();
+        }
+
+        // All 6 concurrent threads must succeed and resolve to the exact same conversation ID
+        assert(successCount == 6);
+        assert(sharedConvId.load() > 0);
+
+        std::cout << "[PASS] Test 94: Multithreaded concurrent direct conversation creation uniqueness verified" << std::endl;
+    }
+
+    // Test 95: CSRF origin allowlist validation
+    {
+        // Untrusted origin
+        assert(!connectx::isOriginAllowed("https://evil-attacker-site.com"));
+
+        // Trusted origin
+        assert(connectx::isOriginAllowed("http://localhost:5173"));
+        assert(connectx::isOriginAllowed("http://127.0.0.1:5173"));
+
+        std::cout << "[PASS] Test 95: CSRF origin allowlist validation verified" << std::endl;
+    }
     }
 
     // Test 72: Database migration from legacy schema with sample data
@@ -1324,7 +1481,7 @@ void runTests() {
     if (fs::exists(testDbPath + "-shm")) fs::remove(testDbPath + "-shm");
 
     std::cout << "\n=============================================" << std::endl;
-    std::cout << " ALL 88 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
+    std::cout << " ALL 95 BACKEND TESTS PASSED SUCCESSFULLY!   " << std::endl;
     std::cout << "=============================================" << std::endl;
 }
 

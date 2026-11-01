@@ -90,16 +90,32 @@ Server::~Server() {
 }
 
 void Server::setupRoutes() {
-    // 1. CORS Pre-routing Handler
+    // 1. CORS & CSRF Pre-routing Handler
     svr_.set_pre_routing_handler([](const httplib::Request& req, httplib::Response& res) {
         std::string origin = req.get_header_value("Origin");
+
+        // Inspect Referer if Origin is not directly provided
+        if (origin.empty()) {
+            std::string referer = req.get_header_value("Referer");
+            if (!referer.empty()) {
+                size_t schemeEnd = referer.find("://");
+                if (schemeEnd != std::string::npos) {
+                    size_t pathStart = referer.find('/', schemeEnd + 3);
+                    if (pathStart != std::string::npos) {
+                        origin = referer.substr(0, pathStart);
+                    } else {
+                        origin = referer;
+                    }
+                }
+            }
+        }
 
         if (!origin.empty()) {
             if (isOriginAllowed(origin)) {
                 res.set_header("Access-Control-Allow-Origin", origin);
                 res.set_header("Access-Control-Allow-Credentials", "true");
                 res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, Accept, X-Requested-With");
+                res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, Accept, X-Requested-With, X-Request-Token, X-Client-Type");
                 res.set_header("Vary", "Origin");
 
                 if (req.method == "OPTIONS") {
@@ -113,8 +129,13 @@ void Server::setupRoutes() {
                     res.set_content("CORS origin not allowed.", "text/plain");
                     return httplib::Server::HandlerResponse::Handled;
                 }
-                // For non-OPTIONS from untrusted origins, do NOT set Access-Control-Allow-Origin.
-                // Standard browser SOP will block response reading.
+
+                // CSRF Protection: Block mutating requests from untrusted origins
+                if (req.method == "POST" || req.method == "PUT" || req.method == "DELETE") {
+                    res.status = 403;
+                    res.set_content("CSRF validation failed: untrusted origin.", "text/plain");
+                    return httplib::Server::HandlerResponse::Handled;
+                }
             }
         } else if (req.method == "OPTIONS") {
             res.status = 204;
@@ -132,7 +153,7 @@ void Server::setupRoutes() {
                 res.set_header("Access-Control-Allow-Origin", origin);
                 res.set_header("Access-Control-Allow-Credentials", "true");
                 res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, Accept, X-Requested-With");
+                res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie, Accept, X-Requested-With, X-Request-Token, X-Client-Type");
                 res.set_header("Vary", "Origin");
             }
         }

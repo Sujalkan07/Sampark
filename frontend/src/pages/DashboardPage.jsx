@@ -148,15 +148,47 @@ export function DashboardPage() {
   useEffect(() => {
     fetchConversations(true);
 
-    // Poll for new incoming conversations or activity updates every 4 seconds
-    pollIntervalRef.current = setInterval(() => {
-      fetchConversations(false);
-    }, 4000);
+    let failureCount = 0;
+    let isCancelled = false;
+
+    const scheduleNext = (delay) => {
+      if (isCancelled) return;
+      if (pollIntervalRef.current) clearTimeout(pollIntervalRef.current);
+      pollIntervalRef.current = setTimeout(async () => {
+        if (isCancelled) return;
+        const hidden = typeof document !== 'undefined' && document.hidden;
+        if (hidden) {
+          scheduleNext(15000);
+          return;
+        }
+        try {
+          await fetchConversations(false);
+          failureCount = 0;
+          scheduleNext(4000);
+        } catch {
+          failureCount++;
+          const backoff = Math.min(30000, 4000 * Math.pow(1.5, failureCount));
+          scheduleNext(backoff);
+        }
+      }, delay);
+    };
+
+    scheduleNext(4000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !isCancelled) {
+        failureCount = 0;
+        scheduleNext(500);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      isCancelled = true;
       if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
+        clearTimeout(pollIntervalRef.current);
       }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchConversations]);
 

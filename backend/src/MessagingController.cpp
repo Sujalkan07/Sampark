@@ -62,6 +62,10 @@ void MessagingController::handleCreateOrGetConversation(const httplib::Request& 
 
     try {
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
         if (!payload.is_object() || !payload.contains("participantId") || !payload["participantId"].is_number()) {
             sendError(res, 400, "Field 'participantId' is required and must be an integer.");
             return;
@@ -202,6 +206,15 @@ void MessagingController::handleSendMessage(const httplib::Request& req, httplib
         int64_t convId = std::stoll(convIdStr);
 
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
+
         std::string body = "";
         if (payload.contains("body") && payload["body"].is_string()) {
             body = payload["body"].get<std::string>();
@@ -275,7 +288,11 @@ void MessagingController::handleEditMessage(const httplib::Request& req, httplib
         int64_t msgId = std::stoll(msgIdStr);
 
         json payload = json::parse(req.body);
-        if (!payload.contains("body") || !payload["body"].is_string()) {
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
+        if (!payload.is_object() || !payload.contains("body") || !payload["body"].is_string()) {
             sendError(res, 400, "Field 'body' is required and must be a string.");
             return;
         }
@@ -426,19 +443,30 @@ void MessagingController::handleCreateGroup(const httplib::Request& req, httplib
 
     try {
         json payload = json::parse(req.body);
-        if (!payload.contains("name") || !payload["name"].is_string()) {
-            sendError(res, 400, "Field 'name' is required.");
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
+        if (!payload.is_object() || !payload.contains("name") || !payload["name"].is_string()) {
+            sendError(res, 400, "Field 'name' is required and must be a string.");
             return;
         }
         std::string name = payload["name"].get<std::string>();
-        std::string description = payload.value("description", "");
-        std::string avatarUrl = payload.value("avatarUrl", "");
+        std::string description = (payload.contains("description") && payload["description"].is_string()) ? payload["description"].get<std::string>() : "";
+        std::string avatarUrl = (payload.contains("avatarUrl") && payload["avatarUrl"].is_string()) ? payload["avatarUrl"].get<std::string>() : "";
 
         std::vector<int64_t> memberIds;
-        if (payload.contains("memberIds") && payload["memberIds"].is_array()) {
+        if (payload.contains("memberIds")) {
+            if (!payload["memberIds"].is_array()) {
+                sendError(res, 400, "Field 'memberIds' must be an array of integers.");
+                return;
+            }
             for (const auto& item : payload["memberIds"]) {
                 if (item.is_number()) {
                     memberIds.push_back(item.get<int64_t>());
+                } else {
+                    sendError(res, 400, "All items in 'memberIds' must be integers.");
+                    return;
                 }
             }
         }
@@ -456,8 +484,10 @@ void MessagingController::handleCreateGroup(const httplib::Request& req, httplib
         res.set_content(responseBody.dump(), "application/json");
     } catch (const json::parse_error&) {
         sendError(res, 400, "Malformed JSON in request body.");
+    } catch (const json::type_error&) {
+        sendError(res, 400, "Invalid data types in request payload.");
     } catch (const std::exception& e) {
-        sendError(res, 500, "An internal server error occurred.");
+        sendError(res, 400, "Invalid request format.");
     }
 }
 
@@ -502,8 +532,12 @@ void MessagingController::handleAddGroupMember(const httplib::Request& req, http
     try {
         int64_t convId = std::stoll(req.matches[1]);
         json payload = json::parse(req.body);
-        if (!payload.contains("userId") || !payload["userId"].is_number()) {
-            sendError(res, 400, "Field 'userId' is required.");
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
+        if (!payload.is_object() || !payload.contains("userId") || !payload["userId"].is_number()) {
+            sendError(res, 400, "Field 'userId' is required and must be an integer.");
             return;
         }
         int64_t targetUserId = payload["userId"].get<int64_t>();
@@ -572,8 +606,12 @@ void MessagingController::handleUpdateGroupMemberRole(const httplib::Request& re
         int64_t targetUserId = std::stoll(req.matches[2]);
 
         json payload = json::parse(req.body);
-        if (!payload.contains("role") || !payload["role"].is_string()) {
-            sendError(res, 400, "Field 'role' is required.");
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
+        if (!payload.is_object() || !payload.contains("role") || !payload["role"].is_string()) {
+            sendError(res, 400, "Field 'role' is required and must be a string.");
             return;
         }
 
@@ -613,6 +651,10 @@ void MessagingController::handleUpdateGroup(const httplib::Request& req, httplib
     try {
         int64_t convId = std::stoll(req.matches[1]);
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
 
         std::string name = payload.value("name", "");
         std::string description = payload.value("description", "");
@@ -700,6 +742,10 @@ void MessagingController::handleToggleReaction(const httplib::Request& req, http
     try {
         int64_t msgId = std::stoll(req.matches[1]);
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
         if (!payload.contains("emoji") || !payload["emoji"].is_string()) {
             sendError(res, 400, "Field 'emoji' is required.");
             return;
@@ -758,6 +804,10 @@ void MessagingController::handleUploadAttachment(const httplib::Request& req, ht
         } else {
             // Support JSON upload format
             json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
             fileName = payload.value("fileName", "attachment.dat");
             fileContent = payload.value("content", "");
             mimeType = payload.value("mimeType", "application/octet-stream");
@@ -875,6 +925,10 @@ void MessagingController::handleUpdatePreferences(const httplib::Request& req, h
 
     try {
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
         auto existing = messagingService_->getUserPreferences(token);
         UserPreferences prefs;
         if (existing.success && existing.preferences) {
@@ -1076,6 +1130,10 @@ void MessagingController::handleAddContact(const httplib::Request& req, httplib:
 
     try {
         json payload = json::parse(req.body);
+        if (!payload.is_object()) {
+            sendError(res, 400, "Request payload must be a JSON object.");
+            return;
+        }
         if (!payload.contains("contactUserId") || !payload["contactUserId"].is_number()) {
             sendError(res, 400, "Field 'contactUserId' is required and must be an integer.");
             return;
@@ -1103,7 +1161,7 @@ void MessagingController::handleAddContact(const httplib::Request& req, httplib:
     } catch (const json::parse_error&) {
         sendError(res, 400, "Malformed JSON in request body.");
     } catch (...) {
-        sendError(res, 500, "An internal server error occurred.");
+        sendError(res, 400, "Invalid contact request payload.");
     }
 }
 

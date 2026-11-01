@@ -8,11 +8,20 @@
 #include <random>
 #include <sstream>
 #include <iomanip>
+#include <unordered_set>
 #include <openssl/rand.h>
 
 namespace connectx {
 
 namespace fs = std::filesystem;
+
+static std::string getUploadsDirectory() {
+    if (const char* envDir = std::getenv("UPLOAD_DIRECTORY")) {
+        std::string dir = envDir;
+        if (!dir.empty()) return dir;
+    }
+    return "uploads";
+}
 
 MessagingService::MessagingService(std::shared_ptr<IConversationRepository> convRepo,
                                    std::shared_ptr<IMessageRepository> msgRepo,
@@ -24,7 +33,7 @@ MessagingService::MessagingService(std::shared_ptr<IConversationRepository> conv
       sessionRepo_(std::move(sessionRepo)) {
     // Ensure uploads directory exists
     try {
-        fs::create_directories("uploads");
+        fs::create_directories(getUploadsDirectory());
     } catch (...) {}
 }
 
@@ -274,32 +283,12 @@ MessagingResult MessagingService::sendMessage(const std::string& sessionToken, i
         }
     }
 
-    auto createdMsg = msgRepo_->createMessage(conversationId, *callerId, trimmedBody, replyToId);
+    auto createdMsg = msgRepo_->createMessageWithAttachment(conversationId, *callerId, trimmedBody, replyToId, attachmentId);
     if (!createdMsg) {
-        // If message creation failed and an unlinked attachment was provided, clean up the attachment to avoid orphans
-        if (attachmentId.has_value() && *attachmentId > 0) {
-            auto att = msgRepo_->getAttachmentById(*attachmentId);
-            if (att && att->uploaderId == *callerId && !att->messageId.has_value()) {
-                try {
-                    if (fs::exists(att->filePath)) fs::remove(att->filePath);
-                } catch (...) {}
-                msgRepo_->deleteAttachment(*attachmentId);
-            }
-        }
         res.success = false;
         res.statusCode = 500;
         res.message = "Failed to persist message.";
         return res;
-    }
-
-    // Link attachment if provided
-    if (attachmentId.has_value() && *attachmentId > 0) {
-        auto att = msgRepo_->getAttachmentById(*attachmentId);
-        if (att && att->conversationId == conversationId && att->uploaderId == *callerId && !att->messageId.has_value()) {
-            msgRepo_->linkAttachmentToMessage(*attachmentId, createdMsg->id);
-            att->messageId = createdMsg->id;
-            createdMsg->attachment = att;
-        }
     }
 
     // Reappearance policy: unhide conversation upon new message
@@ -448,6 +437,18 @@ MessagingResult MessagingService::deleteMessage(const std::string& sessionToken,
         return res;
     }
 
+    // Clean up physical file and attachment record if present
+    if (existingMsg->attachment.has_value()) {
+        try {
+            if (!existingMsg->attachment->filePath.empty() && fs::exists(existingMsg->attachment->filePath)) {
+                fs::remove(existingMsg->attachment->filePath);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Failed to delete attachment file: " << e.what() << std::endl;
+        }
+        msgRepo_->deleteAttachmentRecord(existingMsg->attachment->id);
+    }
+
     bool ok = msgRepo_->deleteMessage(messageId);
     if (!ok) {
         res.success = false;
@@ -545,7 +546,32 @@ MessagingResult MessagingService::createGroup(const std::string& sessionToken,
         return res;
     }
 
-    auto conv = convRepo_->createGroup(trimmedName, description, avatarUrl, *callerId, memberIds);
+    // Validate members: creator is automatically added as admin.
+    std::vector<int64_t> validatedMemberIds;
+    std::unordered_set<int64_t> seen;
+    for (int64_t mid : memberIds) {
+        if (mid <= 0) {
+            res.success = false;
+            res.statusCode = 400;
+            res.message = "Invalid member user ID.";
+            return res;
+        }
+        if (mid == *callerId) {
+            continue; // Creator will be added as admin
+        }
+        if (seen.insert(mid).second) {
+            auto user = userRepo_->findById(mid);
+            if (!user) {
+                res.success = false;
+                res.statusCode = 400;
+                res.message = "User with ID " + std::to_string(mid) + " does not exist.";
+                return res;
+            }
+            validatedMemberIds.push_back(mid);
+        }
+    }
+
+    auto conv = convRepo_->createGroup(trimmedName, description, avatarUrl, *callerId, validatedMemberIds);
     if (!conv) {
         res.success = false;
         res.statusCode = 500;
@@ -887,6 +913,18 @@ MessagingResult MessagingService::deleteGroup(const std::string& sessionToken, i
         return res;
     }
 
+    // Clean up physical attachment files belonging to this conversation
+    auto paths = msgRepo_->getAttachmentPathsForConversation(conversationId);
+    for (const auto& path : paths) {
+        try {
+            if (!path.empty() && fs::exists(path)) {
+                fs::remove(path);
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Warning: Failed to delete attachment file for group: " << e.what() << std::endl;
+        }
+    }
+
     bool ok = convRepo_->deleteGroup(conversationId);
     if (!ok) {
         res.success = false;
@@ -936,6 +974,14 @@ MessagingResult MessagingService::leaveGroup(const std::string& sessionToken, in
     auto members = convRepo_->getGroupMembers(conversationId);
     if (members.size() <= 1) {
         // Last member leaving - disband the group cleanly
+        auto paths = msgRepo_->getAttachmentPathsForConversation(conversationId);
+        for (const auto& path : paths) {
+            try {
+                if (!path.empty() && fs::exists(path)) {
+                    fs::remove(path);
+                }
+            } catch (...) {}
+        }
         bool delOk = convRepo_->deleteGroup(conversationId);
         if (!delOk) {
             res.success = false;
@@ -1081,7 +1127,9 @@ MessagingResult MessagingService::uploadAttachment(const std::string& sessionTok
     int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::system_clock::now().time_since_epoch()).count();
     std::string diskName = std::to_string(timestamp) + "_" + std::to_string(*callerId) + "_" + hexStream.str() + valRes.safeStorageExt;
-    std::string fullPath = "uploads/" + diskName;
+    std::string uploadDir = getUploadsDirectory();
+    try { fs::create_directories(uploadDir); } catch (...) {}
+    std::string fullPath = (fs::path(uploadDir) / diskName).string();
 
     std::ofstream out(fullPath, std::ios::binary);
     if (!out.is_open()) {

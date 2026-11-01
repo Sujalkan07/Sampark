@@ -6,14 +6,14 @@
   "type": "workflow",
   "quality": "showcase",
   "specification": {
-    "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
-    "sha256": "13955b8643104f40241617edf91a0e723fec37fe851a6985a98cf2632628ab14",
-    "bytes": 10788
+    "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-system-flow-20261101-184800\\candidate.json",
+    "sha256": "239bf55b81f1a47a94b1b3fd7f7607be11d5e2a35cb938fa829caff64732d2f9",
+    "bytes": 10347
   },
   "artifact": {
     "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
-    "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
-    "bytes": 870895
+    "sha256": "b9d8af9c01a00ffe809c76e24c2ddca0d0969c024bf4f5bcd252f7da7e48d8f3",
+    "bytes": 852583
   },
   "gates": {
     "validate": "pass",
@@ -38,12 +38,12 @@
     "availableVersion": "3.2.0",
     "releaseNotes": null,
     "checkedAt": "2026-10-27T04:19:27.257Z",
-    "source": "network",
+    "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 6476,
+  "durationMs": 7453,
   "browserCheck": {
     "requested": true,
     "ran": true

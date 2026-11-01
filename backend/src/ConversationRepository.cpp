@@ -58,7 +58,17 @@ std::optional<Conversation> SqliteConversationRepository::getOrCreate(int64_t us
 
         stmt.bindInt64(1, low);
         stmt.bindInt64(2, high);
-        if (stmt.step() != SQLITE_DONE) {
+        int stepRc = stmt.step();
+        if (stepRc != SQLITE_DONE) {
+            // Concurrent insert race condition: query again to retrieve created row
+            Statement recheckStmt(db_.getHandle(), findSql);
+            if (recheckStmt.isValid()) {
+                recheckStmt.bindInt64(1, low);
+                recheckStmt.bindInt64(2, high);
+                if (recheckStmt.step() == SQLITE_ROW) {
+                    return extractConversation(recheckStmt);
+                }
+            }
             return std::nullopt;
         }
     }
@@ -155,14 +165,16 @@ std::vector<Conversation> SqliteConversationRepository::getUserConversations(int
     if (userId <= 0) return list;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    // Direct conversations where user is low/high OR group conversations where user is in conversation_members
-    const std::string sql = "SELECT c.id, c.type, c.name, c.description, c.avatar_url, c.created_by, c.user_low_id, c.user_high_id, c.created_at, c.updated_at "
-                            "FROM conversations c "
-                            "LEFT JOIN conversation_user_state cus ON (cus.conversation_id = c.id AND cus.user_id = ?) "
-                            "WHERE ((c.type = 'direct' AND (c.user_low_id = ? OR c.user_high_id = ?)) "
-                            "   OR (c.type = 'group' AND c.id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?))) "
-                            "  AND (cus.is_hidden IS NULL OR cus.is_hidden = 0) "
-                            "ORDER BY c.updated_at DESC, c.id DESC;";
+
+    const std::string sql =
+        "SELECT c.id, c.type, c.name, c.description, c.avatar_url, c.created_by, c.user_low_id, c.user_high_id, c.created_at, c.updated_at "
+        "FROM conversations c "
+        "LEFT JOIN conversation_user_state cus ON (cus.conversation_id = c.id AND cus.user_id = ?) "
+        "WHERE ((c.type = 'direct' AND (c.user_low_id = ? OR c.user_high_id = ?)) "
+        "    OR (c.type = 'group' AND c.id IN (SELECT conversation_id FROM conversation_members WHERE user_id = ?))) "
+        "  AND (cus.is_hidden IS NULL OR cus.is_hidden = 0) "
+        "ORDER BY c.updated_at DESC;";
+
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return list;
 
@@ -229,7 +241,6 @@ bool SqliteConversationRepository::isParticipant(int64_t conversationId, int64_t
         int64_t high = stmt.getColumnInt64(2);
         return (low == userId || high == userId);
     } else {
-        // Check conversation_members
         const std::string memSql = "SELECT 1 FROM conversation_members WHERE conversation_id = ? AND user_id = ? LIMIT 1;";
         Statement memStmt(db_.getHandle(), memSql);
         if (!memStmt.isValid()) return false;
@@ -258,7 +269,7 @@ bool SqliteConversationRepository::updateTimestamp(int64_t conversationId) {
     if (!stmt.isValid()) return false;
 
     stmt.bindInt64(1, conversationId);
-    return stmt.step() == SQLITE_DONE;
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 // Phase 4: Group Chat Implementation
@@ -270,65 +281,85 @@ std::optional<Conversation> SqliteConversationRepository::createGroup(const std:
     if (name.empty() || createdBy <= 0) return std::nullopt;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
+    Transaction tx(db_, true); // BEGIN IMMEDIATE TRANSACTION
+    if (!tx.isStarted()) return std::nullopt;
 
-    // Begin immediate transaction
-    char* errMsg = nullptr;
-    sqlite3_exec(db_.getHandle(), "BEGIN IMMEDIATE TRANSACTION;", nullptr, nullptr, &errMsg);
-    if (errMsg) { sqlite3_free(errMsg); errMsg = nullptr; }
+    // Verify creator exists
+    {
+        const std::string checkCreator = "SELECT 1 FROM users WHERE id = ? LIMIT 1;";
+        Statement stmt(db_.getHandle(), checkCreator);
+        if (!stmt.isValid() || !stmt.bindInt64(1, createdBy) || stmt.step() != SQLITE_ROW) {
+            return std::nullopt;
+        }
+    }
 
+    // Deduplicate and validate member IDs
+    std::vector<int64_t> uniqueMembers;
+    for (int64_t mId : memberIds) {
+        if (mId <= 0) return std::nullopt;
+        if (mId == createdBy) continue;
+        if (std::find(uniqueMembers.begin(), uniqueMembers.end(), mId) == uniqueMembers.end()) {
+            uniqueMembers.push_back(mId);
+        }
+    }
+
+    for (int64_t mId : uniqueMembers) {
+        const std::string checkUser = "SELECT 1 FROM users WHERE id = ? LIMIT 1;";
+        Statement stmt(db_.getHandle(), checkUser);
+        if (!stmt.isValid() || !stmt.bindInt64(1, mId) || stmt.step() != SQLITE_ROW) {
+            return std::nullopt; // Nonexistent member!
+        }
+    }
+
+    // Insert group conversation row
     const std::string insertGroupSql = "INSERT INTO conversations (type, name, description, avatar_url, created_by, user_low_id, user_high_id, created_at, updated_at) "
                                        "VALUES ('group', ?, ?, ?, ?, NULL, NULL, datetime('now'), datetime('now'));";
     int64_t convId = 0;
     {
         Statement stmt(db_.getHandle(), insertGroupSql);
-        if (!stmt.isValid()) {
-            sqlite3_exec(db_.getHandle(), "ROLLBACK;", nullptr, nullptr, nullptr);
-            return std::nullopt;
-        }
+        if (!stmt.isValid()) return std::nullopt;
         stmt.bindText(1, name);
         stmt.bindText(2, description);
         stmt.bindText(3, avatarUrl);
         stmt.bindInt64(4, createdBy);
 
         if (stmt.step() != SQLITE_DONE) {
-            sqlite3_exec(db_.getHandle(), "ROLLBACK;", nullptr, nullptr, nullptr);
             return std::nullopt;
         }
         convId = sqlite3_last_insert_rowid(db_.getHandle());
     }
 
-    if (convId <= 0) {
-        sqlite3_exec(db_.getHandle(), "ROLLBACK;", nullptr, nullptr, nullptr);
-        return std::nullopt;
-    }
+    if (convId <= 0) return std::nullopt;
 
     // Add creator as admin
-    const std::string insertMemberSql = "INSERT OR IGNORE INTO conversation_members (conversation_id, user_id, role, joined_at) "
+    const std::string insertMemberSql = "INSERT INTO conversation_members (conversation_id, user_id, role, joined_at) "
                                         "VALUES (?, ?, ?, datetime('now'));";
     {
         Statement stmt(db_.getHandle(), insertMemberSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, convId);
-            stmt.bindInt64(2, createdBy);
-            stmt.bindText(3, "admin");
-            stmt.step();
+        if (!stmt.isValid()) return std::nullopt;
+        stmt.bindInt64(1, convId);
+        stmt.bindInt64(2, createdBy);
+        stmt.bindText(3, "admin");
+        if (stmt.step() != SQLITE_DONE || sqlite3_changes(db_.getHandle()) != 1) {
+            return std::nullopt;
         }
     }
 
     // Add selected members as regular members
-    for (int64_t memberId : memberIds) {
-        if (memberId > 0 && memberId != createdBy) {
-            Statement stmt(db_.getHandle(), insertMemberSql);
-            if (stmt.isValid()) {
-                stmt.bindInt64(1, convId);
-                stmt.bindInt64(2, memberId);
-                stmt.bindText(3, "member");
-                stmt.step();
-            }
+    for (int64_t memberId : uniqueMembers) {
+        Statement stmt(db_.getHandle(), insertMemberSql);
+        if (!stmt.isValid()) return std::nullopt;
+        stmt.bindInt64(1, convId);
+        stmt.bindInt64(2, memberId);
+        stmt.bindText(3, "member");
+        if (stmt.step() != SQLITE_DONE || sqlite3_changes(db_.getHandle()) != 1) {
+            return std::nullopt;
         }
     }
 
-    sqlite3_exec(db_.getHandle(), "COMMIT;", nullptr, nullptr, nullptr);
+    if (!tx.commit()) {
+        return std::nullopt;
+    }
 
     // Retrieve created conversation
     const std::string findSql = "SELECT id, type, name, description, avatar_url, created_by, user_low_id, user_high_id, created_at, updated_at "
@@ -339,7 +370,6 @@ std::optional<Conversation> SqliteConversationRepository::createGroup(const std:
     findStmt.bindInt64(1, convId);
     if (findStmt.step() == SQLITE_ROW) {
         Conversation conv = extractConversation(findStmt);
-        // Load members
         const std::string memSql = "SELECT cm.id, cm.conversation_id, cm.user_id, cm.role, cm.joined_at, cm.last_read_message_id, "
                                    "u.username, u.full_name, u.bio, u.last_active_at, u.created_at "
                                    "FROM conversation_members cm "
@@ -372,7 +402,6 @@ std::optional<Conversation> SqliteConversationRepository::createGroup(const std:
         }
         return conv;
     }
-
     return std::nullopt;
 }
 
@@ -387,26 +416,26 @@ std::vector<ConversationMember> SqliteConversationRepository::getGroupMembers(in
                                "JOIN users u ON cm.user_id = u.id "
                                "WHERE cm.conversation_id = ? "
                                "ORDER BY CASE WHEN cm.role = 'admin' THEN 0 ELSE 1 END, cm.joined_at ASC, cm.id ASC;";
-    Statement memStmt(db_.getHandle(), memSql);
-    if (!memStmt.isValid()) return members;
+    Statement stmt(db_.getHandle(), memSql);
+    if (!stmt.isValid()) return members;
 
-    memStmt.bindInt64(1, conversationId);
-    while (memStmt.step() == SQLITE_ROW) {
+    stmt.bindInt64(1, conversationId);
+    while (stmt.step() == SQLITE_ROW) {
         ConversationMember m;
-        m.id = memStmt.getColumnInt64(0);
-        m.conversationId = memStmt.getColumnInt64(1);
-        m.userId = memStmt.getColumnInt64(2);
-        m.role = memStmt.getColumnText(3);
-        m.joinedAt = memStmt.getColumnText(4);
-        m.lastReadMessageId = memStmt.getColumnInt64(5);
+        m.id = stmt.getColumnInt64(0);
+        m.conversationId = stmt.getColumnInt64(1);
+        m.userId = stmt.getColumnInt64(2);
+        m.role = stmt.getColumnText(3);
+        m.joinedAt = stmt.getColumnText(4);
+        m.lastReadMessageId = stmt.getColumnInt64(5);
 
         User u;
         u.id = m.userId;
-        u.username = memStmt.getColumnText(6);
-        u.fullName = memStmt.getColumnText(7);
-        u.bio = memStmt.getColumnText(8);
-        u.lastActiveAt = memStmt.getColumnText(9);
-        u.createdAt = memStmt.getColumnText(10);
+        u.username = stmt.getColumnText(6);
+        u.fullName = stmt.getColumnText(7);
+        u.bio = stmt.getColumnText(8);
+        u.lastActiveAt = stmt.getColumnText(9);
+        u.createdAt = stmt.getColumnText(10);
         m.user = u;
 
         members.push_back(m);
@@ -418,15 +447,17 @@ bool SqliteConversationRepository::addMember(int64_t conversationId, int64_t use
     if (conversationId <= 0 || userId <= 0) return false;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "INSERT OR IGNORE INTO conversation_members (conversation_id, user_id, role, joined_at) "
-                            "VALUES (?, ?, ?, datetime('now'));";
+    const std::string sql = "INSERT INTO conversation_members (conversation_id, user_id, role, joined_at) "
+                            "VALUES (?, ?, ?, datetime('now')) "
+                            "ON CONFLICT(conversation_id, user_id) DO UPDATE SET role = excluded.role;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return false;
 
     stmt.bindInt64(1, conversationId);
     stmt.bindInt64(2, userId);
     stmt.bindText(3, role.empty() ? "member" : role);
-    return stmt.step() == SQLITE_DONE;
+
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 bool SqliteConversationRepository::removeMember(int64_t conversationId, int64_t userId) {
@@ -439,7 +470,8 @@ bool SqliteConversationRepository::removeMember(int64_t conversationId, int64_t 
 
     stmt.bindInt64(1, conversationId);
     stmt.bindInt64(2, userId);
-    return stmt.step() == SQLITE_DONE;
+
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 bool SqliteConversationRepository::updateGroup(int64_t conversationId, const std::string& name, const std::string& description, const std::string& avatarUrl) {
@@ -455,7 +487,8 @@ bool SqliteConversationRepository::updateGroup(int64_t conversationId, const std
     stmt.bindText(2, description);
     stmt.bindText(3, avatarUrl);
     stmt.bindInt64(4, conversationId);
-    return stmt.step() == SQLITE_DONE;
+
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 bool SqliteConversationRepository::deleteGroup(int64_t conversationId) {
@@ -467,7 +500,7 @@ bool SqliteConversationRepository::deleteGroup(int64_t conversationId) {
     if (!stmt.isValid()) return false;
 
     stmt.bindInt64(1, conversationId);
-    return stmt.step() == SQLITE_DONE;
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 std::optional<std::string> SqliteConversationRepository::getMemberRole(int64_t conversationId, int64_t userId) {
@@ -503,58 +536,40 @@ bool SqliteConversationRepository::transferAdmin(int64_t conversationId, int64_t
         }
     }
 
-    char* errMsg = nullptr;
-    sqlite3_exec(db_.getHandle(), "BEGIN IMMEDIATE TRANSACTION;", nullptr, nullptr, &errMsg);
+    Transaction tx(db_, true);
+    if (!tx.isStarted()) return false;
 
     // Update current admin to member
-    int rc1 = SQLITE_OK;
     if (currentAdminId > 0) {
         const std::string demoteSql = "UPDATE conversation_members SET role = 'member' WHERE conversation_id = ? AND user_id = ?;";
         Statement stmt(db_.getHandle(), demoteSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, conversationId);
-            stmt.bindInt64(2, currentAdminId);
-            rc1 = stmt.step();
-        } else {
-            rc1 = SQLITE_ERROR;
-        }
+        if (!stmt.isValid()) return false;
+        stmt.bindInt64(1, conversationId);
+        stmt.bindInt64(2, currentAdminId);
+        if (stmt.step() != SQLITE_DONE) return false;
     }
 
     // Promote new admin
-    int rc2 = SQLITE_OK;
     const std::string promoteSql = "UPDATE conversation_members SET role = 'admin' WHERE conversation_id = ? AND user_id = ?;";
     {
         Statement stmt(db_.getHandle(), promoteSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, conversationId);
-            stmt.bindInt64(2, newAdminId);
-            rc2 = stmt.step();
-        } else {
-            rc2 = SQLITE_ERROR;
-        }
+        if (!stmt.isValid()) return false;
+        stmt.bindInt64(1, conversationId);
+        stmt.bindInt64(2, newAdminId);
+        if (stmt.step() != SQLITE_DONE || sqlite3_changes(db_.getHandle()) != 1) return false;
     }
 
     // Update created_by in conversations table
-    int rc3 = SQLITE_OK;
     const std::string updateConvSql = "UPDATE conversations SET created_by = ?, updated_at = datetime('now') WHERE id = ?;";
     {
         Statement stmt(db_.getHandle(), updateConvSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, newAdminId);
-            stmt.bindInt64(2, conversationId);
-            rc3 = stmt.step();
-        } else {
-            rc3 = SQLITE_ERROR;
-        }
+        if (!stmt.isValid()) return false;
+        stmt.bindInt64(1, newAdminId);
+        stmt.bindInt64(2, conversationId);
+        if (stmt.step() != SQLITE_DONE) return false;
     }
 
-    if ((rc1 == SQLITE_DONE || rc1 == SQLITE_OK) && rc2 == SQLITE_DONE && rc3 == SQLITE_DONE) {
-        sqlite3_exec(db_.getHandle(), "COMMIT;", nullptr, nullptr, nullptr);
-        return true;
-    } else {
-        sqlite3_exec(db_.getHandle(), "ROLLBACK;", nullptr, nullptr, nullptr);
-        return false;
-    }
+    return tx.commit();
 }
 
 bool SqliteConversationRepository::updateLastReadMessage(int64_t conversationId, int64_t userId) {
@@ -581,7 +596,7 @@ bool SqliteConversationRepository::updateMemberRole(int64_t conversationId, int6
     stmt.bindText(1, newRole);
     stmt.bindInt64(2, conversationId);
     stmt.bindInt64(3, userId);
-    return stmt.step() == SQLITE_DONE;
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 // Phase 5: Conversation Visibility

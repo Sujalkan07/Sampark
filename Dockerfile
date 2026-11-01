@@ -30,18 +30,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Create dedicated non-root application user and group
+RUN groupadd -g 10001 sampark && \
+    useradd -u 10001 -g sampark -m -s /bin/bash sampark
+
 WORKDIR /app
 
 # Copy compiled server binary from builder
 COPY --from=builder /build/backend/server ./server
 
-# Ensure upload directory exists with full read/write permissions
-RUN mkdir -p uploads && chmod 777 uploads
+# Ensure upload directory and persistent mount points exist with secure permissions
+RUN mkdir -p /var/data/uploads /app/uploads && \
+    chown -R sampark:sampark /app /var/data && \
+    chmod 755 /app && \
+    chmod 750 ./server && \
+    chmod 700 /var/data /var/data/uploads /app/uploads
 
 # Default runtime configuration
 ENV HOST=0.0.0.0
 ENV PORT=8080
-ENV DATABASE_PATH=connectx.db
+ENV DATABASE_PATH=/var/data/connectx.db
+ENV UPLOAD_DIRECTORY=/var/data/uploads
+
+# Run as dedicated unprivileged user
+USER sampark
 
 EXPOSE 8080
 

@@ -189,6 +189,7 @@ struct Message {
     std::optional<std::string> readAt;
     std::optional<std::string> editedAt;
     bool isDeleted = false;
+    bool readReceiptSuppressed = false;
 
     // Phase 4 extensions
     std::optional<int64_t> replyToId;
@@ -211,7 +212,7 @@ struct Message {
         if (!senderName.empty()) {
             j["senderName"] = senderName;
         }
-        if (readAt.has_value()) {
+        if (readAt.has_value() && !readReceiptSuppressed) {
             j["readAt"] = *readAt;
         } else {
             j["readAt"] = nullptr;

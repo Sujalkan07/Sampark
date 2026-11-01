@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "79feb412-f302-46ac-92cf-1e3cd7f43f74",
+  "receiptId": "ff31d078-7f50-4f15-93f9-d386cabe58fb",
   "status": "current",
   "command": "deliver",
   "type": "workflow",
-  "input": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
+  "input": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\architecture-explainable-20261101-190400\\candidate.json",
   "output": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
   "specification": {
-    "sha256": "13955b8643104f40241617edf91a0e723fec37fe851a6985a98cf2632628ab14",
-    "bytes": 10788
+    "sha256": "593a71236b87c9a6f8b6da644fe2050d47cf279fc67a19b38cf6cfa21eb20668",
+    "bytes": 9993
   },
   "artifact": {
-    "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
-    "bytes": 870895
+    "sha256": "d5c3e9a9d8cbb23041ca25febf2fc39022bb937076fdf8beece3fdfa42ab8e4e",
+    "bytes": 852855
   }
 }

@@ -27,11 +27,56 @@ public:
     std::mutex& getMutex() { return mutex_; }
 
     bool execute(const std::string& sql);
+    bool beginTransaction(bool immediate = true);
+    bool commitTransaction();
+    void rollbackTransaction();
 
 private:
     sqlite3* db_ = nullptr;
     std::string dbPath_;
     std::mutex mutex_;
+};
+
+// RAII helper for sqlite3 transaction
+class Transaction {
+public:
+    explicit Transaction(Database& db, bool immediate = true) : db_(db) {
+        active_ = db_.beginTransaction(immediate);
+    }
+
+    ~Transaction() {
+        if (active_) {
+            db_.rollbackTransaction();
+        }
+    }
+
+    Transaction(const Transaction&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
+
+    bool isStarted() const { return active_; }
+
+    bool commit() {
+        if (!active_) return false;
+        bool ok = db_.commitTransaction();
+        if (ok) {
+            active_ = false;
+        } else {
+            db_.rollbackTransaction();
+            active_ = false;
+        }
+        return ok;
+    }
+
+    void rollback() {
+        if (active_) {
+            db_.rollbackTransaction();
+            active_ = false;
+        }
+    }
+
+private:
+    Database& db_;
+    bool active_ = false;
 };
 
 // RAII helper for sqlite3_stmt

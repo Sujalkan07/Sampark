@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libsqlite3-dev
+          sudo apt-get install -y build-essential libsqlite3-dev libssl-dev
 
       - name: Build Server Binary
         run: make -C backend server

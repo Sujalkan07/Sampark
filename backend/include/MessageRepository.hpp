@@ -14,6 +14,7 @@ public:
     virtual ~IMessageRepository() = default;
 
     virtual std::optional<Message> createMessage(int64_t conversationId, int64_t senderId, const std::string& body, std::optional<int64_t> replyToId = std::nullopt) = 0;
+    virtual std::optional<Message> createMessageWithAttachment(int64_t conversationId, int64_t senderId, const std::string& body, std::optional<int64_t> replyToId = std::nullopt, std::optional<int64_t> attachmentId = std::nullopt) = 0;
     virtual std::vector<Message> getMessages(int64_t conversationId, int limit = 50, int64_t beforeId = 0, int64_t afterId = 0, int64_t currentUserId = 0) = 0;
     virtual std::optional<Message> getLastMessage(int64_t conversationId) = 0;
     virtual int getUnreadCount(int64_t conversationId, int64_t recipientUserId) = 0;
@@ -31,9 +32,12 @@ public:
     virtual std::vector<ReactionSummary> getMessageReactions(int64_t messageId, int64_t currentUserId = 0) = 0;
     virtual std::optional<Attachment> createAttachment(int64_t uploaderId, int64_t conversationId, const std::string& fileName, const std::string& filePath, int64_t fileSize, const std::string& mimeType) = 0;
     virtual bool linkAttachmentToMessage(int64_t attachmentId, int64_t messageId) = 0;
+    virtual bool linkAttachmentConditionally(int64_t attachmentId, int64_t messageId, int64_t conversationId = 0, int64_t uploaderId = 0) = 0;
     virtual std::optional<Attachment> getAttachmentById(int64_t attachmentId) = 0;
     virtual std::optional<Attachment> getMessageAttachment(int64_t messageId) = 0;
     virtual bool deleteAttachment(int64_t attachmentId) = 0;
+    virtual bool deleteAttachmentRecord(int64_t attachmentId) = 0;
+    virtual std::vector<std::string> getAttachmentPathsForConversation(int64_t conversationId) = 0;
     virtual int cleanupOrphanedAttachments(int maxAgeHours = 24) = 0;
     virtual UserPreferences getUserPreferences(int64_t userId) = 0;
     virtual bool updateUserPreferences(const UserPreferences& prefs) = 0;
@@ -45,6 +49,7 @@ public:
     ~SqliteMessageRepository() override = default;
 
     std::optional<Message> createMessage(int64_t conversationId, int64_t senderId, const std::string& body, std::optional<int64_t> replyToId = std::nullopt) override;
+    std::optional<Message> createMessageWithAttachment(int64_t conversationId, int64_t senderId, const std::string& body, std::optional<int64_t> replyToId = std::nullopt, std::optional<int64_t> attachmentId = std::nullopt) override;
     std::vector<Message> getMessages(int64_t conversationId, int limit = 50, int64_t beforeId = 0, int64_t afterId = 0, int64_t currentUserId = 0) override;
     std::optional<Message> getLastMessage(int64_t conversationId) override;
     int getUnreadCount(int64_t conversationId, int64_t recipientUserId) override;
@@ -62,9 +67,12 @@ public:
     std::vector<ReactionSummary> getMessageReactions(int64_t messageId, int64_t currentUserId = 0) override;
     std::optional<Attachment> createAttachment(int64_t uploaderId, int64_t conversationId, const std::string& fileName, const std::string& filePath, int64_t fileSize, const std::string& mimeType) override;
     bool linkAttachmentToMessage(int64_t attachmentId, int64_t messageId) override;
+    bool linkAttachmentConditionally(int64_t attachmentId, int64_t messageId, int64_t conversationId = 0, int64_t uploaderId = 0) override;
     std::optional<Attachment> getAttachmentById(int64_t attachmentId) override;
     std::optional<Attachment> getMessageAttachment(int64_t messageId) override;
     bool deleteAttachment(int64_t attachmentId) override;
+    bool deleteAttachmentRecord(int64_t attachmentId) override;
+    std::vector<std::string> getAttachmentPathsForConversation(int64_t conversationId) override;
     int cleanupOrphanedAttachments(int maxAgeHours = 24) override;
     UserPreferences getUserPreferences(int64_t userId) override;
     bool updateUserPreferences(const UserPreferences& prefs) override;

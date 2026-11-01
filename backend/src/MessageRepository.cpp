@@ -62,9 +62,6 @@ Message SqliteMessageRepository::extractMessage(Statement& stmt, int64_t current
     m.body = stmt.getColumnText(3);
     m.createdAt = stmt.getColumnText(4);
     std::string readAt = stmt.getColumnText(5);
-    if (!readAt.empty() && readAt != "suppressed") {
-        m.readAt = readAt;
-    }
     std::string editedAt = stmt.getColumnText(6);
     if (!editedAt.empty()) {
         m.editedAt = editedAt;
@@ -79,6 +76,14 @@ Message SqliteMessageRepository::extractMessage(Statement& stmt, int64_t current
 
     m.senderUsername = stmt.getColumnText(9);
     m.senderName = stmt.getColumnText(10);
+    int64_t readSuppressed = stmt.getColumnInt64(11);
+    m.readReceiptSuppressed = (readSuppressed != 0);
+
+    if (!readAt.empty() && readAt != "suppressed" && !m.readReceiptSuppressed) {
+        m.readAt = readAt;
+    } else {
+        m.readAt = std::nullopt;
+    }
 
     // Fetch reactions for this message
     const std::string rxSql = "SELECT mr.emoji, COUNT(mr.id) AS cnt, "
@@ -141,26 +146,53 @@ Message SqliteMessageRepository::extractMessage(Statement& stmt, int64_t current
 }
 
 std::optional<Message> SqliteMessageRepository::createMessage(int64_t conversationId, int64_t senderId, const std::string& body, std::optional<int64_t> replyToId) {
-    if (conversationId <= 0 || senderId <= 0 || body.empty()) {
+    return createMessageWithAttachment(conversationId, senderId, body, replyToId, std::nullopt);
+}
+
+std::optional<Message> SqliteMessageRepository::createMessageWithAttachment(int64_t conversationId,
+                                                                             int64_t senderId,
+                                                                             const std::string& body,
+                                                                             std::optional<int64_t> replyToId,
+                                                                             std::optional<int64_t> attachmentId) {
+    if (conversationId <= 0 || senderId <= 0 || (body.empty() && !attachmentId.has_value())) {
         return std::nullopt;
     }
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
+    Transaction tx(db_, true);
+    if (!tx.isStarted()) return std::nullopt;
 
-    // If replyToId provided, verify it belongs to the same conversation
+    // 1. If replyToId provided, verify it belongs to this conversation
     if (replyToId.has_value() && *replyToId > 0) {
         const std::string checkSql = "SELECT conversation_id FROM messages WHERE id = ? LIMIT 1;";
         Statement checkStmt(db_.getHandle(), checkSql);
         if (!checkStmt.isValid()) return std::nullopt;
         checkStmt.bindInt64(1, *replyToId);
         if (checkStmt.step() != SQLITE_ROW || checkStmt.getColumnInt64(0) != conversationId) {
-            return std::nullopt; // Cross-conversation reply rejection!
+            return std::nullopt; // Cross-conversation reply rejected
         }
     }
 
-    // 1. Insert message
-    const std::string insertSql = "INSERT INTO messages (conversation_id, sender_id, body, created_at, is_deleted, reply_to_id) "
-                                  "VALUES (?, ?, ?, datetime('now'), 0, ?);";
+    // 2. If attachmentId provided, verify ownership, conversation, and unlinked status
+    if (attachmentId.has_value() && *attachmentId > 0) {
+        const std::string checkAttSql = "SELECT uploader_id, conversation_id, message_id FROM attachments WHERE id = ? LIMIT 1;";
+        Statement checkAttStmt(db_.getHandle(), checkAttSql);
+        if (!checkAttStmt.isValid()) return std::nullopt;
+        checkAttStmt.bindInt64(1, *attachmentId);
+        if (checkAttStmt.step() != SQLITE_ROW) {
+            return std::nullopt;
+        }
+        int64_t uploaderId = checkAttStmt.getColumnInt64(0);
+        int64_t attConvId = checkAttStmt.getColumnInt64(1);
+        int64_t msgId = checkAttStmt.getColumnInt64(2);
+        if (uploaderId != senderId || attConvId != conversationId || msgId > 0) {
+            return std::nullopt; // Cross-user, wrong conversation, or already linked
+        }
+    }
+
+    // 3. Insert message
+    const std::string insertSql = "INSERT INTO messages (conversation_id, sender_id, body, created_at, read_receipt_suppressed, is_deleted, reply_to_id) "
+                                  "VALUES (?, ?, ?, datetime('now'), 0, 0, ?);";
     int64_t newMsgId = 0;
     {
         Statement stmt(db_.getHandle(), insertSql);
@@ -181,30 +213,50 @@ std::optional<Message> SqliteMessageRepository::createMessage(int64_t conversati
         newMsgId = sqlite3_last_insert_rowid(db_.getHandle());
     }
 
-    // 2. Update conversation updated_at
-    const std::string updateConvSql = "UPDATE conversations SET updated_at = datetime('now') WHERE id = ?;";
-    {
-        Statement stmt(db_.getHandle(), updateConvSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, conversationId);
-            stmt.step();
+    if (newMsgId <= 0) return std::nullopt;
+
+    // 4. Link attachment conditionally if provided
+    if (attachmentId.has_value() && *attachmentId > 0) {
+        const std::string linkSql = "UPDATE attachments SET message_id = ? WHERE id = ? AND message_id IS NULL AND conversation_id = ? AND uploader_id = ?;";
+        Statement linkStmt(db_.getHandle(), linkSql);
+        if (!linkStmt.isValid()) return std::nullopt;
+
+        linkStmt.bindInt64(1, newMsgId);
+        linkStmt.bindInt64(2, *attachmentId);
+        linkStmt.bindInt64(3, conversationId);
+        linkStmt.bindInt64(4, senderId);
+
+        if (linkStmt.step() != SQLITE_DONE || sqlite3_changes(db_.getHandle()) != 1) {
+            return std::nullopt; // Linking failed
         }
     }
 
-    // 3. Retrieve inserted message
+    // 5. Update conversation updated_at atomically
+    const std::string updateConvSql = "UPDATE conversations SET updated_at = datetime('now') WHERE id = ?;";
+    {
+        Statement stmt(db_.getHandle(), updateConvSql);
+        if (!stmt.isValid() || !stmt.bindInt64(1, conversationId) || stmt.step() != SQLITE_DONE) {
+            return std::nullopt;
+        }
+    }
+
+    // 6. Commit transaction
+    if (!tx.commit()) {
+        return std::nullopt;
+    }
+
+    // 7. Retrieve inserted message
     const std::string selectSql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                                  "u.username, u.full_name "
+                                  "u.username, u.full_name, m.read_receipt_suppressed "
                                   "FROM messages m "
                                   "LEFT JOIN users u ON m.sender_id = u.id "
                                   "WHERE m.id = ? LIMIT 1;";
-    {
-        Statement stmt(db_.getHandle(), selectSql);
-        if (!stmt.isValid()) return std::nullopt;
+    Statement stmt(db_.getHandle(), selectSql);
+    if (!stmt.isValid()) return std::nullopt;
 
-        stmt.bindInt64(1, newMsgId);
-        if (stmt.step() == SQLITE_ROW) {
-            return extractMessage(stmt, senderId);
-        }
+    stmt.bindInt64(1, newMsgId);
+    if (stmt.step() == SQLITE_ROW) {
+        return extractMessage(stmt, senderId);
     }
 
     return std::nullopt;
@@ -221,7 +273,7 @@ std::vector<Message> SqliteMessageRepository::getMessages(int64_t conversationId
 
     if (afterId > 0) {
         const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                                "u.username, u.full_name "
+                                "u.username, u.full_name, m.read_receipt_suppressed "
                                 "FROM messages m "
                                 "LEFT JOIN users u ON m.sender_id = u.id "
                                 "WHERE m.conversation_id = ? AND m.id > ? "
@@ -241,7 +293,7 @@ std::vector<Message> SqliteMessageRepository::getMessages(int64_t conversationId
 
     if (beforeId > 0) {
         const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                                "u.username, u.full_name "
+                                "u.username, u.full_name, m.read_receipt_suppressed "
                                 "FROM messages m "
                                 "LEFT JOIN users u ON m.sender_id = u.id "
                                 "WHERE m.conversation_id = ? AND m.id < ? "
@@ -262,7 +314,7 @@ std::vector<Message> SqliteMessageRepository::getMessages(int64_t conversationId
 
     // Default: latest 'limit' messages in ascending order
     const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                            "u.username, u.full_name "
+                            "u.username, u.full_name, m.read_receipt_suppressed "
                             "FROM messages m "
                             "LEFT JOIN users u ON m.sender_id = u.id "
                             "WHERE m.conversation_id = ? "
@@ -285,7 +337,7 @@ std::optional<Message> SqliteMessageRepository::getLastMessage(int64_t conversat
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
     const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                            "u.username, u.full_name "
+                            "u.username, u.full_name, m.read_receipt_suppressed "
                             "FROM messages m "
                             "LEFT JOIN users u ON m.sender_id = u.id "
                             "WHERE m.conversation_id = ? ORDER BY m.id DESC LIMIT 1;";
@@ -303,65 +355,33 @@ int SqliteMessageRepository::getUnreadCount(int64_t conversationId, int64_t reci
     if (conversationId <= 0 || recipientUserId <= 0) return 0;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
+    // Direct count of unread messages: sender is not recipient, and read_at is NULL
+    const std::string sql = "SELECT COUNT(id) FROM messages "
+                            "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return 0;
 
-    // Check if conversation is group
-    const std::string typeSql = "SELECT type FROM conversations WHERE id = ? LIMIT 1;";
-    Statement typeStmt(db_.getHandle(), typeSql);
-    std::string type = "direct";
-    if (typeStmt.isValid()) {
-        typeStmt.bindInt64(1, conversationId);
-        if (typeStmt.step() == SQLITE_ROW) {
-            type = typeStmt.getColumnText(0);
-        }
+    stmt.bindInt64(1, conversationId);
+    stmt.bindInt64(2, recipientUserId);
+
+    if (stmt.step() == SQLITE_ROW) {
+        return static_cast<int>(stmt.getColumnInt64(0));
     }
-
-    if (type == "group") {
-        const std::string groupSql = "SELECT COUNT(*) FROM messages "
-                                     "WHERE conversation_id = ? AND sender_id != ? "
-                                     "  AND id > (SELECT COALESCE(last_read_message_id, 0) FROM conversation_members WHERE conversation_id = ? AND user_id = ?);";
-        Statement stmt(db_.getHandle(), groupSql);
-        if (!stmt.isValid()) return 0;
-        stmt.bindInt64(1, conversationId);
-        stmt.bindInt64(2, recipientUserId);
-        stmt.bindInt64(3, conversationId);
-        stmt.bindInt64(4, recipientUserId);
-        if (stmt.step() == SQLITE_ROW) {
-            return static_cast<int>(stmt.getColumnInt64(0));
-        }
-        return 0;
-    } else {
-        const std::string sql = "SELECT COUNT(*) FROM messages "
-                                "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
-        Statement stmt(db_.getHandle(), sql);
-        if (!stmt.isValid()) return 0;
-
-        stmt.bindInt64(1, conversationId);
-        stmt.bindInt64(2, recipientUserId);
-
-        if (stmt.step() == SQLITE_ROW) {
-            return static_cast<int>(stmt.getColumnInt64(0));
-        }
-        return 0;
-    }
+    return 0;
 }
 
 int SqliteMessageRepository::markAsRead(int64_t conversationId, int64_t recipientUserId, bool suppressReceipt) {
     if (conversationId <= 0 || recipientUserId <= 0) return 0;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    std::string sql;
-    if (suppressReceipt) {
-        sql = "UPDATE messages SET read_at = 'suppressed' "
-              "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
-    } else {
-        sql = "UPDATE messages SET read_at = datetime('now') "
-              "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
-    }
+    const std::string sql = "UPDATE messages SET read_at = datetime('now'), read_receipt_suppressed = ? "
+                            "WHERE conversation_id = ? AND sender_id != ? AND read_at IS NULL;";
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return 0;
 
-    stmt.bindInt64(1, conversationId);
-    stmt.bindInt64(2, recipientUserId);
+    stmt.bindInt64(1, suppressReceipt ? 1 : 0);
+    stmt.bindInt64(2, conversationId);
+    stmt.bindInt64(3, recipientUserId);
 
     if (stmt.step() == SQLITE_DONE) {
         return sqlite3_changes(db_.getHandle());
@@ -374,7 +394,7 @@ std::optional<Message> SqliteMessageRepository::getMessageById(int64_t messageId
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
     const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                            "u.username, u.full_name "
+                            "u.username, u.full_name, m.read_receipt_suppressed "
                             "FROM messages m "
                             "LEFT JOIN users u ON m.sender_id = u.id "
                             "WHERE m.id = ? LIMIT 1;";
@@ -399,7 +419,7 @@ bool SqliteMessageRepository::updateMessageBody(int64_t messageId, const std::st
     stmt.bindText(1, newBody);
     stmt.bindInt64(2, messageId);
 
-    return stmt.step() == SQLITE_DONE;
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 bool SqliteMessageRepository::deleteMessage(int64_t messageId) {
@@ -412,7 +432,7 @@ bool SqliteMessageRepository::deleteMessage(int64_t messageId) {
 
     stmt.bindInt64(1, messageId);
 
-    return stmt.step() == SQLITE_DONE;
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 std::vector<Message> SqliteMessageRepository::searchMessages(int64_t conversationId, const std::string& query, int limit, int64_t currentUserId) {
@@ -423,7 +443,7 @@ std::vector<Message> SqliteMessageRepository::searchMessages(int64_t conversatio
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
     const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                            "u.username, u.full_name "
+                            "u.username, u.full_name, m.read_receipt_suppressed "
                             "FROM messages m "
                             "LEFT JOIN users u ON m.sender_id = u.id "
                             "WHERE m.conversation_id = ? AND m.body LIKE ? ESCAPE '\\' AND m.is_deleted = 0 "
@@ -449,7 +469,7 @@ std::vector<Message> SqliteMessageRepository::searchAllUserMessages(int64_t user
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
     const std::string sql = "SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.edited_at, m.is_deleted, m.reply_to_id, "
-                            "u.username, u.full_name "
+                            "u.username, u.full_name, m.read_receipt_suppressed "
                             "FROM messages m "
                             "JOIN conversations c ON m.conversation_id = c.id "
                             "LEFT JOIN users u ON m.sender_id = u.id "
@@ -477,45 +497,40 @@ std::vector<Message> SqliteMessageRepository::searchAllUserMessages(int64_t user
 
 // Phase 4: Reactions
 std::pair<bool, std::string> SqliteMessageRepository::toggleReaction(int64_t messageId, int64_t userId, const std::string& emoji) {
-    if (messageId <= 0 || userId <= 0 || emoji.empty()) {
-        return {false, "invalid_params"};
-    }
+    if (messageId <= 0 || userId <= 0 || emoji.empty()) return {false, "invalid_params"};
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
 
-    // Check if reaction already exists
+    // 1. Check if user already reacted with this emoji
     const std::string checkSql = "SELECT id FROM message_reactions WHERE message_id = ? AND user_id = ? AND emoji = ? LIMIT 1;";
-    int64_t existingId = 0;
-    {
-        Statement stmt(db_.getHandle(), checkSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, messageId);
-            stmt.bindInt64(2, userId);
-            stmt.bindText(3, emoji);
-            if (stmt.step() == SQLITE_ROW) {
-                existingId = stmt.getColumnInt64(0);
-            }
-        }
-    }
+    Statement checkStmt(db_.getHandle(), checkSql);
+    if (!checkStmt.isValid()) return {false, "db_error"};
 
-    if (existingId > 0) {
+    checkStmt.bindInt64(1, messageId);
+    checkStmt.bindInt64(2, userId);
+    checkStmt.bindText(3, emoji);
+
+    if (checkStmt.step() == SQLITE_ROW) {
+        // Already reacted: toggle off by deleting
+        int64_t reactionId = checkStmt.getColumnInt64(0);
         const std::string delSql = "DELETE FROM message_reactions WHERE id = ?;";
-        Statement stmt(db_.getHandle(), delSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, existingId);
-            if (stmt.step() == SQLITE_DONE) {
+        Statement delStmt(db_.getHandle(), delSql);
+        if (delStmt.isValid()) {
+            delStmt.bindInt64(1, reactionId);
+            if (delStmt.step() == SQLITE_DONE) {
                 return {true, "removed"};
             }
         }
     } else {
-        const std::string insSql = "INSERT OR IGNORE INTO message_reactions (message_id, user_id, emoji, created_at) "
+        // Not reacted: toggle on by inserting
+        const std::string insSql = "INSERT INTO message_reactions (message_id, user_id, emoji, created_at) "
                                    "VALUES (?, ?, ?, datetime('now'));";
-        Statement stmt(db_.getHandle(), insSql);
-        if (stmt.isValid()) {
-            stmt.bindInt64(1, messageId);
-            stmt.bindInt64(2, userId);
-            stmt.bindText(3, emoji);
-            if (stmt.step() == SQLITE_DONE) {
+        Statement insStmt(db_.getHandle(), insSql);
+        if (insStmt.isValid()) {
+            insStmt.bindInt64(1, messageId);
+            insStmt.bindInt64(2, userId);
+            insStmt.bindText(3, emoji);
+            if (insStmt.step() == SQLITE_DONE) {
                 return {true, "added"};
             }
         }
@@ -595,16 +610,35 @@ std::optional<Attachment> SqliteMessageRepository::createAttachment(int64_t uplo
 }
 
 bool SqliteMessageRepository::linkAttachmentToMessage(int64_t attachmentId, int64_t messageId) {
+    return linkAttachmentConditionally(attachmentId, messageId, 0, 0);
+}
+
+bool SqliteMessageRepository::linkAttachmentConditionally(int64_t attachmentId, int64_t messageId, int64_t conversationId, int64_t uploaderId) {
     if (attachmentId <= 0 || messageId <= 0) return false;
 
     std::lock_guard<std::mutex> lock(db_.getMutex());
-    const std::string sql = "UPDATE attachments SET message_id = ? WHERE id = ?;";
+    std::string sql = "UPDATE attachments SET message_id = ? WHERE id = ? AND message_id IS NULL";
+    if (conversationId > 0) sql += " AND conversation_id = ?";
+    if (uploaderId > 0) sql += " AND uploader_id = ?";
+    sql += ";";
+
     Statement stmt(db_.getHandle(), sql);
     if (!stmt.isValid()) return false;
 
     stmt.bindInt64(1, messageId);
     stmt.bindInt64(2, attachmentId);
-    return stmt.step() == SQLITE_DONE;
+    int paramIdx = 3;
+    if (conversationId > 0) {
+        stmt.bindInt64(paramIdx++, conversationId);
+    }
+    if (uploaderId > 0) {
+        stmt.bindInt64(paramIdx++, uploaderId);
+    }
+
+    if (stmt.step() == SQLITE_DONE) {
+        return sqlite3_changes(db_.getHandle()) > 0;
+    }
+    return false;
 }
 
 std::optional<Attachment> SqliteMessageRepository::getAttachmentById(int64_t attachmentId) {
@@ -674,6 +708,36 @@ bool SqliteMessageRepository::deleteAttachment(int64_t attachmentId) {
     return false;
 }
 
+bool SqliteMessageRepository::deleteAttachmentRecord(int64_t attachmentId) {
+    if (attachmentId <= 0) return false;
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "DELETE FROM attachments WHERE id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return false;
+    stmt.bindInt64(1, attachmentId);
+    if (stmt.step() == SQLITE_DONE) {
+        return sqlite3_changes(db_.getHandle()) > 0;
+    }
+    return false;
+}
+
+std::vector<std::string> SqliteMessageRepository::getAttachmentPathsForConversation(int64_t conversationId) {
+    std::vector<std::string> paths;
+    if (conversationId <= 0) return paths;
+
+    std::lock_guard<std::mutex> lock(db_.getMutex());
+    const std::string sql = "SELECT file_path FROM attachments WHERE conversation_id = ?;";
+    Statement stmt(db_.getHandle(), sql);
+    if (!stmt.isValid()) return paths;
+
+    stmt.bindInt64(1, conversationId);
+    while (stmt.step() == SQLITE_ROW) {
+        std::string p = stmt.getColumnText(0);
+        if (!p.empty()) paths.push_back(p);
+    }
+    return paths;
+}
+
 int SqliteMessageRepository::cleanupOrphanedAttachments(int maxAgeHours) {
     std::vector<std::pair<int64_t, std::string>> toDelete;
     {
@@ -698,7 +762,9 @@ int SqliteMessageRepository::cleanupOrphanedAttachments(int maxAgeHours) {
                 if (fs::exists(path)) {
                     fs::remove(path);
                 }
-            } catch (...) {}
+            } catch (const std::exception& e) {
+                std::cerr << "[Attachment] Failed to remove orphaned physical file " << path << ": " << e.what() << std::endl;
+            }
             count++;
         }
     }
@@ -727,9 +793,9 @@ UserPreferences SqliteMessageRepository::getUserPreferences(int64_t userId) {
         }
     }
 
-    // Insert default preferences if not yet existing
+    // Insert default preferences if not yet existing (desktop_notifications default is 0/false to match Models.hpp)
     const std::string insSql = "INSERT OR IGNORE INTO user_preferences (user_id, theme, sound_notifications, desktop_notifications, read_receipts_enabled, updated_at) "
-                               "VALUES (?, 'system', 1, 1, 1, datetime('now'));";
+                               "VALUES (?, 'system', 1, 0, 1, datetime('now'));";
     Statement insStmt(db_.getHandle(), insSql);
     if (insStmt.isValid()) {
         insStmt.bindInt64(1, userId);
@@ -758,7 +824,7 @@ bool SqliteMessageRepository::updateUserPreferences(const UserPreferences& prefs
     stmt.bindInt64(3, prefs.soundNotifications ? 1 : 0);
     stmt.bindInt64(4, prefs.desktopNotifications ? 1 : 0);
     stmt.bindInt64(5, prefs.readReceiptsEnabled ? 1 : 0);
-    return stmt.step() == SQLITE_DONE;
+    return stmt.step() == SQLITE_DONE && sqlite3_changes(db_.getHandle()) > 0;
 }
 
 } // namespace connectx

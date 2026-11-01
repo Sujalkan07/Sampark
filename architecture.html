@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 3.2.0">
   <meta name="archify-reader-contract" content="declared-wide-v1">
-  <title>Sampark C++ Chat Architecture &amp; Message Lifecycle Diagram</title>
+  <title>Sampark Architecture: Frontend, Backend &amp; Database SQL Diagram</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -5194,19 +5194,19 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
            data-preset-badge-blueprint="BLUEPRINT / REV 01"
            data-preset-badge-editorial="EDITORIAL / FIELD NOTE">
         <div class="pulse-dot"></div>
-        <h1>Sampark C++ Chat Architecture &amp; Message Lifecycle</h1>
+        <h1>Sampark Architecture: Frontend, Backend &amp; Database SQL</h1>
       </div>
-      <p class="subtitle">End-to-end trace from React DOM composer to C++ SQLite WAL and 2.5s polling delivery</p>
+      <p class="subtitle">Explainable 3-Tier Architecture &amp; Request Lifecycle</p>
     </div>
 
-
+    <script id="archify-source-evidence-data" type="application/json">{"schemaVersion":1,"verified":true,"repository":{"url":"https://github.com/Sujalkan07/Sampark","revision":"156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48","shortRevision":"156e1bb","label":"Sujalkan07/Sampark","href":"https://github.com/Sujalkan07/Sampark/tree/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48"},"referenceCount":15,"nodes":{"client_ui":[{"path":"frontend/src/components/ChatPanel.jsx","line":24,"endLine":85,"label":"ChatPanel UI \u0026 Message Composer","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/frontend/src/components/ChatPanel.jsx#L24-L85"},{"path":"frontend/src/App.jsx","line":17,"endLine":58,"label":"Router \u0026 Protected Contexts","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/frontend/src/App.jsx#L17-L58"}],"api_client":[{"path":"frontend/src/api/client.js","line":12,"endLine":60,"label":"Unified Fetch API Wrapper","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/frontend/src/api/client.js#L12-L60"},{"path":"frontend/src/context/AuthContext.jsx","line":1,"endLine":40,"label":"Global Session State","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/frontend/src/context/AuthContext.jsx#L1-L40"}],"server_router":[{"path":"backend/src/Server.cpp","line":127,"endLine":162,"label":"CORS Post-Routing \u0026 Routes","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/Server.cpp#L127-L162"},{"path":"backend/src/main.cpp","line":1,"endLine":45,"label":"Server Main Entry","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/main.cpp#L1-L45"}],"auth_gate":[{"path":"backend/src/AuthService.cpp","line":35,"endLine":80,"label":"PBKDF2 Hashing \u0026 256-bit Tokens","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/AuthService.cpp#L35-L80"},{"path":"backend/src/AuthController.cpp","line":1,"endLine":60,"label":"Session Cookie Verification","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/AuthController.cpp#L1-L60"}],"messaging_service":[{"path":"backend/src/MessagingService.cpp","line":1,"endLine":60,"label":"1-on-1 \u0026 Group Chat Logic","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/MessagingService.cpp#L1-L60"},{"path":"backend/src/Validator.cpp","line":28,"endLine":75,"label":"MIME Magic Bytes Validation","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/Validator.cpp#L28-L75"}],"sqlite_wal":[{"path":"backend/src/Database.cpp","line":14,"endLine":63,"label":"WAL Mode \u0026 Mutex Lock","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/Database.cpp#L14-L63"},{"path":"backend/src/Database.cpp","line":65,"endLine":120,"label":"Normalized SQL Tables","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/Database.cpp#L65-L120"}],"media_store":[{"path":"backend/src/MessageRepository.cpp","line":1,"endLine":40,"label":"Attachment Disk Persistence","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/backend/src/MessageRepository.cpp#L1-L40"}],"sync_poll":[{"path":"frontend/src/components/ChatPanel.jsx","line":71,"endLine":85,"label":"2.5s Polling Interval","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/frontend/src/components/ChatPanel.jsx#L71-L85"},{"path":"frontend/src/utils/sound.js","line":1,"endLine":25,"label":"Web Audio Chime","href":"https://github.com/Sujalkan07/Sampark/blob/156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48/frontend/src/utils/sound.js#L1-L25"}]}}</script>
     <script id="archify-i18n-data" type="application/json">{"locale":"en","messages":{"viewer.kind.frontend":"Frontend","viewer.kind.backend":"Backend","viewer.kind.database":"Database","viewer.kind.cloud":"Cloud","viewer.kind.security":"Security","viewer.kind.messagebus":"Message bus","viewer.kind.external":"External","viewer.kind.neutral":"Neutral","viewer.kind.node":"Node","viewer.kind.start":"Start","viewer.kind.active":"Active","viewer.kind.waiting":"Waiting","viewer.kind.decision":"Decision","viewer.kind.success":"Success","viewer.kind.failure":"Failure","viewer.toolbar.actions":"Diagram actions","viewer.theme.toggle.title":"Toggle theme (T)","viewer.theme.toggle":"Toggle color theme","viewer.theme.dark":"Dark","viewer.theme.light":"Light","viewer.preset.choose.title":"Choose visual style (S cycles)","viewer.preset.choose":"Choose visual style","viewer.preset.style":"Style","viewer.preset.menu":"Visual style","viewer.preset.identity":"Visual identity","viewer.preset.cycles":"to cycle","viewer.preset.classic":"Classic","viewer.preset.classic.short":"Classic","viewer.preset.classic.hint":"Stable technical default","viewer.preset.flow":"Signal Flow","viewer.preset.flow.short":"Flow","viewer.preset.flow.hint":"Motion-forward presentation","viewer.preset.blueprint":"Blueprint","viewer.preset.blueprint.hint":"Engineering review","viewer.preset.editorial":"Editorial","viewer.preset.editorial.hint":"Publication and launch notes","viewer.preset.badge.signalFlow":"SIGNAL FLOW","viewer.preset.badge.blueprint":"BLUEPRINT / REV 01","viewer.preset.badge.editorial":"EDITORIAL / FIELD NOTE","viewer.preset.badge.editorialPlate":"ARCHIFY / PLATE 04","viewer.preset.current":"Visual style: {style}. Choose visual style","viewer.motion.live":"Live","viewer.motion.still":"Still","viewer.motion.pause":"Pause motion","viewer.motion.resume":"Resume motion","viewer.motion.reduced":"Motion paused by reduced-motion preference","viewer.motion.hidden":"Motion paused while this page is hidden","viewer.motion.yielding":"Pause motion; currently yielding to {owner}","viewer.motion.yielding.title":"Live preview enabled · yielding to {owner}","viewer.owner.route":"Route Probe","viewer.owner.lens":"Semantic Lens","viewer.owner.relationship":"Relationship Preview","viewer.owner.intent":"Intent Trace","viewer.owner.focus":"semantic focus","viewer.owner.legend":"legend preview","viewer.owner.reader":"reader interaction","viewer.present.enter":"Enter presentation stage","viewer.present.enter.title":"Presentation stage (F)","viewer.present.exit":"Exit presentation stage","viewer.present.exit.title":"Exit presentation stage (F or Escape)","viewer.present.present":"Present","viewer.present.exit.label":"Exit","viewer.export.button":"Export","viewer.export.button.title":"Export diagram (E)","viewer.export.diagram":"Export diagram","viewer.export.menu":"Export","viewer.export.subtitle":"Portable, clean outputs","viewer.export.share":"Share","viewer.export.shareCard":"Share Card","viewer.export.routeShareCard":"Route Share Card","viewer.export.reachShareCard":"Reach Share Card","viewer.export.copyDiagram":"Copy diagram","viewer.export.clipboardPng":"PNG to clipboard","viewer.export.raster":"Raster images","viewer.export.image":"Image","viewer.export.lossless":"Lossless image","viewer.export.compact":"Compact image","viewer.export.modern":"Modern image","viewer.export.vectorMotion":"Vector and motion","viewer.export.vectorMotion.heading":"Vector \u0026 motion","viewer.export.editable":"Editable vector","viewer.export.svg.auto":"SVG · Auto","viewer.export.svg.auto.hint":"Matches host theme","viewer.export.svg.light":"SVG · Light","viewer.export.svg.light.hint":"Always light","viewer.export.svg.dark":"SVG · Dark","viewer.export.svg.dark.hint":"Always dark","viewer.export.motion6s":"6s motion","viewer.export.unsupported":"Not supported by this browser","viewer.export.clipboardUnsupported":"Clipboard image write not supported by this browser","viewer.export.clipboardUnsupported.short":"Clipboard image write not supported in this browser.","viewer.export.motionUnavailable":"Motion capture unavailable in this browser","viewer.export.webmUnavailable":"WebM unavailable in this browser","viewer.export.failed":"Export failed: {message}","viewer.export.unknownVariant":"Unknown Share Card variant: {variant}","viewer.export.routeRequired":"Trace a route before exporting a Route Share Card","viewer.export.reachRequired":"Trace authored reach before exporting a Reach Share Card","viewer.export.unknown":"unknown","viewer.export.routeFailed":"Route Share Card export failed: {message}","viewer.export.reachFailed":"Reach Share Card export failed: {message}","viewer.export.copyFailed":"Copy failed: {message}","viewer.export.copiedPng":"Copied PNG to clipboard","viewer.export.downloadedRoute":"Downloaded Route Share Card","viewer.export.downloadedReach":"Downloaded Reach Share Card","viewer.export.downloadedWebm":"Downloaded WebM","viewer.export.recording":"Recording 6 seconds of motion…","viewer.export.card.routeSummary.one":"Path: {source} → {target} · {count} step","viewer.export.card.routeSummary.other":"Path: {source} → {target} · {count} steps","viewer.export.card.reachSummary":"Authored {direction} from {origin} · {nodes} · {links} · max {hops}","viewer.export.card.node.one":"{count} node","viewer.export.card.node.other":"{count} nodes","viewer.export.card.link.one":"{count} link","viewer.export.card.link.other":"{count} links","viewer.export.card.hop.one":"{count} hop","viewer.export.card.hop.other":"{count} hops","viewer.export.card.routeBadge":"ARCHIFY · ROUTE · {hops}","viewer.export.card.reachBadge":"ARCHIFY · {direction} REACH","viewer.export.direction.upstream":"Upstream","viewer.export.direction.downstream":"Downstream","viewer.export.error.canvasUnavailable":"Canvas unavailable for {label}","viewer.export.error.contextUnavailable":"2D canvas context unavailable for {label}","viewer.export.error.toBlobUnavailable":"canvas.toBlob unavailable for {label}","viewer.export.error.toBlobNull":"canvas.toBlob returned no data for {label}","viewer.export.error.variantsCombined":"Share Card variants cannot be combined","viewer.export.error.viewerState":"Share Card export could not remove temporary viewer state","viewer.export.error.routeState":"Route Card export could not preserve the resolved route safely","viewer.export.error.reachState":"Reach Card export could not preserve authored reach safely","viewer.export.error.webmRequirements":"WebM motion export requires a trace animation and browser MediaRecorder support","viewer.export.error.mediaRecorder":"MediaRecorder failed","viewer.export.error.emptyWebm":"MediaRecorder produced an empty WebM","viewer.export.error.webmBackground":"SVG background could not be loaded for WebM export","viewer.guide.title":"Explore this system","viewer.focus.selectedNodes":"{count} selected nodes","viewer.guide.eyebrow":"Diagram guide","viewer.guide.close":"Close diagram guide","viewer.guide.inspecting":"Inspecting compiled semantics","viewer.guide.actions":"Diagram exploration actions","viewer.guide.find":"Find any node","viewer.guide.find.hint":"Search labels, responsibilities, kinds, and stable IDs.","viewer.guide.route":"Trace a route","viewer.guide.route.aria":"Trace a directed route","viewer.guide.route.hint":"Ask how two semantic nodes connect in authored direction.","viewer.guide.map":"See the whole system","viewer.guide.map.hint":"Open Semantic Radar with a live viewport and stable nodes.","viewer.guide.lens":"Compare semantic kinds","viewer.guide.lens.hint":"Count roles, reveal their traffic, and compare direct authored links.","viewer.guide.present":"Enter Presentation Stage","viewer.guide.present.hint":"Give the live diagram the viewport without changing export.","viewer.guide.shortcuts":"Additional keyboard shortcuts","viewer.guide.shortcut.export":"Export","viewer.guide.shortcut.theme":"Theme","viewer.guide.shortcut.style":"Style","viewer.guide.shortcut.reset":"Reset","viewer.guide.shortcut.zoomIn":"Zoom in","viewer.guide.shortcut.zoomOut":"Zoom out","viewer.guide.shortcut.close":"Close","viewer.guide.credit":"Find Archify useful? A star on GitHub helps","viewer.guide.star":"Star","viewer.guide.facts":"{nodes} · {relationships}","viewer.guide.fact.node.one":"{count} semantic node","viewer.guide.fact.node.other":"{count} semantic nodes","viewer.guide.fact.relationship.one":"{count} relationship","viewer.guide.fact.relationship.other":"{count} relationships","viewer.guide.open":"Open diagram guide","viewer.finder.title":"Find a node","viewer.finder.close":"Close node finder","viewer.finder.placeholder":"Search labels or IDs","viewer.finder.search":"Search diagram nodes","viewer.finder.results":"Diagram nodes","viewer.finder.empty":"No matching nodes","viewer.finder.result.focus":"Focus {label}","viewer.finder.result.routeStart":"Choose {label} as route start","viewer.finder.result.routeTarget":"Choose {label} as route destination, {links}","viewer.finder.status.empty":"No matching nodes","viewer.finder.status.count.one":"{count} matching node","viewer.finder.status.count.other":"{count} matching nodes","viewer.finder.noun.nodes":"nodes","viewer.finder.link.one":"{count} link","viewer.finder.link.other":"{count} links","viewer.finder.result.focus.one":"Focus {label}, {count} related connection","viewer.finder.result.focus.other":"Focus {label}, {count} related connections","viewer.finder.status.filtered":"{visible} of {available} {noun}","viewer.finder.status.all":"{available} {noun}","viewer.passport.eyebrow":"Semantic passport","viewer.passport.metadata":"Node metadata","viewer.passport.evidence":"Verified source evidence","viewer.passport.verified":"Verified source","viewer.passport.verificationScope":"Verified against local Git at the pinned revision. Remote access has not been checked.","viewer.passport.reach":"Authored reach","viewer.passport.reach.trace":"Trace authored reachability","viewer.passport.upstream":"Upstream","viewer.passport.downstream":"Downstream","viewer.passport.upstream.trace":"Trace upstream authored reachability","viewer.passport.downstream.trace":"Trace downstream authored reachability","viewer.passport.close":"Close semantic passport","viewer.passport.move":"Move semantic passport. Drag, use arrow keys, or press Home to reset.","viewer.passport.copy":"Copy link","viewer.passport.copy.focus":"Copy link to focused node","viewer.passport.relations":"Relations","viewer.passport.relations.show":"Show connected relationships","viewer.passport.relations.hide":"Hide connected relationships","viewer.passport.relations.list":"Connected relationships","viewer.passport.copyRelation":"Copy relation","viewer.passport.copyNode":"Copy node","viewer.passport.copyPinned":"Copy link to pinned relationship","viewer.passport.copySource":"Copy link to source node","viewer.passport.copy.focused.success":"Focused node link copied","viewer.passport.copy.pinned.success":"Pinned relationship link copied","viewer.passport.copy.focused.failed":"Could not copy focused node link","viewer.passport.copy.pinned.failed":"Could not copy pinned relationship link","viewer.passport.relationship.none":"No connected relationships","viewer.passport.relationship.count.one":"{count} relation","viewer.passport.relationship.count.other":"{count} relations","viewer.passport.relationship.show.one":"Show {count} connected relationship","viewer.passport.relationship.show.other":"Show {count} connected relationships","viewer.passport.relationship.summary":"{out} outgoing · {in} incoming{loops}","viewer.passport.relationship.loops":" · {count} loop","viewer.passport.relationship.explorer":"Direct relationship explorer","viewer.passport.relationship.help":"Use arrow keys to explore relationships. Press Enter or Space to pin details; Escape clears.","viewer.passport.relationship.loopsBack":"loops back","viewer.passport.relationship.connectsTo":"connects to","viewer.passport.relationship.connectsFrom":"connects from","viewer.passport.relationship.pinned":"Pinned relationship · {from} → {to} · {label}","viewer.passport.relationship.inspect":"Inspect relationship {index} of {total}: {from} to {to}, {label}. Press Enter for details.","viewer.passport.relationship.group.out":"Outgoing","viewer.passport.relationship.group.in":"Incoming","viewer.passport.relationship.group.loop":"Self loops","viewer.passport.relationship.row":"{group}: {relationship}, {neighbor}","viewer.passport.relationship.direction.out":"OUT →","viewer.passport.relationship.direction.in":"← IN","viewer.passport.relationship.direction.loop":"LOOP","viewer.passport.sourceCount.one":"{count} verified source reference","viewer.passport.sourceCount.other":"{count} verified source references","viewer.passport.repository.open":"Open verified repository revision {revision}","viewer.passport.source.open":"Open verified source {path} at revision {revision}","viewer.passport.source.openLink":"Open ↗","viewer.passport.reach.upstream.one":"Trace {count} upstream authored node","viewer.passport.reach.upstream.other":"Trace {count} upstream authored nodes","viewer.passport.reach.downstream.one":"Trace {count} downstream authored node","viewer.passport.reach.downstream.other":"Trace {count} downstream authored nodes","viewer.passport.reach.noUpstream":"No upstream authored nodes","viewer.passport.reach.noDownstream":"No downstream authored nodes","viewer.passport.reach.status":"{direction} · {nodes} nodes · {links} links · max {hops} hops","viewer.route.eyebrow":"Path","viewer.route.start":"Click where the path starts","viewer.route.start.find":"Find start","viewer.route.start.find.aria":"Find a route start","viewer.route.copy":"Copy link","viewer.route.copy.aria":"Copy link to traced route","viewer.route.clear":"Clear","viewer.route.clear.aria":"Clear route probe","viewer.route.traced":"Path","viewer.route.pickTwo":"Click two nodes on the diagram","viewer.route.pickOne":"Click a node on the diagram","viewer.route.controls":"Route journey controls","viewer.route.previous":"Previous route position","viewer.route.play":"Play route journey","viewer.route.pause":"Pause route journey","viewer.route.replay":"Replay route journey","viewer.route.next":"Next route position","viewer.route.journey":"Journey","viewer.route.pause.label":"Pause","viewer.route.replay.label":"Replay","viewer.route.overview":"Overview","viewer.route.overview.aria":"Show complete route overview","viewer.route.instructions":"Click a start, then an end. Paths follow the arrows.","viewer.route.destination":"Where does the path from {label} end?","viewer.route.destination.find":"Find target","viewer.route.destination.find.aria":"Find a reachable route destination","viewer.route.differentDestination":"Choose a different destination","viewer.route.distinct":"Pick two different nodes.","viewer.route.unreachable":"Cannot reach {label} from here","viewer.route.unreachable.detail":"{target} cannot be reached from {source} along the arrows. Pick a highlighted node.","viewer.route.start.instructions":"Next, pick the end. Only nodes you can reach will light up.","viewer.route.copy.success":"Traced route link copied","viewer.route.copy.failed":"Could not copy traced route link","viewer.route.position":"Route position {index} of {total}: {label}","viewer.route.step":"Step {index} of {total} · {phase} · {label}","viewer.route.motionRequired":"Automatic journey requires Live motion","viewer.route.trigger.clear":"Clear traced route","viewer.route.overview.status":"{nodes} · {hops} · shortest path","viewer.route.overview.node.one":"{count} node","viewer.route.overview.node.other":"{count} nodes","viewer.route.overview.hop.one":"{count} step","viewer.route.overview.hop.other":"{count} steps","viewer.route.phase.playing":"Playing","viewer.route.phase.complete":"Complete","viewer.route.phase.inspecting":"Inspecting","viewer.route.destination.count.one":"{count} reachable node is highlighted. Click it.","viewer.route.destination.count.other":"{count} reachable nodes are highlighted. Click one.","viewer.route.noOutgoing":"No arrows lead out of this node. Clear it and pick another start.","viewer.route.result.title":"{source} to {target}","viewer.route.finder.source.title":"Choose route start","viewer.route.finder.source.placeholder":"Search route sources","viewer.route.finder.source.empty":"No matching route sources","viewer.route.finder.source.results":"Nodes that can start a route","viewer.route.finder.source.noun":"route sources","viewer.route.finder.source.badge":"start","viewer.route.finder.target.title":"Destination from {label}","viewer.route.finder.target.placeholder":"Search reachable destinations","viewer.route.finder.target.empty":"No matching reachable destinations","viewer.route.finder.target.results":"Reachable route destinations","viewer.route.finder.target.noun":"reachable destinations","viewer.route.hop.one":"{count} hop","viewer.route.hop.other":"{count} hops","viewer.lens.eyebrow":"Semantic lens","viewer.lens.title":"Compare system roles","viewer.lens.close":"Close semantic lens","viewer.lens.instruction":"Choose up to two semantic kinds. One reveals its real traffic; two compare only direct authored relationships.","viewer.lens.kinds":"Semantic kinds","viewer.lens.choose":"Choose a kind to inspect its nodes and touching relationships.","viewer.lens.copy":"Copy link to semantic lens","viewer.lens.clear":"Clear semantic lens","viewer.lens.open":"Open semantic lens","viewer.lens.openActive":"Open active semantic lens","viewer.lens.legend":"Semantic legend","viewer.lens.legend.inspect.one":"Inspect {label}, {count} node","viewer.lens.legend.inspect.other":"Inspect {label}, {count} nodes","viewer.lens.kind.count.one":"{label}, {count} node","viewer.lens.kind.count.other":"{label}, {count} nodes","viewer.lens.compare.one":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationship","viewer.lens.compare.other":"{first} → {second}: {forward} · {second} → {first}: {reverse} · {count} direct relationships","viewer.lens.single":"{nodes} · {relationships} · connected peers remain visible","viewer.lens.node.one":"{count} {label} node","viewer.lens.node.other":"{count} {label} nodes","viewer.lens.relationship.one":"{count} touching relationship","viewer.lens.relationship.other":"{count} touching relationships","viewer.radar.title":"Semantic radar","viewer.radar.building":"Building overview","viewer.radar.openFull":"Open full semantic radar","viewer.radar.open":"Open radar","viewer.radar.close":"Close semantic radar","viewer.radar.surface":"Diagram overview. Click a node to focus it, or use arrow keys to pan.","viewer.radar.click":"Click node","viewer.radar.drag":"Drag to pan","viewer.radar.space":"Semantic radar needs more MAP space.","viewer.radar.nodes":"Semantic diagram radar nodes","viewer.radar.focus":"Focus {label} from Semantic Radar","viewer.radar.status":"{count} nodes · {viewport}","viewer.radar.fullMap":"{count} nodes · full map","viewer.radar.compacted":"Radar compacted to avoid covering the Semantic Passport or MAP controls.","viewer.radar.cancelWaiting":"Cancel semantic radar waiting for more MAP space","viewer.radar.needsSpace":"Semantic radar needs more visible MAP space","viewer.radar.viewport.full":"full map","viewer.radar.viewport.width":"{percent}% width","viewer.radar.viewport.scale":"{percent}% viewport","viewer.nav.controls":"Diagram view controls","viewer.nav.route":"Trace a directed route","viewer.nav.route.title":"Trace route (R)","viewer.nav.route.short":"ROUTE","viewer.nav.radar":"Open semantic radar","viewer.nav.radar.title":"Semantic radar (M)","viewer.nav.radar.short":"MAP","viewer.nav.lens":"Open semantic lens","viewer.nav.lens.title":"Semantic lens (L)","viewer.nav.lens.short":"LENS","viewer.nav.find":"Find a node","viewer.nav.find.title":"Find a node (/)","viewer.outline.title":"Node index","viewer.rail.show":"Notes \u0026 index","viewer.rail.controls":"Side panel","viewer.rail.collapse":"Collapse side panel","viewer.rail.bottom":"Move panel below the diagram","viewer.rail.right":"Move panel beside the diagram","viewer.nav.guide":"Open diagram guide","viewer.nav.guide.title":"Diagram guide (?)","viewer.nav.zoomOut":"Zoom out","viewer.nav.zoomOut.title":"Zoom out (-)","viewer.nav.reset":"Reset diagram view","viewer.nav.reset.title":"Reset view (0)","viewer.nav.read":"READ","viewer.nav.zoomIn":"Zoom in","viewer.nav.zoomIn.title":"Zoom in (+)","viewer.nav.camera":"{hint}. Reset diagram view","viewer.nav.camera.title":"{semantic}{hint} · reset view (0)","viewer.nav.camera.semantic":"Semantic camera active · ","viewer.nav.level.map":"MAP","viewer.nav.level.read":"READ","viewer.nav.level.full":"FULL","viewer.nav.level.auto":"AUTO","viewer.nav.detail.map":"Zoom in to reveal relationship labels and node context","viewer.nav.detail.read":"Zoom in again to reveal tags and annotations","viewer.nav.detail.full":"Full diagram detail","viewer.intent.summary":"{label}. {out} outgoing, {in} incoming{loops}. {total} connections. Press Enter for details.","viewer.intent.loops":", {count} self loop","viewer.common.copied":"Copied","viewer.common.copyFailed":"Copy failed","viewer.common.copyLink":"Copy link","viewer.common.clear":"Clear","viewer.common.close":"Close"}}</script>
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / PLATE 04">
-      <svg viewBox="0 0 1237 1292" data-reader-fit="width-first" data-layout-contract="readable-v2" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase" data-node-ui="">
-        <title id="archify-diagram-title">Sampark C++ Chat Architecture &amp; Message Lifecycle</title>
-        <desc id="archify-diagram-description">End-to-end trace from React DOM composer to C++ SQLite WAL and 2.5s polling delivery</desc>
+      <svg viewBox="0 0 1159 558" data-layout-contract="readable-v2" role="img" lang="en" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="signal-flow" data-quality-profile="showcase" data-node-ui="">
+        <title id="archify-diagram-title">Sampark Architecture: Frontend, Backend &amp; Database SQL</title>
+        <desc id="archify-diagram-description">Explainable 3-Tier Architecture &amp; Request Lifecycle</desc>
         <!-- Definitions -->
         <defs>
           <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -5251,387 +5251,206 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Swimlanes -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-0" x="40" y="52" width="1124" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="74" class="t-muted" font-size="10" font-weight="600">01 / User A (Sender Client)</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-0" x="40" y="52" width="1099" height="114" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="74" class="t-muted" font-size="10" font-weight="600">01 / Frontend (React SPA)</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-1" x="40" y="178" width="1124" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="200" class="t-muted" font-size="10" font-weight="600">02 / Network &amp; Gateway</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-1" x="40" y="186" width="1099" height="114" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="208" class="t-muted" font-size="10" font-weight="600">02 / Backend (C++ REST API)</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-2" x="40" y="304" width="1124" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="326" class="t-muted" font-size="10" font-weight="600">03 / C++ Backend Core</text>
-
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-3" x="40" y="430" width="1124" height="296" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="452" class="t-muted" font-size="10" font-weight="600">04 / Security &amp; Validation</text>
-
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-4" x="40" y="746" width="1124" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="768" class="t-muted" font-size="10" font-weight="600">05 / SQLite Persistence</text>
-
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-5" x="40" y="872" width="1124" height="296" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="894" class="t-muted" font-size="10" font-weight="600">06 / User B (Recipient Client)</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-2" x="40" y="320" width="1099" height="114" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="342" class="t-muted" font-size="10" font-weight="600">03 / Database SQL &amp; Storage</text>
 
         <!-- Phase headers -->
-        <path d="M 72 35 H 352.4" class="a-default phase-rule" stroke-width="1" stroke-linecap="round" fill="none"/>
-        <rect x="122.99999999999999" y="27" width="178.4" height="16" rx="8" class="c-mask phase-chip"/>
-        <text x="212.2" y="38.5" class="t-muted" font-size="8" font-weight="600" text-anchor="middle" letter-spacing=".04em">Phase 1: Input &amp; Client Transport</text>
-        <path d="M 485.5999999999999 35 H 766" class="a-default phase-rule" stroke-width="1" stroke-linecap="round" fill="none"/>
-        <rect x="527" y="27" width="197.6" height="16" rx="8" class="c-mask phase-chip"/>
-        <text x="625.8" y="38.5" class="t-muted" font-size="8" font-weight="600" text-anchor="middle" letter-spacing=".04em">Phase 2: Auth &amp; Server Business Logic</text>
-        <path d="M 846 35 H 1131.2" class="a-default phase-rule" stroke-width="1" stroke-linecap="round" fill="none"/>
-        <rect x="889.8000000000001" y="27" width="197.6" height="16" rx="8" class="c-mask phase-chip"/>
-        <text x="988.6" y="38.5" class="t-muted" font-size="8" font-weight="600" text-anchor="middle" letter-spacing=".04em">Phase 3: Persistence &amp; Recipient Sync</text>
+        <path d="M 80 35 H 371.6" class="a-default phase-rule" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <rect x="158.20000000000002" y="27" width="135.2" height="16" rx="8" class="c-mask phase-chip"/>
+        <text x="225.8" y="38.5" class="t-muted" font-size="8" font-weight="600" text-anchor="middle" letter-spacing=".04em">Phase 1: Frontend Client</text>
+        <path d="M 415.6000000000001 35 H 716.8" class="a-default phase-rule" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <rect x="489.00000000000006" y="27" width="154.4" height="16" rx="8" class="c-mask phase-chip"/>
+        <text x="566.2" y="38.5" class="t-muted" font-size="8" font-weight="600" text-anchor="middle" letter-spacing=".04em">Phase 2: Backend Core &amp; Auth</text>
+        <path d="M 846.8 35 H 1094.8" class="a-default phase-rule" stroke-width="1" stroke-linecap="round" fill="none"/>
+        <rect x="886.4" y="27" width="168.79999999999998" height="16" rx="8" class="c-mask phase-chip"/>
+        <text x="970.8" y="38.5" class="t-muted" font-size="8" font-weight="600" text-anchor="middle" letter-spacing=".04em">Phase 3: Database SQL &amp; Polling</text>
 
         <!-- Workflow groups -->
-
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="group" data-composition-frame-id="group-0" x="44" y="90" width="363.6" height="72" rx="9" class="c-lane" stroke-width="1"/>
+        <text x="54" y="88" class="t-muted" font-size="7" font-weight="600">Frontend UI &amp; Client Layer</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="group" data-composition-frame-id="group-1" x="379.6" y="224" width="579.1999999999999" height="72" rx="9" class="c-lane" stroke-width="1"/>
+        <text x="389.6" y="222" class="t-muted" font-size="7" font-weight="600">Backend C++ Services Layer</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="group" data-composition-frame-id="group-2" x="810.8" y="358" width="320" height="72" rx="9" class="c-lane" stroke-width="1"/>
+        <text x="820.8" y="356" class="t-muted" font-size="7" font-weight="600">Database SQL &amp; Storage Layer</text>
 
         <!-- Edge paths -->
-        <path data-edge-from="ack_dispatch" data-edge-to="chat_composer" data-edge-label="HTTP 201 ACK" data-edge-key="0" data-edge-id="ack-to-composer" data-composition-routing="workflow-v2-auto" data-edge-role="return" data-composition-points="884,212;884,120;376.4,120" d="M 884 212 L 884 128 Q 884 120 876 120 L 376.4 120" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="auth_service" data-edge-to="auth_gate" data-edge-label="invalid token" data-edge-key="1" data-edge-id="auth-denied" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="666,593;585.5999999999999,593" d="M 666 593 L 585.5999999999999 593" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="auth_service" data-edge-to="messaging_svc" data-edge-label="session valid" data-edge-key="2" data-edge-id="auth-to-messaging" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="728,559;728,406" d="M 728 559 L 728 406" class="a-emphasis" data-animate="edge" style="--step:5" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="chat_composer" data-edge-to="client_fetch" data-edge-label="handleSend()" data-edge-key="3" data-edge-id="composer-to-fetch" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="314.4,154;314.4,212" d="M 314.4 154 L 314.4 212" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="client_fetch" data-edge-to="network_proxy" data-edge-label="POST /messages" data-edge-key="4" data-edge-id="fetch-to-proxy" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="376.4,246;461.5999999999999,246" d="M 376.4 246 L 461.5999999999999 246" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="messaging_svc" data-edge-to="validator" data-edge-label="validate body" data-edge-key="5" data-edge-id="messaging-to-validator" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="790,372;806,372;806,586;822,586" d="M 790 372 L 798 372 Q 806 372 806 380 L 806 578 Q 806 586 814 586 L 822 586" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="delta_poll" data-edge-to="chat_receiver" data-edge-label="delivers delta" data-edge-key="6" data-edge-id="poll-to-receiver" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="946,1035;1031.2,1035" d="M 946 1035 L 1031.2 1035" class="a-emphasis" data-animate="edge" style="--step:10" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="network_proxy" data-edge-to="server_router" data-edge-label="routes :8080" data-edge-key="7" data-edge-id="proxy-to-router" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="523.5999999999999,280;523.5999999999999,338" d="M 523.5999999999999 280 L 523.5999999999999 338" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="read_sync" data-edge-to="sqlite_wal" data-edge-label="UPDATE read_at" data-edge-key="8" data-edge-id="read-to-sqlite" data-composition-routing="workflow-v2-auto" data-edge-role="return" data-composition-points="1031.2,814;946,814" d="M 1031.2 814 L 946 814" class="a-dashed" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="chat_receiver" data-edge-to="user_b" data-edge-label="renders in DOM" data-edge-key="9" data-edge-id="receiver-to-user" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="1031.2,1042;1007.2,1042;1007.2,1130;1031.2,1130" d="M 1031.2 1042 L 1015.2 1042 Q 1007.2 1042 1007.2 1050 L 1007.2 1122 Q 1007.2 1130 1015.2 1130 L 1031.2 1130" class="a-emphasis" data-animate="edge" style="--step:11" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="message_repo" data-edge-to="ack_dispatch" data-edge-label="dispatches ACK" data-edge-key="10" data-edge-id="repo-to-ack" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="884,338;884,280" d="M 884 338 L 884 280" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="message_repo" data-edge-to="sqlite_wal" data-edge-label="std::mutex INSERT" data-edge-key="11" data-edge-id="repo-to-sqlite" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="908,406;908,422;954,422;954,764;884,764;884,780" d="M 908 406 L 908 414 Q 908 422 916 422 L 946 422 Q 954 422 954 430 L 954 756 Q 954 764 946 764 L 892 764 Q 884 764 884 772 L 884 780" class="a-emphasis" data-animate="edge" style="--step:8" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="server_router" data-edge-to="auth_service" data-edge-label="cookie token" data-edge-key="12" data-edge-id="router-to-auth" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="585.5999999999999,372;644.8,372;644.8,543;704,543;704,559" d="M 585.5999999999999 372 L 636.8 372 Q 644.8 372 644.8 380 L 644.8 535 Q 644.8 543 652.8 543 L 696 543 Q 704 543 704 551 L 704 559" class="a-security" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="sqlite_wal" data-edge-to="delta_poll" data-edge-label="SELECT ?after=" data-edge-key="13" data-edge-id="sqlite-to-poll" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="884,848;884,1001" d="M 884 848 L 884 1001" class="a-default" data-animate="edge" style="--step:9" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="user_a" data-edge-to="chat_composer" data-edge-label="types message" data-edge-key="14" data-edge-id="user-to-composer" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="172,120;252.39999999999998,120" d="M 172 120 L 252.39999999999998 120" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="user_b" data-edge-to="read_sync" data-edge-label="marks viewed" data-edge-key="15" data-edge-id="user-to-read" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="1155.2,1130;1218.8,1130;1218.8,814;1155.2,814" d="M 1155.2 1130 L 1210.8 1130 Q 1218.8 1130 1218.8 1122 L 1218.8 822 Q 1218.8 814 1210.8 814 L 1155.2 814" class="a-default" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="validator" data-edge-to="validation_err" data-edge-label="invalid / traversal" data-edge-key="16" data-edge-id="validation-failed" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="884,627;884,688;790,688" d="M 884 627 L 884 680 Q 884 688 876 688 L 790 688" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="validator" data-edge-to="message_repo" data-edge-label="sanitized OK" data-edge-key="17" data-edge-id="validator-to-repo" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="884,559;884,406" d="M 884 559 L 884 406" class="a-emphasis" data-animate="edge" style="--step:7" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="auth_gate" data-edge-to="messaging_service" data-edge-label="authorized" data-edge-key="0" data-edge-id="auth-to-msg" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="748.8,261;814.8,261" d="M 748.8 261 L 814.8 261" class="a-emphasis" data-animate="edge" style="--step:3" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="api_client" data-edge-to="server_router" data-edge-label="POST /api/messages" data-edge-key="1" data-edge-id="client-to-router" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="333.6,161;333.6,261;383.6,261" d="M 333.6 161 L 333.6 253 Q 333.6 261 341.6 261 L 383.6 261" class="a-emphasis" data-animate="edge" style="--step:1" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="messaging_service" data-edge-to="media_store" data-edge-label="save file" data-edge-key="2" data-edge-id="msg-to-media" data-composition-routing="workflow-v2-auto" data-edge-role="branch" data-composition-points="954.8,261;1056.8,261;1056.8,361" d="M 954.8 261 L 1048.8 261 Q 1056.8 261 1056.8 269 L 1056.8 361" class="a-dashed" data-animate="edge" style="--step:9" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="messaging_service" data-edge-to="sqlite_wal" data-edge-label="prepared INSERT" data-edge-key="3" data-edge-id="msg-to-sql" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="884.8,295;884.8,322;798.8,322;798.8,395;814.8,395" d="M 884.8 295 L 884.8 314 Q 884.8 322 876.8 322 L 806.8 322 Q 798.8 322 798.8 330 L 798.8 387 Q 798.8 395 806.8 395 L 814.8 395" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="sync_poll" data-edge-to="client_ui" data-edge-label="live update" data-edge-key="4" data-edge-id="poll-to-ui" data-composition-routing="workflow-v2-auto" data-edge-role="return" data-composition-points="1126.8,127;1142.8,127;1142.8,24;32,24;32,127;48,127" d="M 1126.8 127 L 1134.8 127 Q 1142.8 127 1142.8 119 L 1142.8 32 Q 1142.8 24 1134.8 24 L 40 24 Q 32 24 32 32 L 32 119 Q 32 127 40 127 L 48 127" class="a-emphasis" data-animate="edge" style="--step:11" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="server_router" data-edge-to="auth_gate" data-edge-label="verify session" data-edge-key="5" data-edge-id="router-to-auth" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="523.6,261;608.8,261" d="M 523.6 261 L 608.8 261" class="a-security" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="sqlite_wal" data-edge-to="sync_poll" data-edge-label="SELECT ?after={id}" data-edge-key="6" data-edge-id="sql-to-poll" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="884.8,429;884.8,450;1142.8,450;1142.8,135;1126.8,135" d="M 884.8 429 L 884.8 442 Q 884.8 450 892.8 450 L 1134.8 450 Q 1142.8 450 1142.8 442 L 1142.8 143 Q 1142.8 135 1134.8 135 L 1126.8 135" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="client_ui" data-edge-to="api_client" data-edge-label="handleSend()" data-edge-key="7" data-edge-id="ui-to-client" data-composition-routing="workflow-v2-auto" data-edge-role="" data-composition-points="188,127;263.6,127" d="M 188 127 L 263.6 127" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.4" marker-end="url(#arrowhead)"/>
 
         <!-- Nodes -->
-        <g id="node-user_a" data-node-id="user_a" data-node-label="User A (Sender)" tabindex="0" role="button" aria-label="Focus User A (Sender), Types text &amp; files, User A (Sender Client) › Phase 1: Input &amp; Client Transport" aria-pressed="false" data-node-kind="external" data-node-sublabel="Types text &amp; files" data-node-tag="Operator" data-node-context="User A (Sender Client) › Phase 1: Input &amp; Client Transport">
-          <title>User A (Sender) · Types text &amp; files · User A (Sender Client) › Phase 1: Input &amp; Client Transport · Operator</title>
-          <rect x="48" y="86" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="48" y="86" width="124" height="68" rx="8" class="c-external" data-animate="node" style="--step:0" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(54 92) scale(0.6875)">
-            <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
-            <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="116.5" y="107" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">User A (Sender)</text>
-          <text data-detail="context" x="110" y="124" class="t-muted" font-size="8" text-anchor="middle">Types text &amp; files</text>
-        <text data-detail="fine" x="110" y="142" class="t-external" font-size="7" text-anchor="middle">Operator</text>
-        </g>
-
-        <g id="node-chat_composer" data-node-id="chat_composer" data-node-label="ChatPanel Composer" tabindex="0" role="button" aria-label="Focus ChatPanel Composer, React state &amp; UI, User A (Sender Client) › Phase 1: Input &amp; Client Transport" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="React state &amp; UI" data-node-tag="ChatPanel" data-node-context="User A (Sender Client) › Phase 1: Input &amp; Client Transport">
-          <title>ChatPanel Composer · React state &amp; UI · User A (Sender Client) › Phase 1: Input &amp; Client Transport · ChatPanel</title>
-          <rect x="252.39999999999998" y="86" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="252.39999999999998" y="86" width="124" height="68" rx="8" class="c-frontend" data-animate="node" style="--step:1" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(258.4 92) scale(0.6875)">
+        <g id="node-client_ui" data-node-id="client_ui" data-node-label="React Chat UI" tabindex="0" role="button" aria-label="Focus React Chat UI, Composer, Threads &amp; State, Frontend (React SPA) › Frontend UI &amp; Client Layer › Phase 1: Frontend Client" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Composer, Threads &amp; State" data-node-tag="React 18" data-node-context="Frontend (React SPA) › Frontend UI &amp; Client Layer › Phase 1: Frontend Client">
+          <title>React Chat UI · Composer, Threads &amp; State · Frontend (React SPA) › Frontend UI &amp; Client Layer › Phase 1: Frontend Client · React 18</title>
+          <rect x="48" y="93" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="48" y="93" width="140" height="68" rx="8" class="c-frontend" data-animate="node" style="--step:0" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(54 99) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="314.4" y="117.9" class="t-primary" font-size="10.7" font-weight="600" text-anchor="middle">ChatPanel Composer</text>
-          <text data-detail="context" x="314.4" y="132.8" class="t-muted" font-size="8" text-anchor="middle">React state &amp; UI</text>
-        <text data-detail="fine" x="314.4" y="145.6" class="t-frontend" font-size="7" text-anchor="middle">ChatPanel</text>
+          <text data-node-label="" data-detail-anchor="" x="118" y="127.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">React Chat UI</text>
+          <text data-detail="context" x="118" y="142.1" class="t-muted" font-size="8" text-anchor="middle">Composer, Threads &amp; State</text>
+        <text data-detail="fine" x="118" y="154.9" class="t-frontend" font-size="7" text-anchor="middle">React 18</text>
         </g>
 
-        <g id="node-client_fetch" data-node-id="client_fetch" data-node-label="Fetch API Client" tabindex="0" role="button" aria-label="Focus Fetch API Client, POST /api/messages, Network &amp; Gateway › Phase 1: Input &amp; Client Transport" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="POST /api/messages" data-node-tag="Transport" data-node-context="Network &amp; Gateway › Phase 1: Input &amp; Client Transport">
-          <title>Fetch API Client · POST /api/messages · Network &amp; Gateway › Phase 1: Input &amp; Client Transport · Transport</title>
-          <rect x="252.39999999999998" y="212" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="252.39999999999998" y="212" width="124" height="68" rx="8" class="c-frontend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(258.4 218) scale(0.6875)">
+        <g id="node-api_client" data-node-id="api_client" data-node-label="Fetch API Client" tabindex="0" role="button" aria-label="Focus Fetch API Client, HTTP wrapper &amp; cookies, Frontend (React SPA) › Frontend UI &amp; Client Layer › Phase 1: Frontend Client" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="HTTP wrapper &amp; cookies" data-node-tag="Fetch Transport" data-node-context="Frontend (React SPA) › Frontend UI &amp; Client Layer › Phase 1: Frontend Client">
+          <title>Fetch API Client · HTTP wrapper &amp; cookies · Frontend (React SPA) › Frontend UI &amp; Client Layer › Phase 1: Frontend Client · Fetch Transport</title>
+          <rect x="263.6" y="93" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="263.6" y="93" width="140" height="68" rx="8" class="c-frontend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(269.6 99) scale(0.6875)">
             <rect x="2" y="3" width="12" height="10" rx="2"/>
             <path d="M2 6.5h12"/>
             <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
             <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="314.4" y="244.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Fetch API Client</text>
-          <text data-detail="context" x="314.4" y="259.1" class="t-muted" font-size="8" text-anchor="middle">POST /api/messages</text>
-        <text data-detail="fine" x="314.4" y="271.9" class="t-frontend" font-size="7" text-anchor="middle">Transport</text>
+          <text data-node-label="" data-detail-anchor="" x="333.6" y="127.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Fetch API Client</text>
+          <text data-detail="context" x="333.6" y="142.1" class="t-muted" font-size="8" text-anchor="middle">HTTP wrapper &amp; cookies</text>
+        <text data-detail="fine" x="333.6" y="154.9" class="t-frontend" font-size="7" text-anchor="middle">Fetch Transport</text>
         </g>
 
-        <g id="node-network_proxy" data-node-id="network_proxy" data-node-label="Vite Proxy &amp; TCP" tabindex="0" role="button" aria-label="Focus Vite Proxy &amp; TCP, Forward 5173-&gt;8080, Network &amp; Gateway › Phase 2: Auth &amp; Server Business Logic" aria-pressed="false" data-node-kind="cloud" data-node-sublabel="Forward 5173-&gt;8080" data-node-tag="HTTP Socket" data-node-context="Network &amp; Gateway › Phase 2: Auth &amp; Server Business Logic">
-          <title>Vite Proxy &amp; TCP · Forward 5173-&gt;8080 · Network &amp; Gateway › Phase 2: Auth &amp; Server Business Logic · HTTP Socket</title>
-          <rect x="461.5999999999999" y="212" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="461.5999999999999" y="212" width="124" height="68" rx="8" class="c-cloud" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="cloud" class="semantic-sigil s-cloud" transform="translate(467.5999999999999 218) scale(0.6875)">
-            <path d="M4.3 12.5h7.3a2.4 2.4 0 0 0 .2-4.8 4 4 0 0 0-7.5-1.3A3.1 3.1 0 0 0 4.3 12.5Z"/>
+        <g id="node-sync_poll" data-node-id="sync_poll" data-node-label="Live Polling Sync" tabindex="0" role="button" aria-label="Focus Live Polling Sync, 2.5s cursor poll + chime, Frontend (React SPA) › Phase 3: Database SQL &amp; Polling" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="2.5s cursor poll + chime" data-node-tag="Cursor Polling" data-node-context="Frontend (React SPA) › Phase 3: Database SQL &amp; Polling">
+          <title>Live Polling Sync · 2.5s cursor poll + chime · Frontend (React SPA) › Phase 3: Database SQL &amp; Polling · Cursor Polling</title>
+          <rect x="986.8" y="93" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="986.8" y="93" width="140" height="68" rx="8" class="c-messagebus" data-animate="node" style="--step:6" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="clock" class="semantic-sigil s-messagebus" transform="translate(992.8 99) scale(0.6875)">
+            <circle cx="8" cy="8" r="6"/><path d="M8 4v4l3 2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="523.5999999999999" y="244.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Vite Proxy &amp; TCP</text>
-          <text data-detail="context" x="523.5999999999999" y="259.1" class="t-muted" font-size="8" text-anchor="middle">Forward 5173-&gt;8080</text>
-        <text data-detail="fine" x="523.5999999999999" y="271.9" class="t-cloud" font-size="7" text-anchor="middle">HTTP Socket</text>
+          <text data-node-label="" data-detail-anchor="" x="1056.8" y="127.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Live Polling Sync</text>
+          <text data-detail="context" x="1056.8" y="142.1" class="t-muted" font-size="8" text-anchor="middle">2.5s cursor poll + chime</text>
+        <text data-detail="fine" x="1056.8" y="154.9" class="t-messagebus" font-size="7" text-anchor="middle">Cursor Polling</text>
         </g>
 
-        <g id="node-ack_dispatch" data-node-id="ack_dispatch" data-node-label="HTTP 201 Created" tabindex="0" role="button" aria-label="Focus HTTP 201 Created, Returns JSON ACK, Network &amp; Gateway › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Returns JSON ACK" data-node-tag="Sender ACK" data-node-context="Network &amp; Gateway › Phase 3: Persistence &amp; Recipient Sync">
-          <title>HTTP 201 Created · Returns JSON ACK · Network &amp; Gateway › Phase 3: Persistence &amp; Recipient Sync · Sender ACK</title>
-          <rect x="822" y="212" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="822" y="212" width="124" height="68" rx="8" class="c-backend" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(828 218) scale(0.6875)">
+        <g id="node-server_router" data-node-id="server_router" data-node-label="C++ HTTP Router" tabindex="0" role="button" aria-label="Focus C++ HTTP Router, cpp-httplib on port 8080, Backend (C++ REST API) › Backend C++ Services Layer › Phase 2: Backend Core &amp; Auth" aria-pressed="false" data-node-kind="backend" data-node-sublabel="cpp-httplib on port 8080" data-node-tag="C++20 REST API" data-node-context="Backend (C++ REST API) › Backend C++ Services Layer › Phase 2: Backend Core &amp; Auth">
+          <title>C++ HTTP Router · cpp-httplib on port 8080 · Backend (C++ REST API) › Backend C++ Services Layer › Phase 2: Backend Core &amp; Auth · C++20 REST API</title>
+          <rect x="383.6" y="227" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="383.6" y="227" width="140" height="68" rx="8" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(389.6 233) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="884" y="244.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">HTTP 201 Created</text>
-          <text data-detail="context" x="884" y="259.1" class="t-muted" font-size="8" text-anchor="middle">Returns JSON ACK</text>
-        <text data-detail="fine" x="884" y="271.9" class="t-backend" font-size="7" text-anchor="middle">Sender ACK</text>
+          <text data-node-label="" data-detail-anchor="" x="453.6" y="261.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">C++ HTTP Router</text>
+          <text data-detail="context" x="453.6" y="276.1" class="t-muted" font-size="8" text-anchor="middle">cpp-httplib on port 8080</text>
+        <text data-detail="fine" x="453.6" y="288.9" class="t-backend" font-size="7" text-anchor="middle">C++20 REST API</text>
         </g>
 
-        <g id="node-server_router" data-node-id="server_router" data-node-label="Server Router" tabindex="0" role="button" aria-label="Focus Server Router, CORS check &amp; routes, C++ Backend Core › Phase 2: Auth &amp; Server Business Logic" aria-pressed="false" data-node-kind="backend" data-node-sublabel="CORS check &amp; routes" data-node-tag="cpp-httplib" data-node-context="C++ Backend Core › Phase 2: Auth &amp; Server Business Logic">
-          <title>Server Router · CORS check &amp; routes · C++ Backend Core › Phase 2: Auth &amp; Server Business Logic · cpp-httplib</title>
-          <rect x="461.5999999999999" y="338" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="461.5999999999999" y="338" width="124" height="68" rx="8" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(467.5999999999999 344) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="523.5999999999999" y="359" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Server Router</text>
-          <text data-detail="context" x="523.5999999999999" y="376" class="t-muted" font-size="8" text-anchor="middle">CORS check &amp; routes</text>
-        <text data-detail="fine" x="523.5999999999999" y="394" class="t-backend" font-size="7" text-anchor="middle">cpp-httplib</text>
-        </g>
-
-        <g id="node-messaging_svc" data-node-id="messaging_svc" data-node-label="MessagingService" tabindex="0" role="button" aria-label="Focus MessagingService, Pair &amp; group roles, C++ Backend Core › Phase 2: Auth &amp; Server Business Logic" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Pair &amp; group roles" data-node-tag="C++20 OOP" data-node-context="C++ Backend Core › Phase 2: Auth &amp; Server Business Logic">
-          <title>MessagingService · Pair &amp; group roles · C++ Backend Core › Phase 2: Auth &amp; Server Business Logic · C++20 OOP</title>
-          <rect x="666" y="338" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="666" y="338" width="124" height="68" rx="8" class="c-backend" data-animate="node" style="--step:6" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(672 344) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="728" y="370.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">MessagingService</text>
-          <text data-detail="context" x="728" y="385.1" class="t-muted" font-size="8" text-anchor="middle">Pair &amp; group roles</text>
-        <text data-detail="fine" x="728" y="397.9" class="t-backend" font-size="7" text-anchor="middle">C++20 OOP</text>
-        </g>
-
-        <g id="node-message_repo" data-node-id="message_repo" data-node-label="MessageRepository" tabindex="0" role="button" aria-label="Focus MessageRepository, RAII stmt &amp; mutex, C++ Backend Core › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="backend" data-node-sublabel="RAII stmt &amp; mutex" data-node-tag="lock_guard" data-node-context="C++ Backend Core › Phase 3: Persistence &amp; Recipient Sync">
-          <title>MessageRepository · RAII stmt &amp; mutex · C++ Backend Core › Phase 3: Persistence &amp; Recipient Sync · lock_guard</title>
-          <rect x="822" y="338" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="822" y="338" width="124" height="68" rx="8" class="c-backend" data-animate="node" style="--step:8" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(828 344) scale(0.6875)">
-            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="884" y="370.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">MessageRepository</text>
-          <text data-detail="context" x="884" y="385.1" class="t-muted" font-size="8" text-anchor="middle">RAII stmt &amp; mutex</text>
-        <text data-detail="fine" x="884" y="397.9" class="t-backend" font-size="7" text-anchor="middle">lock_guard</text>
-        </g>
-
-        <g id="node-auth_gate" data-node-id="auth_gate" data-node-label="401 Unauthorized" tabindex="0" role="button" aria-label="Focus 401 Unauthorized, Invalid session, Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic" aria-pressed="false" data-node-kind="security" data-node-sublabel="Invalid session" data-node-tag="Reject" data-node-context="Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic">
-          <title>401 Unauthorized · Invalid session · Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic · Reject</title>
-          <rect x="461.5999999999999" y="559" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="461.5999999999999" y="559" width="124" height="68" rx="8" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(467.5999999999999 565) scale(0.6875)">
+        <g id="node-auth_gate" data-node-id="auth_gate" data-node-label="Auth &amp; Session Guard" tabindex="0" role="button" aria-label="Focus Auth &amp; Session Guard, PBKDF2 SHA-256 tokens, Backend (C++ REST API) › Backend C++ Services Layer › Phase 2: Backend Core &amp; Auth" aria-pressed="false" data-node-kind="security" data-node-sublabel="PBKDF2 SHA-256 tokens" data-node-tag="Session Cache" data-node-context="Backend (C++ REST API) › Backend C++ Services Layer › Phase 2: Backend Core &amp; Auth">
+          <title>Auth &amp; Session Guard · PBKDF2 SHA-256 tokens · Backend (C++ REST API) › Backend C++ Services Layer › Phase 2: Backend Core &amp; Auth · Session Cache</title>
+          <rect x="608.8" y="227" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="608.8" y="227" width="140" height="68" rx="8" class="c-security" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(614.8 233) scale(0.6875)">
             <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="523.5999999999999" y="591.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">401 Unauthorized</text>
-          <text data-detail="context" x="523.5999999999999" y="606.1" class="t-muted" font-size="8" text-anchor="middle">Invalid session</text>
-        <text data-detail="fine" x="523.5999999999999" y="618.9" class="t-security" font-size="7" text-anchor="middle">Reject</text>
+          <text data-node-label="" data-detail-anchor="" x="678.8" y="261.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Auth &amp; Session Guard</text>
+          <text data-detail="context" x="678.8" y="276.1" class="t-muted" font-size="8" text-anchor="middle">PBKDF2 SHA-256 tokens</text>
+        <text data-detail="fine" x="678.8" y="288.9" class="t-security" font-size="7" text-anchor="middle">Session Cache</text>
         </g>
 
-        <g id="node-auth_service" data-node-id="auth_service" data-node-label="AuthService" tabindex="0" role="button" aria-label="Focus AuthService, Session &amp; PBKDF2, Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic" aria-pressed="false" data-node-kind="security" data-node-sublabel="Session &amp; PBKDF2" data-node-tag="OpenSSL" data-node-context="Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic">
-          <title>AuthService · Session &amp; PBKDF2 · Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic · OpenSSL</title>
-          <rect x="666" y="559" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="666" y="559" width="124" height="68" rx="8" class="c-security" data-animate="node" style="--step:5" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(672 565) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
+        <g id="node-messaging_service" data-node-id="messaging_service" data-node-label="Messaging Service" tabindex="0" role="button" aria-label="Focus Messaging Service, Permissions &amp; magic bytes, Backend (C++ REST API) › Backend C++ Services Layer › Phase 3: Database SQL &amp; Polling" aria-pressed="false" data-node-kind="backend" data-node-sublabel="Permissions &amp; magic bytes" data-node-tag="Domain Logic" data-node-context="Backend (C++ REST API) › Backend C++ Services Layer › Phase 3: Database SQL &amp; Polling">
+          <title>Messaging Service · Permissions &amp; magic bytes · Backend (C++ REST API) › Backend C++ Services Layer › Phase 3: Database SQL &amp; Polling · Domain Logic</title>
+          <rect x="814.8" y="227" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="814.8" y="227" width="140" height="68" rx="8" class="c-backend" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(820.8 233) scale(0.6875)">
+            <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="728" y="580" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">AuthService</text>
-          <text data-detail="context" x="728" y="597" class="t-muted" font-size="8" text-anchor="middle">Session &amp; PBKDF2</text>
-        <text data-detail="fine" x="728" y="615" class="t-security" font-size="7" text-anchor="middle">OpenSSL</text>
+          <text data-node-label="" data-detail-anchor="" x="884.8" y="261.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Messaging Service</text>
+          <text data-detail="context" x="884.8" y="276.1" class="t-muted" font-size="8" text-anchor="middle">Permissions &amp; magic bytes</text>
+        <text data-detail="fine" x="884.8" y="288.9" class="t-backend" font-size="7" text-anchor="middle">Domain Logic</text>
         </g>
 
-        <g id="node-validation_err" data-node-id="validation_err" data-node-label="400 Bad Request" tabindex="0" role="button" aria-label="Focus 400 Bad Request, Oversized / invalid, Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic" aria-pressed="false" data-node-kind="security" data-node-sublabel="Oversized / invalid" data-node-tag="Error" data-node-context="Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic">
-          <title>400 Bad Request · Oversized / invalid · Security &amp; Validation › Phase 2: Auth &amp; Server Business Logic · Error</title>
-          <rect x="666" y="654" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="666" y="654" width="124" height="68" rx="8" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(672 660) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="734.5" y="675" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">400 Bad Request</text>
-          <text data-detail="context" x="728" y="692" class="t-muted" font-size="8" text-anchor="middle">Oversized / invalid</text>
-        <text data-detail="fine" x="728" y="710" class="t-security" font-size="7" text-anchor="middle">Error</text>
-        </g>
-
-        <g id="node-validator" data-node-id="validator" data-node-label="Validator Utility" tabindex="0" role="button" aria-label="Focus Validator Utility, Magic-bytes &amp; limit, Security &amp; Validation › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="security" data-node-sublabel="Magic-bytes &amp; limit" data-node-tag="Validator" data-node-context="Security &amp; Validation › Phase 3: Persistence &amp; Recipient Sync">
-          <title>Validator Utility · Magic-bytes &amp; limit · Security &amp; Validation › Phase 3: Persistence &amp; Recipient Sync · Validator</title>
-          <rect x="822" y="559" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="822" y="559" width="124" height="68" rx="8" class="c-security" data-animate="node" style="--step:7" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(828 565) scale(0.6875)">
-            <path d="M8 2.2 13 4v3.5c0 3.1-1.8 5.4-5 6.5-3.2-1.1-5-3.4-5-6.5V4Z"/>
-            <path d="m5.8 8 1.5 1.5 3-3"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="884" y="591.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Validator Utility</text>
-          <text data-detail="context" x="884" y="606.1" class="t-muted" font-size="8" text-anchor="middle">Magic-bytes &amp; limit</text>
-        <text data-detail="fine" x="884" y="618.9" class="t-security" font-size="7" text-anchor="middle">Validator</text>
-        </g>
-
-        <g id="node-sqlite_wal" data-node-id="sqlite_wal" data-node-label="SQLite3 WAL" tabindex="0" role="button" aria-label="Focus SQLite3 WAL, Atomic INSERT stmt, SQLite Persistence › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="database" data-node-sublabel="Atomic INSERT stmt" data-node-tag="connectx.db" data-node-context="SQLite Persistence › Phase 3: Persistence &amp; Recipient Sync">
-          <title>SQLite3 WAL · Atomic INSERT stmt · SQLite Persistence › Phase 3: Persistence &amp; Recipient Sync · connectx.db</title>
-          <rect x="822" y="780" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="822" y="780" width="124" height="68" rx="8" class="c-database" data-animate="node" style="--step:9" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(828 786) scale(0.6875)">
+        <g id="node-sqlite_wal" data-node-id="sqlite_wal" data-node-label="Database SQL" tabindex="0" role="button" aria-label="Focus Database SQL, SQLite WAL Engine, Database SQL &amp; Storage › Database SQL &amp; Storage Layer › Phase 3: Database SQL &amp; Polling" aria-pressed="false" data-node-kind="database" data-node-sublabel="SQLite WAL Engine" data-node-tag="connectx.db (WAL)" data-node-context="Database SQL &amp; Storage › Database SQL &amp; Storage Layer › Phase 3: Database SQL &amp; Polling">
+          <title>Database SQL · SQLite WAL Engine · Database SQL &amp; Storage › Database SQL &amp; Storage Layer › Phase 3: Database SQL &amp; Polling · connectx.db (WAL)</title>
+          <rect x="814.8" y="361" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="814.8" y="361" width="140" height="68" rx="8" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(820.8 367) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="884" y="801" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">SQLite3 WAL</text>
-          <text data-detail="context" x="884" y="818" class="t-muted" font-size="8" text-anchor="middle">Atomic INSERT stmt</text>
-        <text data-detail="fine" x="884" y="836" class="t-database" font-size="7" text-anchor="middle">connectx.db</text>
+          <text data-node-label="" data-detail-anchor="" x="884.8" y="395.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Database SQL</text>
+          <text data-detail="context" x="884.8" y="410.1" class="t-muted" font-size="8" text-anchor="middle">SQLite WAL Engine</text>
+        <text data-detail="fine" x="884.8" y="422.9" class="t-database" font-size="7" text-anchor="middle">connectx.db (WAL)</text>
         </g>
 
-        <g id="node-read_sync" data-node-id="read_sync" data-node-label="Mark As Read Sync" tabindex="0" role="button" aria-label="Focus Mark As Read Sync, POST /read receipt, SQLite Persistence › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="database" data-node-sublabel="POST /read receipt" data-node-tag="Read Sync" data-node-context="SQLite Persistence › Phase 3: Persistence &amp; Recipient Sync">
-          <title>Mark As Read Sync · POST /read receipt · SQLite Persistence › Phase 3: Persistence &amp; Recipient Sync · Read Sync</title>
-          <rect x="1031.2" y="780" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="1031.2" y="780" width="124" height="68" rx="8" class="c-database" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(1037.2 786) scale(0.6875)">
+        <g id="node-media_store" data-node-id="media_store" data-node-label="Media File Storage" tabindex="0" role="button" aria-label="Focus Media File Storage, Disk /uploads/ with UUIDs, Database SQL &amp; Storage › Database SQL &amp; Storage Layer › Phase 3: Database SQL &amp; Polling" aria-pressed="false" data-node-kind="database" data-node-sublabel="Disk /uploads/ with UUIDs" data-node-tag="Disk Storage" data-node-context="Database SQL &amp; Storage › Database SQL &amp; Storage Layer › Phase 3: Database SQL &amp; Polling">
+          <title>Media File Storage · Disk /uploads/ with UUIDs · Database SQL &amp; Storage › Database SQL &amp; Storage Layer › Phase 3: Database SQL &amp; Polling · Disk Storage</title>
+          <rect x="986.8" y="361" width="140" height="68" rx="8" class="c-mask"/>
+          <rect x="986.8" y="361" width="140" height="68" rx="8" class="c-database" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="database" class="semantic-sigil s-database" transform="translate(992.8 367) scale(0.6875)">
             <ellipse cx="8" cy="4" rx="5" ry="2"/>
             <path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="1093.2" y="812.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Mark As Read Sync</text>
-          <text data-detail="context" x="1093.2" y="827.1" class="t-muted" font-size="8" text-anchor="middle">POST /read receipt</text>
-        <text data-detail="fine" x="1093.2" y="839.9" class="t-database" font-size="7" text-anchor="middle">Read Sync</text>
-        </g>
-
-        <g id="node-delta_poll" data-node-id="delta_poll" data-node-label="2.5s Polling Loop" tabindex="0" role="button" aria-label="Focus 2.5s Polling Loop, GET ?after={id}, User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="messagebus" data-node-sublabel="GET ?after={id}" data-node-tag="Cursor Poll" data-node-context="User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync">
-          <title>2.5s Polling Loop · GET ?after={id} · User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync · Cursor Poll</title>
-          <rect x="822" y="1001" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="822" y="1001" width="124" height="68" rx="8" class="c-messagebus" data-animate="node" style="--step:10" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="messagebus" class="semantic-sigil s-messagebus" transform="translate(828 1007) scale(0.6875)">
-            <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/>
-            <circle cx="5" cy="4.5" r="1" class="sigil-fill"/>
-            <circle cx="10.5" cy="8" r="1" class="sigil-fill"/>
-            <circle cx="7" cy="11.5" r="1" class="sigil-fill"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="884" y="1033.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">2.5s Polling Loop</text>
-          <text data-detail="context" x="884" y="1048.1" class="t-muted" font-size="8" text-anchor="middle">GET ?after={id}</text>
-        <text data-detail="fine" x="884" y="1060.9" class="t-messagebus" font-size="7" text-anchor="middle">Cursor Poll</text>
-        </g>
-
-        <g id="node-chat_receiver" data-node-id="chat_receiver" data-node-label="Receiver ChatPanel" tabindex="0" role="button" aria-label="Focus Receiver ChatPanel, Appends to DOM, User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="frontend" data-node-sublabel="Appends to DOM" data-node-tag="Audio Chime" data-node-context="User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync">
-          <title>Receiver ChatPanel · Appends to DOM · User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync · Audio Chime</title>
-          <rect x="1031.2" y="1001" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="1031.2" y="1001" width="124" height="68" rx="8" class="c-frontend" data-animate="node" style="--step:11" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="frontend" class="semantic-sigil s-frontend" transform="translate(1037.2 1007) scale(0.6875)">
-            <rect x="2" y="3" width="12" height="10" rx="2"/>
-            <path d="M2 6.5h12"/>
-            <circle cx="4.1" cy="4.8" r=".7" class="sigil-fill"/>
-            <circle cx="6.3" cy="4.8" r=".7" class="sigil-fill"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="1093.2" y="1032.9" class="t-primary" font-size="10.7" font-weight="600" text-anchor="middle">Receiver ChatPanel</text>
-          <text data-detail="context" x="1093.2" y="1047.8" class="t-muted" font-size="8" text-anchor="middle">Appends to DOM</text>
-        <text data-detail="fine" x="1093.2" y="1060.6" class="t-frontend" font-size="7" text-anchor="middle">Audio Chime</text>
-        </g>
-
-        <g id="node-user_b" data-node-id="user_b" data-node-label="User B (Recipient)" tabindex="0" role="button" aria-label="Focus User B (Recipient), Reads &amp; sends ack, User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync" aria-pressed="false" data-node-kind="external" data-node-sublabel="Reads &amp; sends ack" data-node-tag="Delivered" data-node-context="User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync">
-          <title>User B (Recipient) · Reads &amp; sends ack · User B (Recipient Client) › Phase 3: Persistence &amp; Recipient Sync · Delivered</title>
-          <rect x="1031.2" y="1096" width="124" height="68" rx="8" class="c-mask"/>
-          <rect x="1031.2" y="1096" width="124" height="68" rx="8" class="c-external" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="external" class="semantic-sigil s-external" transform="translate(1037.2 1102) scale(0.6875)">
-            <rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
-            <path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
-          </g>
-          <text data-node-label="" data-detail-anchor="" x="1093.2" y="1127.9" class="t-primary" font-size="10.7" font-weight="600" text-anchor="middle">User B (Recipient)</text>
-          <text data-detail="context" x="1093.2" y="1142.8" class="t-muted" font-size="8" text-anchor="middle">Reads &amp; sends ack</text>
-        <text data-detail="fine" x="1093.2" y="1155.6" class="t-external" font-size="7" text-anchor="middle">Delivered</text>
+          <text data-node-label="" data-detail-anchor="" x="1056.8" y="395.2" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Media File Storage</text>
+          <text data-detail="context" x="1056.8" y="410.1" class="t-muted" font-size="8" text-anchor="middle">Disk /uploads/ with UUIDs</text>
+        <text data-detail="fine" x="1056.8" y="422.9" class="t-database" font-size="7" text-anchor="middle">Disk Storage</text>
         </g>
 
         <!-- Edge labels -->
-        <g data-detail="context" data-edge-from="ack_dispatch" data-edge-to="chat_composer" data-edge-label="HTTP 201 ACK" data-edge-key="0" data-edge-id="ack-to-composer">
-          <rect x="596.4000000000001" y="100" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="630.2" y="110" class="t-edge-dashed" font-size="8" text-anchor="middle">HTTP 201 ACK</text>
+        <g data-detail="context" data-edge-from="auth_gate" data-edge-to="messaging_service" data-edge-label="authorized" data-edge-key="0" data-edge-id="auth-to-msg">
+          <rect x="752.8" y="241" width="58" height="14" rx="3" class="c-mask"/>
+          <text x="781.8" y="251" class="t-edge-emphasis" font-size="8" text-anchor="middle">authorized</text>
         </g>
-        <g data-detail="context" data-edge-from="auth_service" data-edge-to="auth_gate" data-edge-label="invalid token" data-edge-key="1" data-edge-id="auth-denied">
-          <rect x="589.5999999999999" y="573" width="72.4" height="14" rx="3" class="c-mask"/>
-          <text x="625.8" y="583" class="t-edge-security" font-size="8" text-anchor="middle">invalid token</text>
+        <g data-detail="context" data-edge-from="api_client" data-edge-to="server_router" data-edge-label="POST /api/messages" data-edge-key="1" data-edge-id="client-to-router">
+          <rect x="285.40000000000003" y="201" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="333.6" y="211" class="t-edge-emphasis" font-size="8" text-anchor="middle">POST /api/messages</text>
         </g>
-        <g data-detail="context" data-edge-from="auth_service" data-edge-to="messaging_svc" data-edge-label="session valid" data-edge-key="2" data-edge-id="auth-to-messaging">
-          <rect x="691.8" y="472.5" width="72.4" height="14" rx="3" class="c-mask"/>
-          <text x="728" y="482.5" class="t-edge-emphasis" font-size="8" text-anchor="middle">session valid</text>
+        <g data-detail="context" data-edge-from="messaging_service" data-edge-to="media_store" data-edge-label="save file" data-edge-key="2" data-edge-id="msg-to-media">
+          <rect x="979.1999999999999" y="241" width="53.199999999999996" height="14" rx="3" class="c-mask"/>
+          <text x="1005.8" y="251" class="t-edge-dashed" font-size="8" text-anchor="middle">save file</text>
         </g>
-        <g data-detail="context" data-edge-from="chat_composer" data-edge-to="client_fetch" data-edge-label="handleSend()" data-edge-key="3" data-edge-id="composer-to-fetch">
-          <rect x="280.59999999999997" y="173" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="314.4" y="183" class="t-muted" font-size="8" text-anchor="middle">handleSend()</text>
+        <g data-detail="context" data-edge-from="messaging_service" data-edge-to="sqlite_wal" data-edge-label="prepared INSERT" data-edge-key="3" data-edge-id="msg-to-sql">
+          <rect x="800.8" y="302" width="82" height="14" rx="3" class="c-mask"/>
+          <text x="841.8" y="312" class="t-edge-emphasis" font-size="8" text-anchor="middle">prepared INSERT</text>
         </g>
-        <g data-detail="context" data-edge-from="client_fetch" data-edge-to="network_proxy" data-edge-label="POST /messages" data-edge-key="4" data-edge-id="fetch-to-proxy">
-          <rect x="380.3999999999999" y="226" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="418.99999999999994" y="236" class="t-edge-emphasis" font-size="8" text-anchor="middle">POST /messages</text>
+        <g data-detail="context" data-edge-from="sync_poll" data-edge-to="client_ui" data-edge-label="live update" data-edge-key="4" data-edge-id="poll-to-ui">
+          <rect x="556" y="4" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="587.4" y="14" class="t-edge-emphasis" font-size="8" text-anchor="middle">live update</text>
         </g>
-        <g data-detail="context" data-edge-from="messaging_svc" data-edge-to="validator" data-edge-label="validate body" data-edge-key="5" data-edge-id="messaging-to-validator">
-          <rect x="769.8" y="469" width="72.4" height="14" rx="3" class="c-mask"/>
-          <text x="806" y="479" class="t-muted" font-size="8" text-anchor="middle">validate body</text>
+        <g data-detail="context" data-edge-from="server_router" data-edge-to="auth_gate" data-edge-label="verify session" data-edge-key="5" data-edge-id="router-to-auth">
+          <rect x="527.6" y="241" width="77.2" height="14" rx="3" class="c-mask"/>
+          <text x="566.2" y="251" class="t-edge-security" font-size="8" text-anchor="middle">verify session</text>
         </g>
-        <g data-detail="context" data-edge-from="delta_poll" data-edge-to="chat_receiver" data-edge-label="delivers delta" data-edge-key="6" data-edge-id="poll-to-receiver">
-          <rect x="950" y="1015" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="988.6" y="1025" class="t-edge-emphasis" font-size="8" text-anchor="middle">delivers delta</text>
+        <g data-detail="context" data-edge-from="sqlite_wal" data-edge-to="sync_poll" data-edge-label="SELECT ?after={id}" data-edge-key="6" data-edge-id="sql-to-poll">
+          <rect x="965.5999999999999" y="430" width="96.39999999999999" height="14" rx="3" class="c-mask"/>
+          <text x="1013.8" y="440" class="t-muted" font-size="8" text-anchor="middle">SELECT ?after={id}</text>
         </g>
-        <g data-detail="context" data-edge-from="network_proxy" data-edge-to="server_router" data-edge-label="routes :8080" data-edge-key="7" data-edge-id="proxy-to-router">
-          <rect x="489.7999999999999" y="299" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="523.5999999999999" y="309" class="t-muted" font-size="8" text-anchor="middle">routes :8080</text>
-        </g>
-        <g data-detail="context" data-edge-from="read_sync" data-edge-to="sqlite_wal" data-edge-label="UPDATE read_at" data-edge-key="8" data-edge-id="read-to-sqlite">
-          <rect x="950" y="794" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="988.6" y="804" class="t-edge-dashed" font-size="8" text-anchor="middle">UPDATE read_at</text>
-        </g>
-        <g data-detail="context" data-edge-from="chat_receiver" data-edge-to="user_b" data-edge-label="renders in DOM" data-edge-key="9" data-edge-id="receiver-to-user">
-          <rect x="968.6" y="1076" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="1007.2" y="1086" class="t-edge-emphasis" font-size="8" text-anchor="middle">renders in DOM</text>
-        </g>
-        <g data-detail="context" data-edge-from="message_repo" data-edge-to="ack_dispatch" data-edge-label="dispatches ACK" data-edge-key="10" data-edge-id="repo-to-ack">
-          <rect x="845.4" y="299" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="884" y="309" class="t-muted" font-size="8" text-anchor="middle">dispatches ACK</text>
-        </g>
-        <g data-detail="context" data-edge-from="message_repo" data-edge-to="sqlite_wal" data-edge-label="std::mutex INSERT" data-edge-key="11" data-edge-id="repo-to-sqlite">
-          <rect x="873.2" y="744" width="91.6" height="14" rx="3" class="c-mask"/>
-          <text x="919" y="754" class="t-edge-emphasis" font-size="8" text-anchor="middle">std::mutex INSERT</text>
-        </g>
-        <g data-detail="context" data-edge-from="server_router" data-edge-to="auth_service" data-edge-label="cookie token" data-edge-key="12" data-edge-id="router-to-auth">
-          <rect x="640.6" y="523" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="674.4" y="533" class="t-edge-security" font-size="8" text-anchor="middle">cookie token</text>
-        </g>
-        <g data-detail="context" data-edge-from="sqlite_wal" data-edge-to="delta_poll" data-edge-label="SELECT ?after=" data-edge-key="13" data-edge-id="sqlite-to-poll">
-          <rect x="845.4" y="914.5" width="77.2" height="14" rx="3" class="c-mask"/>
-          <text x="884" y="924.5" class="t-muted" font-size="8" text-anchor="middle">SELECT ?after=</text>
-        </g>
-        <g data-detail="context" data-edge-from="user_a" data-edge-to="chat_composer" data-edge-label="types message" data-edge-key="14" data-edge-id="user-to-composer">
-          <rect x="176" y="100" width="72.4" height="14" rx="3" class="c-mask"/>
-          <text x="212.2" y="110" class="t-muted" font-size="8" text-anchor="middle">types message</text>
-        </g>
-        <g data-detail="context" data-edge-from="user_b" data-edge-to="read_sync" data-edge-label="marks viewed" data-edge-key="15" data-edge-id="user-to-read">
-          <rect x="1153.2" y="1110" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="1187" y="1120" class="t-muted" font-size="8" text-anchor="middle">marks viewed</text>
-        </g>
-        <g data-detail="context" data-edge-from="validator" data-edge-to="validation_err" data-edge-label="invalid / traversal" data-edge-key="16" data-edge-id="validation-failed">
-          <rect x="833.4" y="647.5" width="101.2" height="14" rx="3" class="c-mask"/>
-          <text x="884" y="657.5" class="t-edge-security" font-size="8" text-anchor="middle">invalid / traversal</text>
-        </g>
-        <g data-detail="context" data-edge-from="validator" data-edge-to="message_repo" data-edge-label="sanitized OK" data-edge-key="17" data-edge-id="validator-to-repo">
-          <rect x="850.2" y="472.5" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="884" y="482.5" class="t-edge-emphasis" font-size="8" text-anchor="middle">sanitized OK</text>
+        <g data-detail="context" data-edge-from="client_ui" data-edge-to="api_client" data-edge-label="handleSend()" data-edge-key="7" data-edge-id="ui-to-client">
+          <rect x="192" y="107" width="67.6" height="14" rx="3" class="c-mask"/>
+          <text x="225.8" y="117" class="t-muted" font-size="8" text-anchor="middle">handleSend()</text>
         </g>
 
         <!-- Legend -->
         <g data-legend="" data-legend-bridge="">
-          <text x="20" y="1192" class="t-primary" font-size="12" font-weight="650">Legend</text>
-          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="User UI" data-legend-x="20" data-legend-baseline="1212" data-legend-width="76">
-            <rect x="20" y="1204" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
-            <text x="42" y="1212" class="t-muted" font-size="7.5" font-weight="500">User UI</text>
+          <text x="20" y="458" class="t-primary" font-size="12" font-weight="650">Legend</text>
+          <g data-legend-semantic-kind="frontend" data-legend-kind="frontend" data-legend-label="Frontend (React UI &amp; Client)" data-legend-x="20" data-legend-baseline="478" data-legend-width="174">
+            <rect x="20" y="470" width="14" height="9" rx="2" class="c-frontend" stroke-width="1"/>
+            <text x="42" y="478" class="t-muted" font-size="7.5" font-weight="500">Frontend (React UI &amp; Client)</text>
           </g>
-          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Agent logic" data-legend-x="103" data-legend-baseline="1212" data-legend-width="95">
-            <rect x="103" y="1204" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
-            <text x="125" y="1212" class="t-muted" font-size="7.5" font-weight="500">Agent logic</text>
+          <g data-legend-semantic-kind="backend" data-legend-kind="backend" data-legend-label="Backend (C++ Core Services)" data-legend-x="201" data-legend-baseline="478" data-legend-width="169">
+            <rect x="201" y="470" width="14" height="9" rx="2" class="c-backend" stroke-width="1"/>
+            <text x="223" y="478" class="t-muted" font-size="7.5" font-weight="500">Backend (C++ Core Services)</text>
           </g>
-          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Policy" data-legend-x="205" data-legend-baseline="1212" data-legend-width="71">
-            <rect x="205" y="1204" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
-            <text x="227" y="1212" class="t-muted" font-size="7.5" font-weight="500">Policy</text>
+          <g data-legend-semantic-kind="security" data-legend-kind="security" data-legend-label="Security &amp; Auth Guard" data-legend-x="377" data-legend-baseline="478" data-legend-width="141">
+            <rect x="377" y="470" width="14" height="9" rx="2" class="c-security" stroke-width="1"/>
+            <text x="399" y="478" class="t-muted" font-size="7.5" font-weight="500">Security &amp; Auth Guard</text>
           </g>
-          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Tool action" data-legend-x="283" data-legend-baseline="1212" data-legend-width="95">
-            <rect x="283" y="1204" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
-            <text x="305" y="1212" class="t-muted" font-size="7.5" font-weight="500">Tool action</text>
+          <g data-legend-semantic-kind="messagebus" data-legend-kind="messagebus" data-legend-label="Live Polling Sync" data-legend-x="525" data-legend-baseline="478" data-legend-width="123">
+            <rect x="525" y="470" width="14" height="9" rx="2" class="c-messagebus" stroke-width="1"/>
+            <text x="547" y="478" class="t-muted" font-size="7.5" font-weight="500">Live Polling Sync</text>
           </g>
-          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Context / trace" data-legend-x="385" data-legend-baseline="1212" data-legend-width="113">
-            <rect x="385" y="1204" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
-            <text x="407" y="1212" class="t-muted" font-size="7.5" font-weight="500">Context / trace</text>
-          </g>
-          <g data-legend-semantic-kind="cloud" data-legend-kind="cloud" data-legend-label="Cloud service" data-legend-x="505" data-legend-baseline="1212" data-legend-width="104">
-            <rect x="505" y="1204" width="14" height="9" rx="2" class="c-cloud" stroke-width="1"/>
-            <text x="527" y="1212" class="t-muted" font-size="7.5" font-weight="500">Cloud service</text>
-          </g>
-          <g data-legend-semantic-kind="external" data-legend-kind="external" data-legend-label="External system" data-legend-x="616" data-legend-baseline="1212" data-legend-width="113">
-            <rect x="616" y="1204" width="14" height="9" rx="2" class="c-external" stroke-width="1"/>
-            <text x="638" y="1212" class="t-muted" font-size="7.5" font-weight="500">External system</text>
+          <g data-legend-semantic-kind="database" data-legend-kind="database" data-legend-label="Database SQL &amp; Media" data-legend-x="655" data-legend-baseline="478" data-legend-width="136">
+            <rect x="655" y="470" width="14" height="9" rx="2" class="c-database" stroke-width="1"/>
+            <text x="677" y="478" class="t-muted" font-size="7.5" font-weight="500">Database SQL &amp; Media</text>
           </g>
         </g>
       </svg>
@@ -5813,37 +5632,40 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <div class="cards">
       <div class="card">
         <div class="card-header">
-          <div class="card-dot emerald"></div>
-          <h3>Client Dispatch &amp; Network Transport</h3>
+          <div class="card-dot cyan"></div>
+          <h3>Frontend Tier (React SPA)</h3>
         </div>
         <ul>
-          <li>User A interacts with React DOM composer in ChatPanel.jsx</li>
-          <li>Client fetch() sends multipart/json POST through Vite dev proxy</li>
-          <li>Vite forwards /api traffic to C++ backend listening on port 8080</li>
+          <li>React 18 single-page application built with Vite and Tailwind CSS</li>
+          <li>Maintains active chat state, drafts, emoji reactions, and modal dialogs</li>
+          <li>Dispatches HTTP REST requests with session cookies to the C++ Backend</li>
+          <li>2.5-second cursor polling loop syncs new incoming messages seamlessly</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <div class="card-dot violet"></div>
-          <h3>Authentication, RBAC &amp; Payload Validation</h3>
+          <div class="card-dot emerald"></div>
+          <h3>Backend Tier (C++ Core Engine)</h3>
         </div>
         <ul>
-          <li>AuthService validates session cookie token against SQLite sessions table</li>
-          <li>MessagingService verifies conversation membership and group permissions</li>
-          <li>Validator inspects MIME magic bytes, filename traversal, and size limits</li>
+          <li>cpp-httplib multi-threaded HTTP server listening on port 8080</li>
+          <li>Auth Guard checks 256-bit session tokens &amp; PBKDF2 password hashes</li>
+          <li>Payload Validator verifies file MIME magic bytes &amp; blocks directory traversal</li>
+          <li>Messaging Service enforces group permissions and coordinates database writes</li>
         </ul>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-dot amber"></div>
-          <h3>SQLite WAL Storage &amp; Polling Delivery</h3>
+          <h3>Database SQL &amp; Storage Tier</h3>
         </div>
         <ul>
-          <li>MessageRepository acquires std::lock_guard and executes prepared INSERT</li>
-          <li>Server returns HTTP 201 Created acknowledgment to sender client</li>
-          <li>User B 2.5s polling loop fetches incremental messages and triggers UI chime</li>
+          <li>Embedded SQLite3 database operating in Write-Ahead Logging (WAL) mode</li>
+          <li>Thread-safe synchronization using RAII std::lock_guard mutexes</li>
+          <li>Normalized relational SQL schemas for users, sessions, chats, and messages</li>
+          <li>Dedicated disk storage in /uploads/ with collision-proof UUIDs</li>
         </ul>
       </div>
     </div>

@@ -11,14 +11,12 @@ class ApiError extends Error {
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  const token = typeof window !== 'undefined' ? localStorage.getItem('sampark_token') : null;
   const config = {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   };
@@ -70,9 +68,6 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ username, email, fullName, password }),
     });
-    if (data?.token && typeof window !== 'undefined') {
-      localStorage.setItem('sampark_token', data.token);
-    }
     return data;
   },
 
@@ -81,22 +76,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ identifier, password }),
     });
-    if (data?.token && typeof window !== 'undefined') {
-      localStorage.setItem('sampark_token', data.token);
-    }
     return data;
   },
 
   async logout() {
-    try {
-      return await request('/api/auth/logout', {
-        method: 'POST',
-      });
-    } finally {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('sampark_token');
-      }
-    }
+    return await request('/api/auth/logout', {
+      method: 'POST',
+    });
   },
 
   async getMe() {
@@ -306,15 +292,9 @@ export const api = {
     const formData = new FormData();
     formData.append('file', file);
     const url = `${API_BASE_URL}/api/conversations/${conversationId}/attachments`;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('sampark_token') : null;
-    const headers = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
     const response = await fetch(url, {
       method: 'POST',
       credentials: 'include',
-      headers,
       body: formData,
     });
     if (!response.ok) {

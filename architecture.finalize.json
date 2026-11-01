@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "workflow",
   "quality": "showcase",
-  "startedAt": "2026-10-27T04:19:26.886Z",
+  "startedAt": "2026-11-01T13:19:53.419Z",
   "specification": {
-    "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
-    "sha256": "13955b8643104f40241617edf91a0e723fec37fe851a6985a98cf2632628ab14",
-    "bytes": 10788
+    "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-system-flow-20261101-184800\\candidate.json",
+    "sha256": "239bf55b81f1a47a94b1b3fd7f7607be11d5e2a35cb938fa829caff64732d2f9",
+    "bytes": 10347
   },
   "artifact": {
     "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
-    "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
-    "bytes": 870895
+    "sha256": "b9d8af9c01a00ffe809c76e24c2ddca0d0969c024bf4f5bcd252f7da7e48d8f3",
+    "bytes": 852583
   },
   "stages": {
     "validate": {
@@ -27,10 +27,12 @@
         "C:\\Users\\sujal\\.agents\\skills\\archify\\bin\\archify.mjs",
         "deliver",
         "workflow",
-        "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
+        "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-system-flow-20261101-184800\\candidate.json",
         "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
         "--quality",
         "showcase",
+        "--repo-root",
+        "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark",
         "--json"
       ],
       "receipt": {
@@ -38,8 +40,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "13955b8643104f40241617edf91a0e723fec37fe851a6985a98cf2632628ab14",
-          "bytes": 10788
+          "sha256": "239bf55b81f1a47a94b1b3fd7f7607be11d5e2a35cb938fa829caff64732d2f9",
+          "bytes": 10347
         },
         "validation": {
           "checksPassed": 9,
@@ -54,33 +56,35 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1064,
+      "durationMs": 1710,
       "command": [
         "C:\\nvm4w\\nodejs\\node.exe",
         "C:\\Users\\sujal\\.agents\\skills\\archify\\bin\\archify.mjs",
         "deliver",
         "workflow",
-        "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
+        "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-system-flow-20261101-184800\\candidate.json",
         "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
         "--quality",
         "showcase",
+        "--repo-root",
+        "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark",
         "--json"
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "79feb412-f302-46ac-92cf-1e3cd7f43f74",
+        "receiptId": "888671c8-39f7-4d6e-b644-b017b33a0cc5",
         "ok": true,
         "command": "deliver",
         "type": "workflow",
-        "input": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-message-lifecycle-20261027-093500\\candidate.json",
+        "input": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\.archify\\workflow-system-flow-20261101-184800\\candidate.json",
         "output": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
         "specification": {
-          "sha256": "13955b8643104f40241617edf91a0e723fec37fe851a6985a98cf2632628ab14",
-          "bytes": 10788
+          "sha256": "239bf55b81f1a47a94b1b3fd7f7607be11d5e2a35cb938fa829caff64732d2f9",
+          "bytes": 10347
         },
         "artifact": {
-          "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
-          "bytes": 870895
+          "sha256": "b9d8af9c01a00ffe809c76e24c2ddca0d0969c024bf4f5bcd252f7da7e48d8f3",
+          "bytes": 852583
         },
         "validation": {
           "checksPassed": 9,
@@ -89,6 +93,12 @@
           "compositionStatus": "pass",
           "errors": 0,
           "warnings": 0
+        },
+        "evidence": {
+          "verified": true,
+          "repository": "https://github.com/Sujalkan07/Sampark",
+          "revision": "156e1bbad7311aedb5a2d9fa2c1c40cfb30f5e48",
+          "references": 15
         },
         "update": {
           "status": "unavailable",
@@ -106,7 +116,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 285,
+      "durationMs": 430,
       "command": [
         "C:\\nvm4w\\nodejs\\node.exe",
         "C:\\Users\\sujal\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -118,8 +128,8 @@
         "ok": true,
         "file": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
         "artifact": {
-          "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
-          "bytes": 870895
+          "sha256": "b9d8af9c01a00ffe809c76e24c2ddca0d0969c024bf4f5bcd252f7da7e48d8f3",
+          "bytes": 852583
         },
         "checks": [
           {
@@ -186,10 +196,10 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 13,
+            "minLabelRouteClearance": 30.6,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
-            "minProjectedNodeTextPx": 6.014551333872272,
+            "minProjectedNodeTextPx": 6.41932700603969,
             "maxBends": 0,
             "routesOverSuggestedBends": 0,
             "maxStretch": 1,
@@ -227,22 +237,22 @@
             "hardFloorMet": true,
             "minimumOwner": {
               "kind": "node",
-              "id": "user_a"
+              "id": "client_ui"
             },
             "minimumSourceTextPx": 8,
-            "minimumProjectedTextPx": 6.014551333872272,
-            "semanticTextCount": 52
+            "minimumProjectedTextPx": 6.41932700603969,
+            "semanticTextCount": 24
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "79feb412-f302-46ac-92cf-1e3cd7f43f74"
+        "deliveryReceiptId": "888671c8-39f7-4d6e-b644-b017b33a0cc5"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 3812,
+      "durationMs": 3409,
       "command": [
         "C:\\nvm4w\\nodejs\\node.exe",
         "C:\\Users\\sujal\\.agents\\skills\\archify\\bin\\archify.mjs",
@@ -260,11 +270,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "79feb412-f302-46ac-92cf-1e3cd7f43f74",
+        "deliveryReceiptId": "888671c8-39f7-4d6e-b644-b017b33a0cc5",
         "artifact": {
           "path": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.html",
-          "sha256": "62ede4696c0b9aea9c1333d9957977f6b2c6388f3129086331eea4d1cea5a566",
-          "bytes": 870895
+          "sha256": "b9d8af9c01a00ffe809c76e24c2ddca0d0969c024bf4f5bcd252f7da7e48d8f3",
+          "bytes": 852583
         },
         "state": {
           "detail": "read",
@@ -286,14 +296,14 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 1574,
+              "scrollHeight": 900,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1376,
               "diagramWidth": 1346,
@@ -301,98 +311,59 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 78,
                 "diagramChromePx": 78,
-                "svgPx": 1406,
+                "svgPx": 648,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 322,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 177,
-                  "spaceAboveNodesPx": 140,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 322,
+                  "frameId": "lane-0",
+                  "heightPx": 132,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 177,
-                  "spaceAboveNodesPx": 140,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 115,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 115,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 115,
+                  "heightPx": 132,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 115,
+                  "frameId": "lane-2",
+                  "heightPx": 132,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -415,14 +386,14 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1807,
+              "scrollHeight": 1000,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1536,
               "diagramWidth": 1506,
@@ -430,98 +401,59 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
-                "svgPx": 1573,
+                "svgPx": 725,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 360,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 198,
-                  "spaceAboveNodesPx": 157,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 360,
+                  "frameId": "lane-0",
+                  "heightPx": 148,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 198,
-                  "spaceAboveNodesPx": 157,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 129,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 129,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 129,
+                  "heightPx": 148,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 129,
+                  "frameId": "lane-2",
+                  "heightPx": 148,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -544,113 +476,74 @@
               "innerWidth": 1920,
               "innerHeight": 1080,
               "scrollWidth": 1920,
-              "scrollHeight": 2141,
+              "scrollHeight": 1080,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1826,
+              "readerWidth": 1763,
+              "diagramWidth": 1733,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
-                "svgPx": 1907,
+                "svgPx": 834,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 437,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 241,
-                  "spaceAboveNodesPx": 190,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 437,
+                  "frameId": "lane-0",
+                  "heightPx": 170,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 241,
-                  "spaceAboveNodesPx": 190,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 156,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 156,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 156,
+                  "heightPx": 170,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 156,
+                  "frameId": "lane-2",
+                  "heightPx": 170,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -673,113 +566,74 @@
               "innerWidth": 2048,
               "innerHeight": 1320,
               "scrollWidth": 2048,
-              "scrollHeight": 2190,
+              "scrollHeight": 1320,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1920,
-              "diagramWidth": 1855.5,
+              "diagramWidth": 1870,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 94,
                 "diagramChromePx": 94,
-                "svgPx": 1938,
+                "svgPx": 900,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 444,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 245,
-                  "spaceAboveNodesPx": 194,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 444,
+                  "frameId": "lane-0",
+                  "heightPx": 184,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 245,
-                  "spaceAboveNodesPx": 194,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 159,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 159,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 159,
+                  "heightPx": 184,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 159,
+                  "frameId": "lane-2",
+                  "heightPx": 184,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -855,14 +709,14 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 1574,
+              "scrollHeight": 900,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1376,
               "diagramWidth": 1346,
@@ -870,98 +724,59 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 78,
                 "diagramChromePx": 78,
-                "svgPx": 1406,
+                "svgPx": 648,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 322,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 177,
-                  "spaceAboveNodesPx": 140,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 322,
+                  "frameId": "lane-0",
+                  "heightPx": 132,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 177,
-                  "spaceAboveNodesPx": 140,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 115,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 115,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 115,
+                  "heightPx": 132,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 115,
+                  "frameId": "lane-2",
+                  "heightPx": 132,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -984,14 +799,14 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1807,
+              "scrollHeight": 1000,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1536,
               "diagramWidth": 1506,
@@ -999,98 +814,59 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
-                "svgPx": 1573,
+                "svgPx": 725,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 360,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 198,
-                  "spaceAboveNodesPx": 157,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 360,
+                  "frameId": "lane-0",
+                  "heightPx": 148,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 198,
-                  "spaceAboveNodesPx": 157,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 129,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 129,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 129,
+                  "heightPx": 148,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 129,
+                  "frameId": "lane-2",
+                  "heightPx": 148,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1113,113 +889,74 @@
               "innerWidth": 1920,
               "innerHeight": 1080,
               "scrollWidth": 1920,
-              "scrollHeight": 2141,
+              "scrollHeight": 1080,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1826,
+              "readerWidth": 1763,
+              "diagramWidth": 1733,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
-                "svgPx": 1907,
+                "svgPx": 834,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 437,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 241,
-                  "spaceAboveNodesPx": 190,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 437,
+                  "frameId": "lane-0",
+                  "heightPx": 170,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 241,
-                  "spaceAboveNodesPx": 190,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 156,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 156,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 156,
+                  "heightPx": 170,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 156,
+                  "frameId": "lane-2",
+                  "heightPx": 170,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1242,113 +979,74 @@
               "innerWidth": 2048,
               "innerHeight": 1320,
               "scrollWidth": 2048,
-              "scrollHeight": 2190,
+              "scrollHeight": 1320,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1920,
-              "diagramWidth": 1855.5,
+              "diagramWidth": 1870,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 94,
                 "diagramChromePx": 94,
-                "svgPx": 1938,
+                "svgPx": 900,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 444,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 245,
-                  "spaceAboveNodesPx": 194,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 444,
+                  "frameId": "lane-0",
+                  "heightPx": 184,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 245,
-                  "spaceAboveNodesPx": 194,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 159,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 159,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 159,
+                  "heightPx": 184,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 159,
+                  "frameId": "lane-2",
+                  "heightPx": 184,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1376,14 +1074,14 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 1574,
+              "scrollHeight": 900,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1376,
               "diagramWidth": 1346,
@@ -1391,98 +1089,59 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 78,
                 "diagramChromePx": 78,
-                "svgPx": 1406,
+                "svgPx": 648,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 322,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 177,
-                  "spaceAboveNodesPx": 140,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 322,
+                  "frameId": "lane-0",
+                  "heightPx": 132,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 177,
-                  "spaceAboveNodesPx": 140,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 115,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 115,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 115,
+                  "heightPx": 132,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 115,
+                  "frameId": "lane-2",
+                  "heightPx": 132,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 74,
-                  "spaceAboveNodesPx": 37,
-                  "spaceBelowNodesPx": 4
+                  "nodeSpanPx": 79,
+                  "spaceAboveNodesPx": 48,
+                  "spaceBelowNodesPx": 6
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1505,14 +1164,14 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1807,
+              "scrollHeight": 1000,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1536,
               "diagramWidth": 1506,
@@ -1520,98 +1179,59 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
-                "svgPx": 1573,
+                "svgPx": 725,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 360,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 198,
-                  "spaceAboveNodesPx": 157,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 360,
+                  "frameId": "lane-0",
+                  "heightPx": 148,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 198,
-                  "spaceAboveNodesPx": 157,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 129,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 129,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 129,
+                  "heightPx": 148,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 129,
+                  "frameId": "lane-2",
+                  "heightPx": 148,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 83,
-                  "spaceAboveNodesPx": 41,
-                  "spaceBelowNodesPx": 5
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 6
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1634,113 +1254,74 @@
               "innerWidth": 1920,
               "innerHeight": 1080,
               "scrollWidth": 1920,
-              "scrollHeight": 2141,
+              "scrollHeight": 1080,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1826,
+              "readerWidth": 1763,
+              "diagramWidth": 1733,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 86,
                 "diagramChromePx": 84,
-                "svgPx": 1907,
+                "svgPx": 834,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 437,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 241,
-                  "spaceAboveNodesPx": 190,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 437,
+                  "frameId": "lane-0",
+                  "heightPx": 170,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 241,
-                  "spaceAboveNodesPx": 190,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 156,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 156,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 156,
+                  "heightPx": 170,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 156,
+                  "frameId": "lane-2",
+                  "heightPx": 170,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 100,
-                  "spaceAboveNodesPx": 50,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 102,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 7
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1763,113 +1344,74 @@
               "innerWidth": 2048,
               "innerHeight": 1320,
               "scrollWidth": 2048,
-              "scrollHeight": 2190,
+              "scrollHeight": 1320,
               "overflowX": false,
-              "overflowY": true,
-              "verticalScrollAccepted": true,
-              "overflowDisposition": "readable-vertical-scroll",
+              "overflowY": false,
+              "verticalScrollAccepted": false,
+              "overflowDisposition": "contained",
               "readerLayout": "adaptive",
-              "readerOverflow": "authored",
-              "readerFit": "width-first",
+              "readerOverflow": null,
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1920,
-              "diagramWidth": 1855.5,
+              "diagramWidth": 1870,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 94,
                 "diagramChromePx": 94,
-                "svgPx": 1938,
+                "svgPx": 900,
                 "cardsPx": 0,
-                "viewBoxHeight": 1292
+                "viewBoxHeight": 558
               },
-              "viewBoxWidth": 1237,
+              "viewBoxWidth": 1159,
               "workflowLanes": [
                 {
-                  "frameId": "lane-3",
-                  "heightPx": 444,
-                  "nodeCount": 4,
-                  "nodeIds": [
-                    "auth_gate",
-                    "auth_service",
-                    "validation_err",
-                    "validator"
-                  ],
-                  "nodeSpanPx": 245,
-                  "spaceAboveNodesPx": 194,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-5",
-                  "heightPx": 444,
+                  "frameId": "lane-0",
+                  "heightPx": 184,
                   "nodeCount": 3,
                   "nodeIds": [
-                    "delta_poll",
-                    "chat_receiver",
-                    "user_b"
+                    "client_ui",
+                    "api_client",
+                    "sync_poll"
                   ],
-                  "nodeSpanPx": 245,
-                  "spaceAboveNodesPx": 194,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-0",
-                  "heightPx": 159,
-                  "nodeCount": 2,
-                  "nodeIds": [
-                    "user_a",
-                    "chat_composer"
-                  ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 },
                 {
                   "frameId": "lane-1",
-                  "heightPx": 159,
-                  "nodeCount": 3,
-                  "nodeIds": [
-                    "client_fetch",
-                    "network_proxy",
-                    "ack_dispatch"
-                  ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
-                },
-                {
-                  "frameId": "lane-2",
-                  "heightPx": 159,
+                  "heightPx": 184,
                   "nodeCount": 3,
                   "nodeIds": [
                     "server_router",
-                    "messaging_svc",
-                    "message_repo"
+                    "auth_gate",
+                    "messaging_service"
                   ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 },
                 {
-                  "frameId": "lane-4",
-                  "heightPx": 159,
+                  "frameId": "lane-2",
+                  "heightPx": 184,
                   "nodeCount": 2,
                   "nodeIds": [
                     "sqlite_wal",
-                    "read_sync"
+                    "media_store"
                   ],
-                  "nodeSpanPx": 102,
-                  "spaceAboveNodesPx": 51,
-                  "spaceBelowNodesPx": 6
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 66,
+                  "spaceBelowNodesPx": 8
                 }
               ],
               "minimumProjectedNodeTextPx": 8,
               "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "Types text & files",
+              "minimumProjectedNodeText": "ChatPanel & Composer",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
                 "kind": "node",
-                "id": "user_a"
+                "id": "client_ui"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -1910,15 +1452,15 @@
     "browserCheckReceipt": "C:\\Users\\sujal\\OneDrive\\Documents\\GitHub\\Sampark\\architecture.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-27T04:19:33.363Z",
-  "durationMs": 6476,
+  "finishedAt": "2026-11-01T13:20:00.872Z",
+  "durationMs": 7453,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
     "checkedAt": "2026-10-27T04:19:27.257Z",
-    "source": "network",
+    "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   }
